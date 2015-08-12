@@ -9,7 +9,7 @@
 
 
 Ped pedShortcuts[10] = {};
-
+int lastWaypointID = -1;
 
 std::string statusText;
 DWORD statusTextDrawTicksMax;
@@ -48,6 +48,7 @@ void set_status_text(std::string str, DWORD time = 2500, bool isGxtEntry = false
 
 //log and config file handling borrowed from https://github.com/amoshydra/bearded-batman/blob/e814cf559edbb24b1ef80a326d0608ff67ba17cb/source/Kinky/script.cpp
 
+
 void log_to_file(std::string message, bool bAppend = true) {
 	if (1) {
 		std::ofstream logfile;
@@ -65,6 +66,7 @@ void log_to_file(std::string message, bool bAppend = true) {
 // Config file - test
 LPCSTR config_path = ".\\screen_director.ini";
 int test_property = GetPrivateProfileInt("keys", "test_key", 42, config_path);
+
 
 static LPCSTR weaponNames[] = {
 	"WEAPON_KNIFE", "WEAPON_NIGHTSTICK", "WEAPON_HAMMER", "WEAPON_BAT", "WEAPON_GOLFCLUB", "WEAPON_CROWBAR",
@@ -140,9 +142,6 @@ void move_to_waypoint(Ped ped) {
 	}
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
-
-		
-
 		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
 
 		//check if player is the driver
@@ -178,11 +177,11 @@ void possess_ped(Ped swapToPed) {
 		
 		pedShortcuts[0] = swapFromPed;
 
-		//set_status_text("Possessing ped. Swap back with ALT+0");
 	}
 	else {
 		set_status_text("Could not possess ped");
 	}
+	WAIT(500);
 
 }
 
@@ -264,6 +263,38 @@ void enter_nearest_vehicle_as_passenger() {
 	AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, 0, 1.0, 1, 0);
 }
 
+void check_if_player_is_passenger_and_has_waypoint() {
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
+		
+		//check if player is a passenger
+		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(playerVehicle, -1);
+		
+		if (pedDriver != playerPed) {
+			//player is a passenger, check if player has a waypoint
+			if (UI::IS_WAYPOINT_ACTIVE()) {
+				int waypointID;
+				Vector3 waypointCoord;
+
+				waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+				if (waypointID != lastWaypointID) {
+					waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+					lastWaypointID = waypointID;
+
+					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
+					
+					set_status_text("Driving to passengers waypoint");
+				}
+			}
+		}
+	}
+
+}
+
+
+
+
 
 
 bool possess_key_pressed()
@@ -328,7 +359,6 @@ void action_if_ped_assign_shortcut_key_pressed()
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
 		}
 	}
-	WAIT(300);
 }
 
 void action_if_ped_execute_shortcut_key_pressed()
@@ -381,7 +411,6 @@ void action_if_ped_execute_shortcut_key_pressed()
 			}
 		}
 	}
-	WAIT(300);
 }
 
 
@@ -409,23 +438,24 @@ void main()
 		if (possess_key_pressed()) {
 			set_status_text("Possessing nearest pedestrian");
 			action_possess_ped();
-			WAIT(300);
+			//WAIT(300);
 		}
 
 		if (clone_key_pressed()) {
 			action_clone_myself();
-			WAIT(300);
+			//WAIT(300);
 		}
 
 		if (enter_nearest_vehicle_as_passenger_key_pressed()) {
 			enter_nearest_vehicle_as_passenger();
-			WAIT(300);
+			//WAIT(300);
 		}
 
 		action_if_ped_assign_shortcut_key_pressed();
 
 		action_if_ped_execute_shortcut_key_pressed();
 
+		check_if_player_is_passenger_and_has_waypoint();
 
 		//check if the player is dead/arrested, in order to swap back to original
 		check_player_model();
@@ -436,7 +466,7 @@ void main()
 
 void ScriptMain()
 {
-	log_to_file("Screen Director initialized");
-	log_to_file("Value of test property from config file: " + std::to_string(test_property));
+	//log_to_file("Screen Director initialized");
+	//log_to_file("Value of test property from config file: " + std::to_string(test_property));
 	main();
 }
