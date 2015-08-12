@@ -226,6 +226,16 @@ void action_clone_myself() {
 	set_status_text("Cloned myself. Possess clone with ALT+0");
 }
 
+void enter_nearest_vehicle_as_passenger() {
+	set_status_text("Entering as passenger");
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	Vector3 coord = ENTITY::GET_ENTITY_COORDS(playerPed, true);
+
+	Vehicle vehicle = VEHICLE::GET_CLOSEST_VEHICLE(coord.x, coord.y, coord.z, 100.0, 0, 71);
+	
+	AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, 0, 1.0, 1, 0);
+}
+
 
 
 bool possess_key_pressed()
@@ -345,7 +355,16 @@ void action_if_ped_execute_shortcut_key_pressed()
 }
 
 
-
+bool enter_nearest_vehicle_as_passenger_key_pressed() {
+	//ALT+E
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x46)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+	
+}
 
 
 
@@ -366,9 +385,14 @@ void main()
 			action_clone_myself();
 		}
 
+		if (enter_nearest_vehicle_as_passenger_key_pressed()) {
+			enter_nearest_vehicle_as_passenger();
+		}
+
 		action_if_ped_assign_shortcut_key_pressed();
 
 		action_if_ped_execute_shortcut_key_pressed();
+
 
 		//check if the player is dead/arrested, in order to swap back to original
 		check_player_model();
