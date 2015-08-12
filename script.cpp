@@ -104,19 +104,29 @@ void check_player_model()
 		}
 }
 
-void drive_to_waypoint(Ped pedInVehicle) {
+void move_to_waypoint(Ped ped) {
 	//code inspired by LUA plugin https://www.gta5-mods.com/scripts/realistic-vehicle-controls
-	if (PED::IS_PED_IN_ANY_VEHICLE(pedInVehicle, 0) && UI::IS_WAYPOINT_ACTIVE()) {
-		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
-		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 
-		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(pedInVehicle);
-
-		AI::TASK_VEHICLE_DRIVE_TO_COORD(pedInVehicle, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 30, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 0xC00AB, -1);
-		set_status_text("Driving to waypoint");
+	int waypointID;
+	Vector3 waypointCoord;
+	if (UI::IS_WAYPOINT_ACTIVE()) {
+		waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+		waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 	}
 	else {
-		set_status_text("No waypoint exist when you swapped away from driver");
+		set_status_text("No waypoint active.");
+		return;
+	}
+
+	if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
+		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
+
+		AI::TASK_VEHICLE_DRIVE_TO_COORD(ped, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
+		set_status_text("Driving to waypoint");
+	}
+	else if (PED::IS_PED_ON_FOOT(ped)) {
+		AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, 1.0f, -1, 27.0f, 0.5f);
+		set_status_text("Walking to waypoint");
 	}
 
 }
@@ -125,8 +135,8 @@ void possess_ped(Ped swapToPed) {
 	if (ENTITY::DOES_ENTITY_EXIST(swapToPed) && ENTITY::IS_ENTITY_A_PED(swapToPed)) {
 		Ped swapFromPed = PLAYER::PLAYER_PED_ID();
 
-		if (PED::IS_PED_IN_ANY_VEHICLE(swapFromPed, 0)) {
-			drive_to_waypoint(swapFromPed);
+		if (UI::IS_WAYPOINT_ACTIVE()) {
+			move_to_waypoint(swapFromPed);
 		}
 
 		PLAYER::CHANGE_PLAYER_PED(PLAYER::PLAYER_ID(), swapToPed, false, false);
