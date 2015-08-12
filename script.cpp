@@ -5,6 +5,7 @@
 #include <string>
 #include <ctime>
 #include <vector>
+#include <fstream>
 
 
 Ped pedShortcuts[10] = {};
@@ -44,6 +45,26 @@ void set_status_text(std::string str, DWORD time = 2500, bool isGxtEntry = false
 	statusTextDrawTicksMax = GetTickCount() + time;
 	statusTextGxtEntry = isGxtEntry;
 }
+
+//log and config file handling borrowed from https://github.com/amoshydra/bearded-batman/blob/e814cf559edbb24b1ef80a326d0608ff67ba17cb/source/Kinky/script.cpp
+
+void log_to_file(std::string message, bool bAppend = true) {
+	if (1) {
+		std::ofstream logfile;
+		char* filename = "screen_director.log";
+		if (bAppend)
+			logfile.open(filename, std::ios_base::app);
+		else
+			logfile.open(filename);
+		logfile << message + "\n";
+		logfile.close();
+	}
+	return;
+}
+
+// Config file - test
+LPCSTR config_path = ".\\screen_director.ini";
+int test_property = GetPrivateProfileInt("keys", "test_key", 42, config_path);
 
 static LPCSTR weaponNames[] = {
 	"WEAPON_KNIFE", "WEAPON_NIGHTSTICK", "WEAPON_HAMMER", "WEAPON_BAT", "WEAPON_GOLFCLUB", "WEAPON_CROWBAR",
@@ -415,5 +436,7 @@ void main()
 
 void ScriptMain()
 {
+	log_to_file("Screen Director initialized");
+	log_to_file("Value of test property from config file: " + std::to_string(test_property));
 	main();
 }
