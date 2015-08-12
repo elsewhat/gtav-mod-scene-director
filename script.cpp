@@ -119,10 +119,21 @@ void move_to_waypoint(Ped ped) {
 	}
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
+
+		
+
 		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
 
-		AI::TASK_VEHICLE_DRIVE_TO_COORD(ped, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
-		set_status_text("Driving to waypoint");
+		//check if player is the driver
+		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(playerVehicle, -1);
+		if (pedDriver != ped) {
+			set_status_text("Ped is not driver. Ignore waypoint");
+		}
+		else {
+			AI::TASK_VEHICLE_DRIVE_TO_COORD(ped, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
+			set_status_text("Driving to waypoint");
+		}
+
 	}
 	else if (PED::IS_PED_ON_FOOT(ped)) {
 		AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, 1.0f, -1, 27.0f, 0.5f);
@@ -146,14 +157,10 @@ void possess_ped(Ped swapToPed) {
 		
 		pedShortcuts[0] = swapFromPed;
 
-
-
 		//set_status_text("Possessing ped. Swap back with ALT+0");
-		WAIT(500);
 	}
 	else {
 		set_status_text("Could not possess ped");
-		WAIT(500);
 	}
 
 }
@@ -300,6 +307,7 @@ void action_if_ped_assign_shortcut_key_pressed()
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
 		}
 	}
+	WAIT(300);
 }
 
 void action_if_ped_execute_shortcut_key_pressed()
@@ -352,6 +360,7 @@ void action_if_ped_execute_shortcut_key_pressed()
 			}
 		}
 	}
+	WAIT(300);
 }
 
 
@@ -379,14 +388,17 @@ void main()
 		if (possess_key_pressed()) {
 			set_status_text("Possessing nearest pedestrian");
 			action_possess_ped();
+			WAIT(300);
 		}
 
 		if (clone_key_pressed()) {
 			action_clone_myself();
+			WAIT(300);
 		}
 
 		if (enter_nearest_vehicle_as_passenger_key_pressed()) {
 			enter_nearest_vehicle_as_passenger();
+			WAIT(300);
 		}
 
 		action_if_ped_assign_shortcut_key_pressed();
