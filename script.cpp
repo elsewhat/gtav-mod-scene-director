@@ -282,6 +282,11 @@ void action_if_ped_assign_shortcut_key_pressed()
 		if (pedShortcutsIndex != -1) {
 			Ped playerPed = PLAYER::PLAYER_PED_ID();
 			pedShortcuts[pedShortcutsIndex] = playerPed;
+
+			int blipId = UI::ADD_BLIP_FOR_ENTITY(playerPed);
+			//BLIP Sprite for nr1=17, nr9=25
+			UI::SET_BLIP_SPRITE(blipId, 16 + pedShortcutsIndex);
+
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
 		}
 	}
