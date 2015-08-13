@@ -219,11 +219,10 @@ void possess_ped(Ped swapToPed) {
 
 		PLAYER::CHANGE_PLAYER_PED(PLAYER::PLAYER_ID(), swapToPed, false, false);
 		
-		//pause any AI tasks such as driving to waypoint
-		AI::TASK_PAUSE(swapToPed, 1);
+		//stop any animations or scenarios being run on the ped
+		AI::CLEAR_PED_TASKS(swapToPed);
 		
 		pedShortcuts[0] = swapFromPed;
-
 	}
 	else {
 		set_status_text("Could not possess ped");
