@@ -162,6 +162,53 @@ void move_to_waypoint(Ped ped) {
 
 }
 
+void teleport_player_to_waypoint() {
+	// get entity to teleport
+	Entity entityToTeleport = PLAYER::PLAYER_PED_ID();
+	
+	if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
+		entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
+	}
+
+	if (UI::IS_WAYPOINT_ACTIVE()) {
+		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+
+		//From the native trainer. Could it be replaced with PATHFIND::GET_SAFE_COORD_FOR_PED ?
+
+		// load needed map region and check height levels for ground existence
+		bool groundFound = false;
+		static float groundCheckHeight[] = {
+			100.0, 150.0, 50.0, 0.0, 200.0, 250.0, 300.0, 350.0, 400.0,
+			450.0, 500.0, 550.0, 600.0, 650.0, 700.0, 750.0, 800.0
+		};
+		for (int i = 0; i < sizeof(groundCheckHeight) / sizeof(float); i++)
+		{
+			ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, waypointCoord.x, waypointCoord.y, groundCheckHeight[i], 0, 0, 1);
+			WAIT(100);
+			if (GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(waypointCoord.x, waypointCoord.y, groundCheckHeight[i], &waypointCoord.z))
+			{
+				groundFound = true;
+				waypointCoord.z += 3.0;
+				break;
+			}
+		}
+		// if ground not found then set Z in air and give player a parachute
+		if (!groundFound)
+		{
+			waypointCoord.z = 1000.0;
+			WEAPON::GIVE_DELAYED_WEAPON_TO_PED(PLAYER::PLAYER_PED_ID(), 0xFBAB5776, 1, 0);
+		}
+
+		ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, waypointCoord.x, waypointCoord.y, waypointCoord.z, 0, 0, 1);
+		set_status_text("Teleporting to waypoint");
+	}
+	else {
+		set_status_text("Set waypoint before teleporting");
+	}
+
+}
+
 void possess_ped(Ped swapToPed) {
 	if (ENTITY::DOES_ENTITY_EXIST(swapToPed) && ENTITY::IS_ENTITY_A_PED(swapToPed)) {
 		Ped swapFromPed = PLAYER::PLAYER_PED_ID();
@@ -422,7 +469,16 @@ bool enter_nearest_vehicle_as_passenger_key_pressed() {
 	else {
 		return false;
 	}
-	
+}
+
+bool teleport_player_key_pressed() {
+	//ALT+T
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x54)) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 
@@ -449,6 +505,10 @@ void main()
 		if (enter_nearest_vehicle_as_passenger_key_pressed()) {
 			enter_nearest_vehicle_as_passenger();
 			//WAIT(300);
+		}
+
+		if (teleport_player_key_pressed()) {
+			teleport_player_to_waypoint();
 		}
 
 		action_if_ped_assign_shortcut_key_pressed();
