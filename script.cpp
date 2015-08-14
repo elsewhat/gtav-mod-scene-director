@@ -16,6 +16,7 @@ DWORD statusTextDrawTicksMax;
 bool statusTextGxtEntry;
 
 int nextWaitTicks = 0;
+int forceSlotIndexOverWrite = -1;
 
 void set_status_text(std::string text)
 {
@@ -383,6 +384,22 @@ void action_if_ped_assign_shortcut_key_pressed()
 		}
 
 		if (pedShortcutsIndex != -1) {
+			nextWaitTicks = 250;
+			//check if there exist an actor for this index
+			if (pedShortcuts[pedShortcutsIndex] != 0) {
+				if (forceSlotIndexOverWrite != pedShortcutsIndex) {
+					set_status_text("Actor already exist in slot. ALT+" + std::to_string(pedShortcutsIndex) + " once more to overwrite");
+					forceSlotIndexOverWrite = pedShortcutsIndex;
+					return;
+				}
+				else {
+					forceSlotIndexOverWrite = -1; 
+					//TODO: Remove old blip
+					//and continue storing the actor
+				}
+
+			}
+
 			Ped playerPed = PLAYER::PLAYER_PED_ID();
 			pedShortcuts[pedShortcutsIndex] = playerPed;
 
@@ -391,7 +408,7 @@ void action_if_ped_assign_shortcut_key_pressed()
 			UI::SET_BLIP_SPRITE(blipId, 16 + pedShortcutsIndex);
 
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
-			nextWaitTicks = 300;
+			
 		}
 	}
 }
