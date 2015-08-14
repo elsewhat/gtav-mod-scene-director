@@ -15,35 +15,14 @@ std::string statusText;
 DWORD statusTextDrawTicksMax;
 bool statusTextGxtEntry;
 
-void update_status_text()
-{
-	if (GetTickCount() < statusTextDrawTicksMax)
-	{
-		UI::SET_TEXT_FONT(0);
-		UI::SET_TEXT_SCALE(0.55, 0.55);
-		UI::SET_TEXT_COLOUR(255, 255, 255, 255);
-		UI::SET_TEXT_WRAP(0.0, 1.0);
-		UI::SET_TEXT_CENTRE(1);
-		UI::SET_TEXT_DROPSHADOW(0, 0, 0, 0, 0);
-		UI::SET_TEXT_EDGE(1, 0, 0, 0, 205);
-		if (statusTextGxtEntry)
-		{
-			UI::_SET_TEXT_ENTRY((char *)statusText.c_str());
-		}
-		else
-		{
-			UI::_SET_TEXT_ENTRY("STRING");
-			UI::_ADD_TEXT_COMPONENT_STRING((char *)statusText.c_str());
-		}
-		UI::_DRAW_TEXT(0.5, 0.5);
-	}
-}
+int nextWaitTicks = 0;
 
-void set_status_text(std::string str, DWORD time = 2500, bool isGxtEntry = false)
+void set_status_text(std::string text)
 {
-	statusText = str;
-	statusTextDrawTicksMax = GetTickCount() + time;
-	statusTextGxtEntry = isGxtEntry;
+
+	UI::_SET_NOTIFICATION_TEXT_ENTRY("STRING");
+	UI::_ADD_TEXT_COMPONENT_STRING((LPSTR)text.c_str());
+	UI::_DRAW_NOTIFICATION(1, 1);
 }
 
 //log and config file handling borrowed from https://github.com/amoshydra/bearded-batman/blob/e814cf559edbb24b1ef80a326d0608ff67ba17cb/source/Kinky/script.cpp
@@ -165,7 +144,7 @@ void move_to_waypoint(Ped ped) {
 void teleport_player_to_waypoint() {
 	// get entity to teleport
 	Entity entityToTeleport = PLAYER::PLAYER_PED_ID();
-	
+
 	if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
 		entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
 	}
@@ -210,7 +189,7 @@ void teleport_player_to_waypoint() {
 }
 
 void possess_ped(Ped swapToPed) {
-	if (ENTITY::DOES_ENTITY_EXIST(swapToPed) && ENTITY::IS_ENTITY_A_PED(swapToPed)) {
+	if (ENTITY::DOES_ENTITY_EXIST(swapToPed) && ENTITY::IS_ENTITY_A_PED(swapToPed) && !ENTITY::IS_ENTITY_DEAD(swapToPed)) {
 		Ped swapFromPed = PLAYER::PLAYER_PED_ID();
 
 		if (UI::IS_WAYPOINT_ACTIVE()) {
@@ -218,16 +197,16 @@ void possess_ped(Ped swapToPed) {
 		}
 
 		PLAYER::CHANGE_PLAYER_PED(PLAYER::PLAYER_ID(), swapToPed, false, false);
-		
+
 		//stop any animations or scenarios being run on the ped
 		AI::CLEAR_PED_TASKS(swapToPed);
-		
+
 		pedShortcuts[0] = swapFromPed;
 	}
 	else {
 		set_status_text("Could not possess ped");
 	}
-	WAIT(500);
+	nextWaitTicks = 500;
 
 }
 
@@ -236,6 +215,7 @@ void possess_ped(Ped swapToPed) {
 
 void action_possess_ped() {
 	Player player = PLAYER::PLAYER_ID();
+	nextWaitTicks = 300;
 
 	//If player is aiming at a ped, control that
 	if (PLAYER::IS_PLAYER_FREE_AIMING(player)) {
@@ -243,12 +223,18 @@ void action_possess_ped() {
 		PLAYER::_GET_AIMED_ENTITY(player, &targetEntity);
 
 		if (ENTITY::DOES_ENTITY_EXIST(targetEntity) && ENTITY::IS_ENTITY_A_PED(targetEntity)) {
+
+			if (ENTITY::IS_ENTITY_DEAD(targetEntity)) {
+				set_status_text("Dead actors can't act");
+				return;
+			}
+
 			set_status_text("Possessing targeted pedestrian");
 
 			possess_ped(targetEntity);
 			//give a pistol, so they can easily target the next person
 			give_basic_weapon(targetEntity);
-			
+
 		}
 		else {
 			set_status_text("Aim on a pedestrian and try again");
@@ -266,7 +252,7 @@ void action_possess_ped() {
 		{
 			int offsettedID = i * 2 + 2;
 
-			if (!ENTITY::DOES_ENTITY_EXIST(peds[offsettedID]))
+			if (!ENTITY::DOES_ENTITY_EXIST(peds[offsettedID]) || ENTITY::IS_ENTITY_DEAD(peds[offsettedID]))
 			{
 				continue;
 			}
@@ -287,7 +273,7 @@ void action_possess_ped() {
 void action_clone_myself() {
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 
-	Ped clonedPed = PED::CLONE_PED(playerPed,0.0f, false, true);
+	Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
 	pedShortcuts[0] = clonedPed;
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0))
@@ -297,6 +283,7 @@ void action_clone_myself() {
 	}
 
 	set_status_text("Cloned myself. Possess clone with ALT+0");
+	nextWaitTicks = 500;
 }
 
 void enter_nearest_vehicle_as_passenger() {
@@ -305,18 +292,19 @@ void enter_nearest_vehicle_as_passenger() {
 	Vector3 coord = ENTITY::GET_ENTITY_COORDS(playerPed, true);
 
 	Vehicle vehicle = VEHICLE::GET_CLOSEST_VEHICLE(coord.x, coord.y, coord.z, 100.0, 0, 71);
-	
+
 	AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, 0, 1.0, 1, 0);
+	nextWaitTicks = 200;
 }
 
 void check_if_player_is_passenger_and_has_waypoint() {
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
 		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
-		
+
 		//check if player is a passenger
 		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(playerVehicle, -1);
-		
+
 		if (pedDriver != playerPed) {
 			//player is a passenger, check if player has a waypoint
 			if (UI::IS_WAYPOINT_ACTIVE()) {
@@ -329,7 +317,7 @@ void check_if_player_is_passenger_and_has_waypoint() {
 					lastWaypointID = waypointID;
 
 					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
-					
+
 					set_status_text("Driving to passengers waypoint");
 				}
 			}
@@ -360,7 +348,7 @@ bool swap_to_previous_possessed_key_pressed()
 }
 
 void action_if_ped_assign_shortcut_key_pressed()
-{	
+{
 	//ALT key
 	if (IsKeyDown(VK_CONTROL)) {
 		int pedShortcutsIndex = -1;
@@ -403,6 +391,7 @@ void action_if_ped_assign_shortcut_key_pressed()
 			UI::SET_BLIP_SPRITE(blipId, 16 + pedShortcutsIndex);
 
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
+			nextWaitTicks = 300;
 		}
 	}
 }
@@ -416,9 +405,11 @@ void action_if_ped_execute_shortcut_key_pressed()
 		if (IsKeyDown(0x30)) {
 			//0 index cannot be assigned, but is previously possessed or cloned
 			pedShortcutsIndex = 0;
-		}else if (IsKeyDown(0x31)) {
+		}
+		else if (IsKeyDown(0x31)) {
 			pedShortcutsIndex = 1;
-		}else if (IsKeyDown(0x31)) {
+		}
+		else if (IsKeyDown(0x31)) {
 			pedShortcutsIndex = 1;
 		}
 		else if (IsKeyDown(0x32)) {
@@ -448,12 +439,20 @@ void action_if_ped_execute_shortcut_key_pressed()
 
 		if (pedShortcutsIndex != -1) {
 			//TODO: Check if it exist
+			nextWaitTicks = 300;
 
 			if (pedShortcuts[pedShortcutsIndex] == 0) {
-				set_status_text("No stored ped. Store with CTRL+" + std::to_string(pedShortcutsIndex));
+				set_status_text("No stored actor. Store with CTRL+" + std::to_string(pedShortcutsIndex));
 			}
 			else {
-				possess_ped(pedShortcuts[pedShortcutsIndex]);
+				Ped pedInSlot = pedShortcuts[pedShortcutsIndex];
+				if (ENTITY::IS_ENTITY_DEAD(pedInSlot)) {
+					set_status_text("Thou shalt not swap to a dead actor");
+
+				}
+				else {
+					possess_ped(pedShortcuts[pedShortcutsIndex]);
+				}
 			}
 		}
 	}
@@ -488,10 +487,7 @@ void main()
 {
 	while (true)
 	{
-		update_status_text();
-
 		if (possess_key_pressed()) {
-			set_status_text("Possessing nearest pedestrian");
 			action_possess_ped();
 			//WAIT(300);
 		}
@@ -519,7 +515,8 @@ void main()
 		//check if the player is dead/arrested, in order to swap back to original
 		check_player_model();
 
-		WAIT(0);
+		WAIT(nextWaitTicks);
+		nextWaitTicks = 0;
 	}
 }
 
