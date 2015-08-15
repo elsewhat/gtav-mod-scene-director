@@ -8,11 +8,17 @@
 #include <fstream>
 
 
+//attributes to the actors in the slot 1-9 
+//index 0 is reserved for the last actor
 Ped actorShortcut[10] = {};
+//waypoint for the acto
 bool actorHasWaypoint[10] = {};
 Vector3 actorWaypoint[10] = {};
+//location when scene was set to active last time
 bool actorHasStartLocation[10] = {};
 Vector3 actorStartLocation[10] = {};
+float actorDriverAgressiveness[] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f};
+
 int blipIdShortcuts[10] = {};
 
 enum SCENE_MODE {
@@ -110,7 +116,7 @@ void check_player_model()
 			model != GAMEPLAY::GET_HASH_KEY("player_one") &&
 			model != GAMEPLAY::GET_HASH_KEY("player_two"))
 		{
-			set_status_text("turning to normal");
+			//set_status_text("turning to normal");
 			WAIT(1000);
 
 			model = GAMEPLAY::GET_HASH_KEY("player_zero");
@@ -149,6 +155,15 @@ void store_current_waypoint_for_actor(Ped ped) {
 
 }
 
+int get_index_for_actor(Ped ped) {
+	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		if (actorShortcut[i] == ped) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 bool is_ped_actor_active(Ped ped) {
 	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 		if (actorShortcut[i] == ped) {
@@ -160,8 +175,13 @@ bool is_ped_actor_active(Ped ped) {
 			}
 		}
 	}
-	//if ped is not in a slot, he's always active
-	return true;
+	//if ped is not in a slot, return the status of the overall scene
+	if (sceneMode == SCENE_MODE_SETUP) {
+		return false;
+	}
+	else {
+		return true;
+	}
 
 }
 
@@ -176,7 +196,7 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord) {
 			//check if player is the driver
 			Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(playerVehicle, -1);
 			if (pedDriver != ped) {
-				set_status_text("Ped is not driver. Ignore waypoint");
+				//set_status_text("Ped is not driver. Ignore waypoint");
 			}
 			else {
 				AI::TASK_VEHICLE_DRIVE_TO_COORD(ped, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
@@ -252,11 +272,20 @@ void possess_ped(Ped swapToPed) {
 	if (ENTITY::DOES_ENTITY_EXIST(swapToPed) && ENTITY::IS_ENTITY_A_PED(swapToPed) && !ENTITY::IS_ENTITY_DEAD(swapToPed)) {
 		Ped swapFromPed = PLAYER::PLAYER_PED_ID();
 
-		if (UI::IS_WAYPOINT_ACTIVE()) {
+		if (swapFromPed == swapToPed) {
+			return;
+		}
+
+		//check if the ped where swapping from should continue towards a waypoint
+		int actor_index = get_index_for_actor(swapFromPed);
+		if (actor_index != -1 && actorHasWaypoint[actor_index]) {
+			move_to_waypoint(swapFromPed, actorWaypoint[actor_index]);
+		}else if (UI::IS_WAYPOINT_ACTIVE()) {
 			int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
 			Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 			move_to_waypoint(swapFromPed, waypointCoord);
 		}
+
 
 		PLAYER::CHANGE_PLAYER_PED(PLAYER::PLAYER_ID(), swapToPed, false, false);
 
@@ -299,7 +328,7 @@ void action_possess_ped() {
 
 		}
 		else {
-			set_status_text("Aim on a pedestrian and try again");
+			set_status_text("Aim at a pedestrian and try again");
 		}
 	}
 	else {//if not, take control of the closest one
@@ -397,19 +426,88 @@ void check_if_player_is_passenger_and_has_waypoint() {
 }
 
 
+void action_increase_aggressiveness(Ped ped, bool suppress_msgs) {
+	int actorIndex = get_index_for_actor(ped);
+	if (actorIndex != -1) {
+		float currentAggressiveness = actorDriverAgressiveness[actorIndex];
+		if (currentAggressiveness >= 1.0f) {
+			if (suppress_msgs == false) {
+				set_status_text("Already at max aggression");
+			}
+			return;
+		}
+
+		currentAggressiveness = currentAggressiveness + 0.1f;
+		if (currentAggressiveness > 1.0f)
+		{
+			currentAggressiveness = 1.0f;
+		}
+
+		PED::SET_DRIVER_AGGRESSIVENESS(ped, currentAggressiveness);
+		//let's increase ability as well, just for show
+		PED::SET_DRIVER_ABILITY(ped, currentAggressiveness);
+
+		actorDriverAgressiveness[actorIndex]= currentAggressiveness;
+		if (suppress_msgs==false) {
+			set_status_text("Increasing driver aggressiveness " + std::to_string(currentAggressiveness));
+		}
+	}
+	else {
+		set_status_text("Actor must be stored in a slot to increase aggressiveness");
+	}
+	nextWaitTicks = 200;
 
 
-
-
-bool possess_key_pressed()
-{
-	return IsKeyJustUp(VK_F9);
 }
 
-bool clone_key_pressed()
-{
-	return IsKeyJustUp(VK_F10);
+void action_decrease_aggressiveness(Ped ped, bool suppress_msgs) {
+	int actorIndex = get_index_for_actor(ped);
+	if (actorIndex != -1) {
+		float currentAggressiveness = actorDriverAgressiveness[actorIndex];
+
+		if (currentAggressiveness <= 0.0f) {
+			if (suppress_msgs == false) {
+				set_status_text("Already at min aggression");
+			}
+			return;
+		}
+
+
+		currentAggressiveness = currentAggressiveness - 0.1f;
+		if (currentAggressiveness < 0.0f)
+		{
+			currentAggressiveness = 0.0f;
+		}
+
+		PED::SET_DRIVER_AGGRESSIVENESS(ped, currentAggressiveness);
+		//let's increase ability as well, just for show
+		PED::SET_DRIVER_ABILITY(ped, currentAggressiveness);
+
+		actorDriverAgressiveness[actorIndex] = currentAggressiveness;
+		if (suppress_msgs == false) {
+			set_status_text("Decreasing driver aggressiveness to " + std::to_string(currentAggressiveness));
+		}
+	}
+	else {
+		set_status_text("Actor must be stored in a slot to increase aggressiveness");
+	}
+	nextWaitTicks = 200;
 }
+
+void action_increase_aggressiveness_for_all_actors() {
+	set_status_text("Increasing aggressiveness for all actors");
+	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		action_increase_aggressiveness(actorShortcut[i],true);
+	}
+}
+
+void action_decrease_aggressiveness_for_all_actors() {
+	set_status_text("Decreasing aggressiveness for all actors");
+	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		action_decrease_aggressiveness(actorShortcut[i],true);
+	}
+}
+
 
 bool swap_to_previous_possessed_key_pressed()
 {
@@ -558,6 +656,39 @@ void action_if_ped_execute_shortcut_key_pressed()
 	}
 }
 
+void action_set_same_waypoint_for_all_actors() {
+	if (UI::IS_WAYPOINT_ACTIVE()) {
+		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+
+		set_status_text("Waypoint set to all actors");
+
+		//add waypoint to all actors in slots
+		//But ignore ALT+0 as this a duplicate
+		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+			actorStatus[i] = sceneMode;
+
+			//if not actor in slot, continue
+			if (actorShortcut[i] == 0) {
+				continue;
+			}
+			actorWaypoint[i] = waypointCoord;
+			actorHasWaypoint[i] = true;
+
+			//act on the waypoint (will not do anything if SCENE_MODE_SETUP
+
+			//first if he's a driver
+			move_to_waypoint(actorShortcut[i], actorWaypoint[i]);
+			//second if he's a passenger
+			check_if_ped_is_passenger_and_has_waypoint(actorShortcut[i]);
+			WAIT(200);
+		}
+	}
+	else {
+		set_status_text("Set a waypoint in the map, before applying it to all actors");
+	}
+}
+
 void action_teleport_to_start_locations() {
 	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 		if (actorHasStartLocation[i]) {
@@ -580,7 +711,7 @@ void action_toggle_scene_mode() {
 	}
 	else {
 		sceneMode = SCENE_MODE_ACTIVE;
-		set_status_text("Scene is now active!");
+		set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
 		log_to_file("SCENE ACTIVE");
 	}
 
@@ -597,7 +728,7 @@ void action_toggle_scene_mode() {
 		}
 
 		if (actorStatus[i] == SCENE_MODE_ACTIVE) {
-			log_to_file("Actor " + std::to_string(i) + " Ped id:" + std::to_string(actorShortcut[i]) + " Has waypoint:"+ std::to_string(actorHasWaypoint[i])+  " Has start location:"+ std::to_string(actorHasStartLocation[i]));
+			//log_to_file("Actor " + std::to_string(i) + " Ped id:" + std::to_string(actorShortcut[i]) + " Has waypoint:"+ std::to_string(actorHasWaypoint[i])+  " Has start location:"+ std::to_string(actorHasStartLocation[i]));
 			
 			//store the current location of all actors, so that we can reset it
 			actorStartLocation[i] = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
@@ -620,6 +751,15 @@ void action_toggle_scene_mode() {
 }
 
 
+bool possess_key_pressed()
+{
+	return IsKeyJustUp(VK_F9);
+}
+
+bool clone_key_pressed()
+{
+	return IsKeyJustUp(VK_F10);
+}
 
 
 bool enter_nearest_vehicle_as_passenger_key_pressed() {
@@ -653,8 +793,8 @@ bool scene_mode_toggle_key_pressed(){
 }
 
 bool scene_teleport_to_start_locations_key_pressed() {
-	//ALT+SPACE
-	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_END)) {
+	//ALT+END
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_DELETE)) {
 		return true;
 	}
 	else {
@@ -662,6 +802,56 @@ bool scene_teleport_to_start_locations_key_pressed() {
 	}
 }
 
+bool set_same_waypoint_for_all_actors_key_pressed() {
+	//ALT+DELETE
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_INSERT)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool increase_aggressiveness_key_pressed() {
+	//ALT+DELETE
+	if (IsKeyDown(VK_ADD)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool increase_aggressiveness_for_all_actors_key_pressed() {
+	//ALT+DELETE
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_ADD)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+
+bool decrease_aggressiveness_key_pressed() {
+	//ALT+DELETE
+	if (IsKeyDown(VK_SUBTRACT)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool decrease_aggressiveness_for_all_actors_key_pressed() {
+	//ALT+DELETE
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_SUBTRACT)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 
 
@@ -678,9 +868,28 @@ void main()
 			action_teleport_to_start_locations();
 		}
 
+		if (set_same_waypoint_for_all_actors_key_pressed()) {
+			action_set_same_waypoint_for_all_actors();
+		}
+
 		if (possess_key_pressed()) {
 			action_possess_ped();
+		}
 
+		if (increase_aggressiveness_key_pressed()) {
+			action_increase_aggressiveness(PLAYER::PLAYER_PED_ID(), false);
+		}
+
+		if (decrease_aggressiveness_key_pressed()) {
+			action_decrease_aggressiveness(PLAYER::PLAYER_PED_ID(),false);
+		}
+
+		if (increase_aggressiveness_for_all_actors_key_pressed()) {
+			action_increase_aggressiveness_for_all_actors();
+		}
+
+		if (decrease_aggressiveness_for_all_actors_key_pressed()) {
+			action_decrease_aggressiveness_for_all_actors();
 		}
 
 		if (clone_key_pressed()) {
@@ -711,6 +920,8 @@ void main()
 
 void ScriptMain()
 {
+	set_status_text("Scene director 0.5a by elsewhat");
+	set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
 	//log_to_file("Screen Director initialized");
 	//log_to_file("Value of test property from config file: " + std::to_string(test_property));
 	main();
