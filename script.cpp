@@ -8,8 +8,28 @@
 #include <fstream>
 
 
-Ped pedShortcuts[10] = {};
+Ped actorShortcut[10] = {};
+bool actorHasWaypoint[10] = {};
+Vector3 actorWaypoint[10] = {};
+bool actorHasStartLocation[10] = {};
+Vector3 actorStartLocation[10] = {};
 int blipIdShortcuts[10] = {};
+
+enum SCENE_MODE {
+	SCENE_MODE_ACTIVE = 1,
+	SCENE_MODE_SETUP = 0
+};
+
+SCENE_MODE sceneMode = SCENE_MODE_ACTIVE;
+
+//Represents the scene status of each actor
+//1=Act on instructions immediately
+//0=No action (scene setup mode)
+//x=Not used (yet)
+SCENE_MODE actorStatus[10] = { SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE };
+
+
+//used in passenger waypoint
 int lastWaypointID = -1;
 
 std::string statusText;
@@ -108,39 +128,101 @@ void check_player_model()
 		}
 }
 
-void move_to_waypoint(Ped ped) {
-	//code inspired by LUA plugin https://www.gta5-mods.com/scripts/realistic-vehicle-controls
+void store_current_waypoint_for_actor(Ped ped) {
 
-	int waypointID;
-	Vector3 waypointCoord;
 	if (UI::IS_WAYPOINT_ACTIVE()) {
-		waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
-		waypointCoord = UI::GET_BLIP_COORDS(waypointID);
-	}
-	else {
-		set_status_text("No waypoint active.");
-		return;
-	}
-
-	if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
-		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
-
-		//check if player is the driver
-		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(playerVehicle, -1);
-		if (pedDriver != ped) {
-			set_status_text("Ped is not driver. Ignore waypoint");
+		log_to_file("store_current_waypoint_for_actor: Looking for ped with id " + std::to_string(ped));
+		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+		//ignore the first index
+		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+			//log_to_file("store_current_waypoint_for_actor: Ped id:" + std::to_string(actorShortcut[i]) );
+			if (actorShortcut[i] == ped) {
+				log_to_file("store_current_waypoint_for_actor:Found match");
+				actorWaypoint[i] = waypointCoord;
+				actorHasWaypoint[i] = true;
+				return;
+			}
 		}
-		else {
-			AI::TASK_VEHICLE_DRIVE_TO_COORD(ped, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
-			set_status_text("Driving to waypoint");
+		log_to_file("store_current_waypoint_for_actor: Found no match");
+	}
+
+}
+
+bool is_ped_actor_active(Ped ped) {
+	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		if (actorShortcut[i] == ped) {
+			if (actorStatus[i] == SCENE_MODE_SETUP) {
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
-
 	}
-	else if (PED::IS_PED_ON_FOOT(ped)) {
-		AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, 1.0f, -1, 27.0f, 0.5f);
-		set_status_text("Walking to waypoint");
+	//if ped is not in a slot, he's always active
+	return true;
+
+}
+
+void move_to_waypoint(Ped ped, Vector3 waypointCoord) {
+	//code inspired by LUA plugin https://www.gta5-mods.com/scripts/realistic-vehicle-controls
+	if (is_ped_actor_active(ped)) {
+
+
+		if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
+			Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
+
+			//check if player is the driver
+			Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(playerVehicle, -1);
+			if (pedDriver != ped) {
+				set_status_text("Ped is not driver. Ignore waypoint");
+			}
+			else {
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(ped, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
+				set_status_text("Driving to waypoint");
+			}
+
+		}
+		else if (PED::IS_PED_ON_FOOT(ped)) {
+			AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, 1.0f, -1, 27.0f, 0.5f);
+			set_status_text("Walking to waypoint");
+		}
 	}
 
+}
+
+void teleport_entity_to_location(Entity entityToTeleport, Vector3 location) {
+	//From the native trainer. Could it be replaced with PATHFIND::GET_SAFE_COORD_FOR_PED ?
+
+	// load needed map region and check height levels for ground existence
+	bool groundFound = false;
+	static float groundCheckHeight[] = {
+		100.0, 150.0, 50.0, 0.0, 200.0, 250.0, 300.0, 350.0, 400.0,
+		450.0, 500.0, 550.0, 600.0, 650.0, 700.0, 750.0, 800.0
+	};
+	for (int i = 0; i < sizeof(groundCheckHeight) / sizeof(float); i++)
+	{
+		ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, location.x, location.y, groundCheckHeight[i], 0, 0, 1);
+		WAIT(100);
+		if (GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(location.x, location.y, groundCheckHeight[i], &location.z))
+		{
+			groundFound = true;
+			location.z += 3.0;
+			break;
+		}
+	}
+	// if ground not found then set Z in air and give player a parachute
+	if (!groundFound)
+	{
+		location.z = 1000.0;
+		WEAPON::GIVE_DELAYED_WEAPON_TO_PED(PLAYER::PLAYER_PED_ID(), 0xFBAB5776, 1, 0);
+	}
+
+	ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, location.x, location.y, location.z, 0, 0, 1);
+	set_status_text("Teleporting to waypoint");
+
+	nextWaitTicks = 500;
 }
 
 void teleport_player_to_waypoint() {
@@ -154,48 +236,26 @@ void teleport_player_to_waypoint() {
 	if (UI::IS_WAYPOINT_ACTIVE()) {
 		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
 		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
-
-		//From the native trainer. Could it be replaced with PATHFIND::GET_SAFE_COORD_FOR_PED ?
-
-		// load needed map region and check height levels for ground existence
-		bool groundFound = false;
-		static float groundCheckHeight[] = {
-			100.0, 150.0, 50.0, 0.0, 200.0, 250.0, 300.0, 350.0, 400.0,
-			450.0, 500.0, 550.0, 600.0, 650.0, 700.0, 750.0, 800.0
-		};
-		for (int i = 0; i < sizeof(groundCheckHeight) / sizeof(float); i++)
-		{
-			ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, waypointCoord.x, waypointCoord.y, groundCheckHeight[i], 0, 0, 1);
-			WAIT(100);
-			if (GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(waypointCoord.x, waypointCoord.y, groundCheckHeight[i], &waypointCoord.z))
-			{
-				groundFound = true;
-				waypointCoord.z += 3.0;
-				break;
-			}
-		}
-		// if ground not found then set Z in air and give player a parachute
-		if (!groundFound)
-		{
-			waypointCoord.z = 1000.0;
-			WEAPON::GIVE_DELAYED_WEAPON_TO_PED(PLAYER::PLAYER_PED_ID(), 0xFBAB5776, 1, 0);
-		}
-
-		ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, waypointCoord.x, waypointCoord.y, waypointCoord.z, 0, 0, 1);
-		set_status_text("Teleporting to waypoint");
+			
+		teleport_entity_to_location(entityToTeleport,waypointCoord);
 	}
 	else {
 		set_status_text("Set waypoint before teleporting");
 	}
 
+	nextWaitTicks = 500;
 }
+
+
 
 void possess_ped(Ped swapToPed) {
 	if (ENTITY::DOES_ENTITY_EXIST(swapToPed) && ENTITY::IS_ENTITY_A_PED(swapToPed) && !ENTITY::IS_ENTITY_DEAD(swapToPed)) {
 		Ped swapFromPed = PLAYER::PLAYER_PED_ID();
 
 		if (UI::IS_WAYPOINT_ACTIVE()) {
-			move_to_waypoint(swapFromPed);
+			int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+			Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+			move_to_waypoint(swapFromPed, waypointCoord);
 		}
 
 		PLAYER::CHANGE_PLAYER_PED(PLAYER::PLAYER_ID(), swapToPed, false, false);
@@ -203,7 +263,7 @@ void possess_ped(Ped swapToPed) {
 		//stop any animations or scenarios being run on the ped
 		AI::CLEAR_PED_TASKS(swapToPed);
 
-		pedShortcuts[0] = swapFromPed;
+		actorShortcut[0] = swapFromPed;
 	}
 	else {
 		set_status_text("Could not possess ped");
@@ -276,7 +336,7 @@ void action_clone_myself() {
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 
 	Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
-	pedShortcuts[0] = clonedPed;
+	actorShortcut[0] = clonedPed;
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0))
 	{
@@ -299,33 +359,41 @@ void enter_nearest_vehicle_as_passenger() {
 	nextWaitTicks = 200;
 }
 
-void check_if_player_is_passenger_and_has_waypoint() {
-	Ped playerPed = PLAYER::PLAYER_PED_ID();
-	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
-		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
+void check_if_ped_is_passenger_and_has_waypoint(Ped ped) {
 
-		//check if player is a passenger
-		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(playerVehicle, -1);
+	if (is_ped_actor_active(ped)) {
 
-		if (pedDriver != playerPed) {
-			//player is a passenger, check if player has a waypoint
-			if (UI::IS_WAYPOINT_ACTIVE()) {
-				int waypointID;
-				Vector3 waypointCoord;
+		if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
+			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
 
-				waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
-				if (waypointID != lastWaypointID) {
-					waypointCoord = UI::GET_BLIP_COORDS(waypointID);
-					lastWaypointID = waypointID;
+			//check if player is a passenger
+			Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
 
-					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
+			if (pedDriver != ped) {
+				//player is a passenger, check if player has a waypoint
+				if (UI::IS_WAYPOINT_ACTIVE()) {
+					int waypointID;
+					Vector3 waypointCoord;
 
-					set_status_text("Driving to passengers waypoint");
+					waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+					if (waypointID != lastWaypointID) {
+						waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+						lastWaypointID = waypointID;
+
+						AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+
+						set_status_text("Driving to passengers waypoint");
+					}
 				}
 			}
 		}
 	}
 
+}
+
+void check_if_player_is_passenger_and_has_waypoint() {
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	check_if_ped_is_passenger_and_has_waypoint(playerPed);
 }
 
 
@@ -387,7 +455,7 @@ void action_if_ped_assign_shortcut_key_pressed()
 		if (pedShortcutsIndex != -1) {
 			nextWaitTicks = 250;
 			//check if there exist an actor for this index
-			if (pedShortcuts[pedShortcutsIndex] != 0) {
+			if (actorShortcut[pedShortcutsIndex] != 0) {
 				if (forceSlotIndexOverWrite != pedShortcutsIndex) {
 					set_status_text("Actor already exist in slot. ALT+" + std::to_string(pedShortcutsIndex) + " once more to overwrite");
 					forceSlotIndexOverWrite = pedShortcutsIndex;
@@ -404,12 +472,21 @@ void action_if_ped_assign_shortcut_key_pressed()
 			}
 
 			Ped playerPed = PLAYER::PLAYER_PED_ID();
-			pedShortcuts[pedShortcutsIndex] = playerPed;
+			actorShortcut[pedShortcutsIndex] = playerPed;
 
 			int blipId = UI::ADD_BLIP_FOR_ENTITY(playerPed);
 			blipIdShortcuts[pedShortcutsIndex] = blipId;
 			//BLIP Sprite for nr1=17, nr9=25
 			UI::SET_BLIP_SPRITE(blipId, 16 + pedShortcutsIndex);
+
+			//Store current waypoint
+			if (UI::IS_WAYPOINT_ACTIVE()) {
+				int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+				Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+				actorWaypoint[pedShortcutsIndex] = waypointCoord;
+				actorHasWaypoint[pedShortcutsIndex] = true;
+			}
+
 
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
 			
@@ -462,21 +539,87 @@ void action_if_ped_execute_shortcut_key_pressed()
 			//TODO: Check if it exist
 			nextWaitTicks = 300;
 
-			if (pedShortcuts[pedShortcutsIndex] == 0) {
+			if (actorShortcut[pedShortcutsIndex] == 0) {
 				set_status_text("No stored actor. Store with CTRL+" + std::to_string(pedShortcutsIndex));
 			}
 			else {
-				Ped pedInSlot = pedShortcuts[pedShortcutsIndex];
+				Ped pedInSlot = actorShortcut[pedShortcutsIndex];
 				if (ENTITY::IS_ENTITY_DEAD(pedInSlot)) {
 					set_status_text("Thou shalt not swap to a dead actor");
 				}
 				else {
-					possess_ped(pedShortcuts[pedShortcutsIndex]);
+					//first store the waypoint for the current actor
+					store_current_waypoint_for_actor(PLAYER::PLAYER_PED_ID());
+
+					possess_ped(actorShortcut[pedShortcutsIndex]);
 				}
 			}
 		}
 	}
 }
+
+void action_teleport_to_start_locations() {
+	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		if (actorHasStartLocation[i]) {
+			Ped entityToTeleport = actorShortcut[i];
+			if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
+				entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
+			}
+
+			teleport_entity_to_location(entityToTeleport, actorStartLocation[i]);
+			WAIT(300);
+		}
+	}
+}
+
+void action_toggle_scene_mode() {
+	if (sceneMode == SCENE_MODE_ACTIVE) {
+		sceneMode = SCENE_MODE_SETUP; 
+		set_status_text("Scene is now in setup mode. Press ALT+SPACE to active all actors");
+		log_to_file("SCENE SETUP");
+	}
+	else {
+		sceneMode = SCENE_MODE_ACTIVE;
+		set_status_text("Scene is now active!");
+		log_to_file("SCENE ACTIVE");
+	}
+
+
+
+	//trigger the action for all actors in slots
+	//But ignore ALT+0 as this a duplicate
+	for (int i = 1; i < sizeof(actorShortcut) /sizeof(Ped); i++) {
+		actorStatus[i] = sceneMode;
+
+		//if not actor in slot, continue
+		if (actorShortcut[i] == 0) {
+			continue;
+		}
+
+		if (actorStatus[i] == SCENE_MODE_ACTIVE) {
+			log_to_file("Actor " + std::to_string(i) + " Ped id:" + std::to_string(actorShortcut[i]) + " Has waypoint:"+ std::to_string(actorHasWaypoint[i])+  " Has start location:"+ std::to_string(actorHasStartLocation[i]));
+			
+			//store the current location of all actors, so that we can reset it
+			actorStartLocation[i] = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
+			actorHasStartLocation[i] = true;
+
+			//move the actor if he has a waypoint
+			if (actorHasWaypoint[i]) {
+				//first if he's a driver
+				move_to_waypoint(actorShortcut[i], actorWaypoint[i]);
+				//second if he's a passenger
+				check_if_ped_is_passenger_and_has_waypoint(actorShortcut[i]);
+				WAIT(200);
+			}
+		}
+		else if (actorStatus[i] == SCENE_MODE_SETUP) {
+			AI::CLEAR_PED_TASKS(actorShortcut[i]);
+		}
+	}
+	nextWaitTicks = 500;
+}
+
+
 
 
 bool enter_nearest_vehicle_as_passenger_key_pressed() {
@@ -499,6 +642,26 @@ bool teleport_player_key_pressed() {
 	}
 }
 
+bool scene_mode_toggle_key_pressed(){
+	//ALT+SPACE
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_SPACE)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool scene_teleport_to_start_locations_key_pressed() {
+	//ALT+SPACE
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_END)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 
 
 
@@ -507,19 +670,25 @@ void main()
 {
 	while (true)
 	{
+		if (scene_mode_toggle_key_pressed()) {
+			action_toggle_scene_mode();
+		}
+
+		if (scene_teleport_to_start_locations_key_pressed()) {
+			action_teleport_to_start_locations();
+		}
+
 		if (possess_key_pressed()) {
 			action_possess_ped();
-			//WAIT(300);
+
 		}
 
 		if (clone_key_pressed()) {
 			action_clone_myself();
-			//WAIT(300);
 		}
 
 		if (enter_nearest_vehicle_as_passenger_key_pressed()) {
 			enter_nearest_vehicle_as_passenger();
-			//WAIT(300);
 		}
 
 		if (teleport_player_key_pressed()) {
