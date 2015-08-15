@@ -9,6 +9,7 @@
 
 
 Ped pedShortcuts[10] = {};
+int blipIdShortcuts[10] = {};
 int lastWaypointID = -1;
 
 std::string statusText;
@@ -394,7 +395,9 @@ void action_if_ped_assign_shortcut_key_pressed()
 				}
 				else {
 					forceSlotIndexOverWrite = -1; 
-					//TODO: Remove old blip
+					//Remove old blip
+					int blipIdsToRemove[1] = { blipIdShortcuts[pedShortcutsIndex] };
+					UI::REMOVE_BLIP(blipIdsToRemove);
 					//and continue storing the actor
 				}
 
@@ -404,6 +407,7 @@ void action_if_ped_assign_shortcut_key_pressed()
 			pedShortcuts[pedShortcutsIndex] = playerPed;
 
 			int blipId = UI::ADD_BLIP_FOR_ENTITY(playerPed);
+			blipIdShortcuts[pedShortcutsIndex] = blipId;
 			//BLIP Sprite for nr1=17, nr9=25
 			UI::SET_BLIP_SPRITE(blipId, 16 + pedShortcutsIndex);
 
@@ -465,7 +469,6 @@ void action_if_ped_execute_shortcut_key_pressed()
 				Ped pedInSlot = pedShortcuts[pedShortcutsIndex];
 				if (ENTITY::IS_ENTITY_DEAD(pedInSlot)) {
 					set_status_text("Thou shalt not swap to a dead actor");
-
 				}
 				else {
 					possess_ped(pedShortcuts[pedShortcutsIndex]);
