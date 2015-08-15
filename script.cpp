@@ -21,6 +21,8 @@ float actorDriverAgressiveness[] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8
 
 int blipIdShortcuts[10] = {};
 
+bool is_autopilot_engaged_for_player = false;
+
 enum SCENE_MODE {
 	SCENE_MODE_ACTIVE = 1,
 	SCENE_MODE_SETUP = 0
@@ -199,6 +201,12 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord) {
 				//set_status_text("Ped is not driver. Ignore waypoint");
 			}
 			else {
+				int actorIndex = get_index_for_actor(pedDriver);
+				if (actorIndex != -1) {
+					actorHasWaypoint[actorIndex] = true;
+					actorWaypoint[actorIndex] = waypointCoord;
+				}
+
 				AI::TASK_VEHICLE_DRIVE_TO_COORD(ped, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
 				set_status_text("Driving to waypoint");
 			}
@@ -240,6 +248,18 @@ void teleport_entity_to_location(Entity entityToTeleport, Vector3 location) {
 	}
 
 	ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, location.x, location.y, location.z, 0, 0, 1);
+	
+	//after a teleport, actions some time seems to be stuck
+	if(ENTITY::IS_ENTITY_A_PED(entityToTeleport)) {
+		AI::CLEAR_PED_TASKS(entityToTeleport);
+	}
+	else if(ENTITY::IS_ENTITY_A_VEHICLE(entityToTeleport)){
+		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(entityToTeleport, -1);
+		if (pedDriver >=1) {
+			AI::CLEAR_PED_TASKS(pedDriver);
+		}
+	}
+
 	set_status_text("Teleporting to waypoint");
 
 	nextWaitTicks = 500;
@@ -273,6 +293,12 @@ void possess_ped(Ped swapToPed) {
 		Ped swapFromPed = PLAYER::PLAYER_PED_ID();
 
 		if (swapFromPed == swapToPed) {
+			if (is_autopilot_engaged_for_player == true) {
+				AI::CLEAR_PED_TASKS(swapFromPed);
+				is_autopilot_engaged_for_player = false;
+				set_status_text("Autopilot disengaged. ALT+A to start it again");
+				nextWaitTicks = 200;
+			}
 			return;
 		}
 
@@ -291,6 +317,7 @@ void possess_ped(Ped swapToPed) {
 
 		//stop any animations or scenarios being run on the ped
 		AI::CLEAR_PED_TASKS(swapToPed);
+		is_autopilot_engaged_for_player = false;
 
 		actorShortcut[0] = swapFromPed;
 	}
@@ -409,7 +436,22 @@ void check_if_ped_is_passenger_and_has_waypoint(Ped ped) {
 						waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 						lastWaypointID = waypointID;
 
-						AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+
+
+						//initial: Quite aggressive, but stops for redlight (I think)
+						//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+						//slow and follows rules
+						//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 15.0, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786599, 4.0, -1.0);
+
+						//aggresive and drives on redlights
+						AI::TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, VEHICLE::_GET_VEHICLE_MAX_SPEED(pedVehicle), 786469, 50.0);
+
+						//assign the waypoint to the drivers as well
+						int actorIndex = get_index_for_actor(pedDriver);
+						if (actorIndex != -1) {
+							actorHasWaypoint[actorIndex] = true;
+							actorWaypoint[actorIndex] = waypointCoord;
+						}
 
 						set_status_text("Driving to passengers waypoint");
 					}
@@ -656,6 +698,32 @@ void action_if_ped_execute_shortcut_key_pressed()
 	}
 }
 
+void action_autopilot_for_player() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	//update the waypoint if one is set currently
+	if (actorIndex != -1 && UI::IS_WAYPOINT_ACTIVE()) {
+		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+		actorHasWaypoint[actorIndex] = true;
+		actorWaypoint[actorIndex] = waypointCoord;
+	}
+
+	if (actorIndex != -1 && actorHasWaypoint[actorIndex]) {
+		if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[actorIndex], 0)) {
+			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[actorIndex]);
+
+			//check if player is a passenger
+			Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
+			if (pedDriver == actorShortcut[actorIndex]) {
+				move_to_waypoint(actorShortcut[actorIndex], actorWaypoint[actorIndex]);
+				set_status_text("Autopilot engaged for player. ALT+" + std::to_string(actorIndex) + " to turn it off");
+				is_autopilot_engaged_for_player = true;
+			}
+		}
+	}
+}
+
+
 void action_set_same_waypoint_for_all_actors() {
 	if (UI::IS_WAYPOINT_ACTIVE()) {
 		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
@@ -813,7 +881,7 @@ bool set_same_waypoint_for_all_actors_key_pressed() {
 }
 
 bool increase_aggressiveness_key_pressed() {
-	//ALT+DELETE
+	//ALT+ NUMPAD+
 	if (IsKeyDown(VK_ADD)) {
 		return true;
 	}
@@ -823,7 +891,7 @@ bool increase_aggressiveness_key_pressed() {
 }
 
 bool increase_aggressiveness_for_all_actors_key_pressed() {
-	//ALT+DELETE
+	//ALT+ NUMPAD+
 	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_ADD)) {
 		return true;
 	}
@@ -834,7 +902,7 @@ bool increase_aggressiveness_for_all_actors_key_pressed() {
 
 
 bool decrease_aggressiveness_key_pressed() {
-	//ALT+DELETE
+	//ALT+ NUMPAD-
 	if (IsKeyDown(VK_SUBTRACT)) {
 		return true;
 	}
@@ -844,8 +912,18 @@ bool decrease_aggressiveness_key_pressed() {
 }
 
 bool decrease_aggressiveness_for_all_actors_key_pressed() {
-	//ALT+DELETE
+	//ALT+ NUMPAD-
 	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_SUBTRACT)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool autopilot_for_player_key_pressed() {
+	//ALT+ NUMPAD-
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x41)) {
 		return true;
 	}
 	else {
@@ -876,6 +954,11 @@ void main()
 			action_possess_ped();
 		}
 
+		if (autopilot_for_player_key_pressed()) {
+			action_autopilot_for_player();
+		}
+
+		/*
 		if (increase_aggressiveness_key_pressed()) {
 			action_increase_aggressiveness(PLAYER::PLAYER_PED_ID(), false);
 		}
@@ -890,7 +973,7 @@ void main()
 
 		if (decrease_aggressiveness_for_all_actors_key_pressed()) {
 			action_decrease_aggressiveness_for_all_actors();
-		}
+		}*/
 
 		if (clone_key_pressed()) {
 			action_clone_myself();
