@@ -22,6 +22,10 @@ float actorDriverAgressiveness[] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8
 int blipIdShortcuts[10] = {};
 
 bool is_autopilot_engaged_for_player = false;
+bool is_chase_player_engaged = false;
+int chase_player_index = -1;
+bool is_escort_player_engaged = false;
+int escort_player_index = -1;
 
 enum SCENE_MODE {
 	SCENE_MODE_ACTIVE = 1,
@@ -165,6 +169,16 @@ int get_index_for_actor(Ped ped) {
 	}
 	return -1;
 }
+
+int get_next_free_slot() {
+	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		if (actorShortcut[i] == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 
 bool is_ped_actor_active(Ped ped) {
 	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
@@ -394,7 +408,7 @@ void action_possess_ped() {
 
 
 
-void action_clone_myself() {
+void action_clone_player() {
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 
 	Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
@@ -409,6 +423,66 @@ void action_clone_myself() {
 	set_status_text("Cloned myself. Possess clone with ALT+0");
 	nextWaitTicks = 500;
 }
+
+void action_clone_player_with_vehicle() {
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+
+	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0))
+	{
+		
+		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
+		//location of the clone vehicle
+
+		
+		Vector3 clonedVehicleCoords;
+		if (PED::IS_PED_IN_ANY_HELI(playerPed) || PED::IS_PED_IN_ANY_PLANE(playerPed)) {
+			clonedVehicleCoords  = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(playerPed, 0.0, 30.0, 25.0);
+		}
+		else {
+			clonedVehicleCoords = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(playerPed, 0.0, 5.0, 0.0);
+		}
+		
+
+		DWORD model = ENTITY::GET_ENTITY_MODEL(playerVehicle);
+		//let's make sure it is loaded (should be already)
+		STREAMING::REQUEST_MODEL(model);
+		while (!STREAMING::HAS_MODEL_LOADED(model)) WAIT(0);
+
+		//clone the vehicle (doesn't include mods etc)
+		Vehicle clonedVehicle = VEHICLE::CREATE_VEHICLE(model, clonedVehicleCoords.x, clonedVehicleCoords.y, clonedVehicleCoords.z, 0.0, 1, 1);
+		VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(clonedVehicle);
+
+		ENTITY::SET_ENTITY_HEADING(clonedVehicle, ENTITY::GET_ENTITY_HEADING(playerPed));
+
+		//clone the player and assign into car
+		Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
+		PED::SET_PED_INTO_VEHICLE(clonedPed, clonedVehicle, -1);
+
+		WAIT(200);
+
+		//assign to a slot if one exists
+		int actorSlotIndex = get_next_free_slot();
+		if (actorSlotIndex != -1) {
+			actorShortcut[actorSlotIndex] = clonedPed;
+
+			int blipId = UI::ADD_BLIP_FOR_ENTITY(clonedPed);
+			blipIdShortcuts[actorSlotIndex] = blipId;
+			
+			//BLIP Sprite for nr1=17, nr9=25
+			UI::SET_BLIP_SPRITE(blipId, 16 + actorSlotIndex);
+
+			set_status_text("Cloned player and vehicle into slot ALT+"+std::to_string(actorSlotIndex));
+		}
+		else {
+			set_status_text("Cloned player and vehicle (but found no free actor slot)");
+		}
+	}
+	else {
+		set_status_text("ALT+F10 clone requires that you're in a vehicle");
+	}
+
+}
+
 
 void enter_nearest_vehicle_as_passenger() {
 	set_status_text("Entering as passenger");
@@ -707,12 +781,32 @@ void action_if_ped_execute_shortcut_key_pressed()
 void action_vehicle_chase() {
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+
+		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
+
 		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-				AI::TASK_VEHICLE_CHASE(actorShortcut[i], playerPed);
+
+				Vehicle actorVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+				//check type of vehicles
+				if (PED::IS_PED_IN_ANY_HELI(playerPed) && PED::IS_PED_IN_ANY_HELI(actorShortcut[i])) {
+					log_to_file("TASK_HELI_CHASE - Actor " + std::to_string(actorShortcut[i]));
+					AI::TASK_HELI_CHASE(actorShortcut[i], playerVehicle, 0.0, 0.0, -5.0);
+				}
+				else if (PED::IS_PED_IN_ANY_PLANE(playerPed) && PED::IS_PED_IN_ANY_PLANE(actorShortcut[i])) {
+					log_to_file("TASK_PLANE_CHASE - Actor " + std::to_string(actorShortcut[i]));
+					AI::TASK_PLANE_CHASE(actorShortcut[i], playerVehicle,0.0, -20.0, 20.0);
+				}
+				else {
+					log_to_file("TASK_VEHICLE_CHASE - Actor " + std::to_string(actorShortcut[i]));
+					AI::TASK_VEHICLE_CHASE(actorShortcut[i], playerPed);
+				}
 			}
 		}
 		set_status_text("Vehicle chase has started");
+		is_chase_player_engaged = true;
+		chase_player_index = get_index_for_actor(playerPed);
+
 		nextWaitTicks = 300;
 	}
 	else {
@@ -747,6 +841,10 @@ void action_vehicle_escort() {
 				
 			}
 		}
+
+		is_escort_player_engaged = true;
+		escort_player_index = get_index_for_actor(playerPed);
+
 		set_status_text("Vehicle escort has started");
 		nextWaitTicks = 300;
 	}
@@ -885,6 +983,17 @@ bool clone_key_pressed()
 {
 	return IsKeyJustUp(VK_F10);
 }
+
+bool clone_player_with_vehicle_key_pressed()
+{
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_F10)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 
 
 bool enter_nearest_vehicle_as_passenger_key_pressed() {
@@ -1059,9 +1168,14 @@ void main()
 			action_decrease_aggressiveness_for_all_actors();
 		}*/
 
-		if (clone_key_pressed()) {
-			action_clone_myself();
+
+
+		if (clone_player_with_vehicle_key_pressed()) {
+			action_clone_player_with_vehicle();
+		}else if (clone_key_pressed()) {
+			action_clone_player();
 		}
+
 
 		if (enter_nearest_vehicle_as_passenger_key_pressed()) {
 			enter_nearest_vehicle_as_passenger();
