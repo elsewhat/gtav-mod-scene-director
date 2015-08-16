@@ -207,7 +207,13 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord) {
 					actorWaypoint[actorIndex] = waypointCoord;
 				}
 
-				AI::TASK_VEHICLE_DRIVE_TO_COORD(ped, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(playerVehicle), 1, 5.0, -1);
+				//initial: Quite aggressive, but stops for redlight (I think)
+				//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 100, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+				//slow and follows rules
+				//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, 15.0, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786599, 4.0, -1.0);
+
+				//aggresive and drives on redlights
+				AI::TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(pedDriver, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, VEHICLE::_GET_VEHICLE_MAX_SPEED(playerVehicle), 786469, 50.0);
 				set_status_text("Driving to waypoint");
 			}
 
@@ -698,6 +704,57 @@ void action_if_ped_execute_shortcut_key_pressed()
 	}
 }
 
+void action_vehicle_chase() {
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+				AI::TASK_VEHICLE_CHASE(actorShortcut[i], playerPed);
+			}
+		}
+		set_status_text("Vehicle chase has started");
+		nextWaitTicks = 300;
+	}
+	else {
+		set_status_text("You need a vehicle in order to start a vehicle chase");
+		nextWaitTicks = 200;
+	}
+}
+
+void action_vehicle_escort() {
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		Vehicle playerVehicle =  PED::GET_VEHICLE_PED_IS_USING(playerPed);
+		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+				if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
+
+					Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+
+					//check if player is a passenger
+					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
+
+					if (pedDriver != playerPed) {
+						//AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, VEHICLE::_GET_VEHICLE_MAX_SPEED(pedVehicle), 786469, 10.0, -1, 10.0);
+						
+						//works
+						//AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 13.0, 786603, 8.0, 20, 5.0);
+
+						AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 45.0, 786469, 8.0, 20, 5.0);
+
+					}
+				}
+				
+			}
+		}
+		set_status_text("Vehicle escort has started");
+		nextWaitTicks = 300;
+	}
+	else {
+		set_status_text("You need a vehicle in order to start a vehicle escort");
+	}
+}
+
 void action_autopilot_for_player() {
 	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
 	//update the waypoint if one is set currently
@@ -931,6 +988,25 @@ bool autopilot_for_player_key_pressed() {
 	}
 }
 
+bool vehicle_chase_key_pressed() {
+	//ALT+ NUMPAD-
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_PRIOR)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool vehicle_escort_key_pressed() {
+	//ALT+ PageDown
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_NEXT) ){
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 
 
@@ -956,6 +1032,14 @@ void main()
 
 		if (autopilot_for_player_key_pressed()) {
 			action_autopilot_for_player();
+		}
+
+		if (vehicle_chase_key_pressed()) {
+			action_vehicle_chase();
+		}
+
+		if (vehicle_escort_key_pressed()) {
+			action_vehicle_escort();
 		}
 
 		/*
