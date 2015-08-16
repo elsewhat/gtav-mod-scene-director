@@ -333,6 +333,7 @@ void teleport_entity_to_location(Entity entityToTeleport, Vector3 location) {
 		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(entityToTeleport, -1);
 		if (pedDriver >= 1) {
 			AI::CLEAR_PED_TASKS(pedDriver);
+			AI::TASK_PAUSE(pedDriver, 500);
 		}
 	}
 
@@ -537,6 +538,10 @@ void action_clone_player_with_vehicle() {
 
 		//clone the player and assign into car
 		Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
+		//try to prevent fleeing during teleport
+		AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(clonedPed, true);
+		PED::SET_PED_FLEE_ATTRIBUTES(clonedPed, 0, 0);
+
 		PED::SET_PED_INTO_VEHICLE(clonedPed, clonedVehicle, -1);
 
 		WAIT(200);
@@ -545,6 +550,7 @@ void action_clone_player_with_vehicle() {
 		int actorSlotIndex = get_next_free_slot();
 		if (actorSlotIndex != -1) {
 			actorShortcut[actorSlotIndex] = clonedPed;
+			ensure_max_driving_ability(clonedPed);
 
 			int blipId = UI::ADD_BLIP_FOR_ENTITY(clonedPed);
 			blipIdShortcuts[actorSlotIndex] = blipId;
@@ -557,6 +563,11 @@ void action_clone_player_with_vehicle() {
 		else {
 			set_status_text("Cloned player and vehicle (but found no free actor slot)");
 		}
+
+		WAIT(500);
+		AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(clonedPed, false);
+
+		nextWaitTicks = 200;
 	}
 	else {
 		set_status_text("ALT+F10 clone requires that you're in a vehicle");
@@ -622,6 +633,11 @@ void check_if_player_is_passenger_and_has_waypoint() {
 	check_if_ped_is_passenger_and_has_waypoint(playerPed);
 }
 
+
+void ensure_max_driving_ability(Ped ped) {
+	PED::SET_DRIVER_ABILITY(ped, 1.0);
+	PED::SET_DRIVER_AGGRESSIVENESS(ped, 1.0);
+}
 
 void action_increase_aggressiveness(Ped ped, bool suppress_msgs) {
 	log_to_file("action_increase_aggressiveness");
@@ -792,6 +808,8 @@ void action_if_ped_assign_shortcut_key_pressed()
 			}
 
 			ensure_ped_and_vehicle_is_not_deleted(playerPed);
+
+			ensure_max_driving_ability(playerPed);
 
 			log_to_file("action_if_ped_assign_shortcut_key_pressed: Stored current ped in slot " + std::to_string(pedShortcutsIndex));
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
@@ -1070,11 +1088,22 @@ void action_teleport_to_start_locations() {
 			}
 
 			if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
+				//pause the actor. seems to be stuck some times
+				AI::CLEAR_PED_TASKS(actorShortcut[i]);
+				AI::TASK_PAUSE(actorShortcut[i], 500);
 				entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
 			}
 
+			//try to prevent fleeing during teleport
+			AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorShortcut[i], true);
+			PED::SET_PED_FLEE_ATTRIBUTES(actorShortcut[i], 0, 0);
+
+			//teleport and wait
 			teleport_entity_to_location(entityToTeleport, actorStartLocation[i]);
 			WAIT(300);
+			//set back this block
+			AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorShortcut[i], false);
+			
 		}
 	}
 }
@@ -1082,7 +1111,7 @@ void action_teleport_to_start_locations() {
 void action_toggle_scene_mode() {
 	if (sceneMode == SCENE_MODE_ACTIVE) {
 		sceneMode = SCENE_MODE_SETUP;
-		set_status_text("Scene is now in setup mode. Press ALT+SPACE to active all actors");
+		set_status_text("Scene is now in setup mode. Press ALT+SPACE to active all actors. Press ALT+DEL to teleport actors back to start location");
 		log_to_file("SCENE SETUP");
 	}
 	else {
