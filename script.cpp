@@ -226,6 +226,31 @@ void ensure_ped_and_vehicle_is_not_deleted(Ped ped) {
 	}
 }
 
+
+void ensure_max_driving_ability(Ped ped) {
+	PED::SET_DRIVER_ABILITY(ped, 1.0);
+	PED::SET_DRIVER_AGGRESSIVENESS(ped, 1.0);
+}
+
+void set_relationships_between_actors() {
+	log_to_file("set_relationships_between_actors");
+	DWORD actorHashGroup = 0x5F0783F1;
+	Hash* actorHashGroupP = &actorHashGroup;
+
+	PED::ADD_RELATIONSHIP_GROUP("ACTOR1_GROUP", actorHashGroupP);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, actorHashGroup, 0x6F0783F5);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, actorHashGroup, actorHashGroup);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, 0x6F0783F5, actorHashGroup);
+
+	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		if (actorShortcut[i] != 0) {
+			PED::SET_PED_RELATIONSHIP_GROUP_HASH(actorShortcut[i], actorHashGroup);
+		}
+	}
+
+}
+
+
 void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 	log_to_file("move_to_waypoint: Ped:" + std::to_string(ped) + " x:" + std::to_string(waypointCoord.x) + " y : " + std::to_string(waypointCoord.y) + " z : " + std::to_string(waypointCoord.z));
 	//code inspired by LUA plugin https://www.gta5-mods.com/scripts/realistic-vehicle-controls
@@ -265,7 +290,7 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 					}
 				}else {
 					//AI::TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, VEHICLE::_GET_VEHICLE_MAX_SPEED(pedVehicle), 786469, 50.0);
-					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469, 4.0, -1.0);
+					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469,5.0, -1);
 					log_to_file("move_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
 					if (suppress_msgs != true) {
 						set_status_text("Driving to waypoint");
@@ -327,13 +352,14 @@ void teleport_entity_to_location(Entity entityToTeleport, Vector3 location) {
 
 	//after a teleport, actions some time seems to be stuck
 	if (ENTITY::IS_ENTITY_A_PED(entityToTeleport)) {
-		AI::CLEAR_PED_TASKS(entityToTeleport);
+		//AI::CLEAR_PED_TASKS(entityToTeleport);
 	}
 	else if (ENTITY::IS_ENTITY_A_VEHICLE(entityToTeleport)) {
+		VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
 		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(entityToTeleport, -1);
 		if (pedDriver >= 1) {
-			AI::CLEAR_PED_TASKS(pedDriver);
-			AI::TASK_PAUSE(pedDriver, 500);
+			//AI::CLEAR_PED_TASKS(pedDriver);
+			//AI::TASK_PAUSE(pedDriver, 500);
 		}
 	}
 
@@ -633,11 +659,6 @@ void check_if_player_is_passenger_and_has_waypoint() {
 	check_if_ped_is_passenger_and_has_waypoint(playerPed);
 }
 
-
-void ensure_max_driving_ability(Ped ped) {
-	PED::SET_DRIVER_ABILITY(ped, 1.0);
-	PED::SET_DRIVER_AGGRESSIVENESS(ped, 1.0);
-}
 
 void action_increase_aggressiveness(Ped ped, bool suppress_msgs) {
 	log_to_file("action_increase_aggressiveness");
@@ -1069,7 +1090,9 @@ void action_set_same_waypoint_for_all_actors() {
 			//second if he's a passenger
 			check_if_ped_is_passenger_and_has_waypoint(actorShortcut[i]);
 			WAIT(200);
+
 		}
+
 	}
 	else {
 		set_status_text("Set a waypoint in the map, before applying it to all actors");
@@ -1077,9 +1100,10 @@ void action_set_same_waypoint_for_all_actors() {
 }
 
 void action_teleport_to_start_locations() {
+	set_status_text("Resetting the scene. Will take a few seconds");
 	log_to_file("action_teleport_to_start_locations");
 	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorHasStartLocation[i]) {
+		if (actorShortcut[i]!= 0 && actorHasStartLocation[i]) {
 			Ped entityToTeleport = actorShortcut[i];
 
 			//ressurect any dead actors
@@ -1087,11 +1111,17 @@ void action_teleport_to_start_locations() {
 				PED::RESURRECT_PED(actorShortcut[i]);
 			}
 
+			//pause the actor. seems to be stuck some times
+
+
+			//AI::CLEAR_PED_TASKS(actorShortcut[i]);
+			//AI::TASK_PAUSE(actorShortcut[i], 10000);
+
 			if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
-				//pause the actor. seems to be stuck some times
-				AI::CLEAR_PED_TASKS(actorShortcut[i]);
-				AI::TASK_PAUSE(actorShortcut[i], 500);
 				entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
+				VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
+				VEHICLE::SET_VEHICLE_UNDRIVEABLE(entityToTeleport, true);
+
 			}
 
 			//try to prevent fleeing during teleport
@@ -1100,12 +1130,53 @@ void action_teleport_to_start_locations() {
 
 			//teleport and wait
 			teleport_entity_to_location(entityToTeleport, actorStartLocation[i]);
+
 			WAIT(300);
 			//set back this block
-			AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorShortcut[i], false);
-			
+
+
+		}
+
+	}
+	log_to_file("Setting vehicle to undrivable");
+	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		if (actorShortcut[i] != 0 && actorHasStartLocation[i]) {
+
+			if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
+				Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+				VEHICLE::SET_VEHICLE_UNDRIVEABLE(teleportedVehicle, true);
+				VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, true);
+				VEHICLE::START_VEHICLE_ALARM(teleportedVehicle);
+			}
 		}
 	}
+
+	WAIT(1000);
+
+	log_to_file("Setting vehicle to drivable");
+	Ped orgPed = PLAYER::PLAYER_PED_ID();
+
+	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		if (actorShortcut[i] != 0 && actorHasStartLocation[i] && actorShortcut[i] != orgPed) {
+			possess_ped(actorShortcut[i]);
+			WAIT(250);
+			if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
+
+				Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+				VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(teleportedVehicle);
+				VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, false);
+				VEHICLE::SET_VEHICLE_UNDRIVEABLE(teleportedVehicle, false);
+			}
+		}
+	}
+
+	possess_ped(orgPed);
+	if (PED::IS_PED_IN_ANY_VEHICLE(orgPed, 0)) {
+		Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+		VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, false);
+		VEHICLE::SET_VEHICLE_UNDRIVEABLE(teleportedVehicle, false);
+	}
+
 }
 
 void action_toggle_scene_mode() {
@@ -1113,6 +1184,7 @@ void action_toggle_scene_mode() {
 		sceneMode = SCENE_MODE_SETUP;
 		set_status_text("Scene is now in setup mode. Press ALT+SPACE to active all actors. Press ALT+DEL to teleport actors back to start location");
 		log_to_file("SCENE SETUP");
+		set_relationships_between_actors();
 	}
 	else {
 		sceneMode = SCENE_MODE_ACTIVE;
@@ -1125,7 +1197,6 @@ void action_toggle_scene_mode() {
 	//trigger the action for all actors in slots
 	//But ignore ALT+0 as this a duplicate
 	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		
 		actorStatus[i] = sceneMode;
 
 
@@ -1153,7 +1224,10 @@ void action_toggle_scene_mode() {
 			}
 		}
 		else if (actorStatus[i] == SCENE_MODE_SETUP) {
+			PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorStatus[i], true);
+			//AI::TASK_STAND_STILL(actorShortcut[i], -1);
 			AI::CLEAR_PED_TASKS(actorShortcut[i]);
+			//AI::TASK_PAUSE(actorShortcut[i], 500);
 		}
 	}
 	nextWaitTicks = 500;
