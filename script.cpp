@@ -914,6 +914,28 @@ void action_if_ped_execute_shortcut_key_pressed()
 	}
 }
 
+void action_reset_scene_director() {
+	set_status_text("Resetting scene director to initial status");
+	actorHasWaypoint[10] = {};
+	actorWaypoint[10] = {};
+	actorStartLocation[10] = {};
+	actorHasStartLocation[10] = {};
+	UI::REMOVE_BLIP(blipIdShortcuts);
+
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+
+	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+			Ped actor = actorShortcut[i];
+			if (PED::IS_PED_IN_ANY_VEHICLE(actor, 0)) {
+				Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(actor);
+				ENTITY::SET_VEHICLE_AS_NO_LONGER_NEEDED(&playerVehicle);
+			}
+			ENTITY::SET_PED_AS_NO_LONGER_NEEDED(&actor);
+		}
+	}
+}
+
 void action_vehicle_chase() {
 	log_to_file("action_vehicle_chase");
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
@@ -1383,6 +1405,16 @@ bool vehicle_escort_key_pressed() {
 	}
 }
 
+bool reset_scene_director_key_pressed() {
+	//ALT+ Pause/break
+	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_PAUSE)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 
 
 void main()
@@ -1415,6 +1447,10 @@ void main()
 
 		if (vehicle_escort_key_pressed()) {
 			action_vehicle_escort();
+		}
+
+		if (reset_scene_director_key_pressed()) {
+			action_reset_scene_director();
 		}
 
 		/*
