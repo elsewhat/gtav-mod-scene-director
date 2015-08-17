@@ -27,6 +27,8 @@ int chase_player_index = -1;
 bool is_escort_player_engaged = false;
 int escort_player_index = -1;
 
+DWORD actorHashGroup = 0x5F0783F1;
+
 enum SCENE_MODE {
 	SCENE_MODE_ACTIVE = 1,
 	SCENE_MODE_SETUP = 0
@@ -232,7 +234,7 @@ void ensure_max_driving_ability(Ped ped) {
 	PED::SET_DRIVER_AGGRESSIVENESS(ped, 1.0);
 }
 
-void set_relationships_between_actors() {
+void create_relationship_groups() {
 	log_to_file("set_relationships_between_actors");
 	DWORD actorHashGroup = 0x5F0783F1;
 	Hash* actorHashGroupP = &actorHashGroup;
@@ -242,12 +244,14 @@ void set_relationships_between_actors() {
 	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, actorHashGroup, actorHashGroup);
 	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, 0x6F0783F5, actorHashGroup);
 
+}
+
+void assign_actor_to_relationship_group(Ped ped) {
 	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 		if (actorShortcut[i] != 0) {
-			PED::SET_PED_RELATIONSHIP_GROUP_HASH(actorShortcut[i], actorHashGroup);
+			PED::SET_PED_RELATIONSHIP_GROUP_HASH(ped, actorHashGroup);
 		}
 	}
-
 }
 
 
@@ -576,6 +580,7 @@ void action_clone_player_with_vehicle() {
 		int actorSlotIndex = get_next_free_slot();
 		if (actorSlotIndex != -1) {
 			actorShortcut[actorSlotIndex] = clonedPed;
+			assign_actor_to_relationship_group(clonedPed);
 			ensure_max_driving_ability(clonedPed);
 
 			int blipId = UI::ADD_BLIP_FOR_ENTITY(clonedPed);
@@ -814,6 +819,8 @@ void action_if_ped_assign_shortcut_key_pressed()
 
 			Ped playerPed = PLAYER::PLAYER_PED_ID();
 			actorShortcut[pedShortcutsIndex] = playerPed;
+
+			assign_actor_to_relationship_group(playerPed);
 
 			int blipId = UI::ADD_BLIP_FOR_ENTITY(playerPed);
 			blipIdShortcuts[pedShortcutsIndex] = blipId;
@@ -1172,7 +1179,7 @@ void action_teleport_to_start_locations() {
 
 	possess_ped(orgPed);
 	if (PED::IS_PED_IN_ANY_VEHICLE(orgPed, 0)) {
-		Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+		Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(orgPed);
 		VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, false);
 		VEHICLE::SET_VEHICLE_UNDRIVEABLE(teleportedVehicle, false);
 	}
@@ -1184,7 +1191,6 @@ void action_toggle_scene_mode() {
 		sceneMode = SCENE_MODE_SETUP;
 		set_status_text("Scene is now in setup mode. Press ALT+SPACE to active all actors. Press ALT+DEL to teleport actors back to start location");
 		log_to_file("SCENE SETUP");
-		set_relationships_between_actors();
 	}
 	else {
 		sceneMode = SCENE_MODE_ACTIVE;
@@ -1464,6 +1470,7 @@ void ScriptMain()
 {
 	set_status_text("Scene director 0.5a by elsewhat");
 	set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
+	create_relationship_groups();
 	//log_to_file("Screen Director initialized");
 	//log_to_file("Value of test property from config file: " + std::to_string(test_property));
 	main();
