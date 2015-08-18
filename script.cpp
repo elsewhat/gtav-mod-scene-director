@@ -92,9 +92,10 @@ void log_to_file(std::string message, bool bAppend = true) {
 }
 
 // Config file - test
+/*
 LPCSTR config_path = ".\\screen_director.ini";
 int test_property = GetPrivateProfileInt("keys", "test_key", 42, config_path);
-
+*/
 
 static LPCSTR weaponNames[] = {
 	"WEAPON_KNIFE", "WEAPON_NIGHTSTICK", "WEAPON_HAMMER", "WEAPON_BAT", "WEAPON_GOLFCLUB", "WEAPON_CROWBAR",
@@ -804,7 +805,7 @@ void action_if_ped_assign_shortcut_key_pressed()
 			if (actorShortcut[pedShortcutsIndex] != 0) {
 				if (forceSlotIndexOverWrite != pedShortcutsIndex) {
 					log_to_file("action_if_ped_assign_shortcut_key_pressed: Slot already exists");
-					set_status_text("Actor already exist in slot. ALT+" + std::to_string(pedShortcutsIndex) + " once more to overwrite");
+					set_status_text("Actor already exist in slot. CTRL+" + std::to_string(pedShortcutsIndex) + " once more to overwrite");
 					forceSlotIndexOverWrite = pedShortcutsIndex;
 					return;
 				}
@@ -918,10 +919,7 @@ void action_if_ped_execute_shortcut_key_pressed()
 
 void action_reset_scene_director() {
 	set_status_text("Resetting scene director to initial status");
-	actorHasWaypoint[10] = {};
-	actorWaypoint[10] = {};
-	actorStartLocation[10] = {};
-	actorHasStartLocation[10] = {};
+
 	UI::REMOVE_BLIP(blipIdShortcuts);
 
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
@@ -931,10 +929,26 @@ void action_reset_scene_director() {
 			Ped actor = actorShortcut[i];
 			if (PED::IS_PED_IN_ANY_VEHICLE(actor, 0)) {
 				Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(actor);
+				ENTITY::SET_ENTITY_AS_MISSION_ENTITY(playerVehicle, false, false);
 				ENTITY::SET_VEHICLE_AS_NO_LONGER_NEEDED(&playerVehicle);
 			}
+			ENTITY::SET_ENTITY_AS_MISSION_ENTITY(actor, false, false);
 			ENTITY::SET_PED_AS_NO_LONGER_NEEDED(&actor);
 		}
+		actorHasWaypoint[i] = false;
+		actorWaypoint[i].x = 0;
+		actorWaypoint[i].y = 0;
+		actorWaypoint[i].z = 0;
+		actorStartLocation[i].x = 0;
+		actorStartLocation[i].y = 0;
+		actorStartLocation[i].z = 0;
+		actorHasStartLocation[i] = false;
+		if (blipIdShortcuts[i] != 0) {
+			int blipIdsToRemove[1] = { blipIdShortcuts[i] };
+			UI::REMOVE_BLIP(blipIdsToRemove);
+			blipIdShortcuts[i] = 0;
+		}
+
 	}
 }
 
@@ -1245,7 +1259,7 @@ void action_toggle_scene_mode() {
 			actorHasStartLocation[i] = true;
 
 			//move the actor if he has a waypoint and if he's not the player
-			if (actorHasWaypoint[i] && actorStatus[i] != PLAYER::PLAYER_PED_ID()) {
+			if (actorHasWaypoint[i] && actorShortcut[i] != PLAYER::PLAYER_PED_ID()) {
 				//first if he's a driver
 				move_to_waypoint(actorShortcut[i], actorWaypoint[i], true);
 				//second if he's a passenger
@@ -1506,7 +1520,7 @@ void main()
 
 void ScriptMain()
 {
-	set_status_text("Scene director 0.5a by elsewhat");
+	set_status_text("Scene director 1.0 by elsewhat");
 	set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
 	create_relationship_groups();
 	//log_to_file("Screen Director initialized");
