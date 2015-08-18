@@ -4,8 +4,10 @@ Scene Director is a mod for GTA V specifically aimed at Director Mode and Rockst
 
 It's intended to play together with other trainers. For example once you've clone or possessed a pedestrian, you could change the skin of the model using any trainer (I prefer Enhanced Trainer as it allows me to store skins and vehicles I want to use in a video). Another is example is that you might use a trainer which allows you to start animations or scenarios (like smoking etc). This animation will continue to play as you swap away from the model, but when you switch back the animation will be stopped so you can take control of the character.
 
+Download:https://www.gta5-mods.com/scripts/scene-director
 Source available at: https://github.com/elsewhat/gtav-mod-scene-director
 Demo video: http://youtu.be/RATa0J01Vis
+
 
 Installation: Requires Scripthook V. Copy SceneDirector.asi into game directory
 
