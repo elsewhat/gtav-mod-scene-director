@@ -196,7 +196,7 @@ int get_next_free_slot() {
 
 
 bool is_ped_actor_active(Ped ped) {
-	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 		if (actorShortcut[i] == ped) {
 			if (actorStatus[i] == SCENE_MODE_SETUP) {
 				return false;
@@ -324,32 +324,34 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 
 }
 
-void teleport_entity_to_location(Entity entityToTeleport, Vector3 location) {
+void teleport_entity_to_location(Entity entityToTeleport, Vector3 location, bool trustZValue) {
 	log_to_file("teleport_entity_to_location: Entity:" + std::to_string(entityToTeleport));
 	//From the native trainer. Could it be replaced with PATHFIND::GET_SAFE_COORD_FOR_PED ?
 
-	// load needed map region and check height levels for ground existence
-	bool groundFound = false;
-	static float groundCheckHeight[] = {
-		100.0, 150.0, 50.0, 0.0, 200.0, 250.0, 300.0, 350.0, 400.0,
-		450.0, 500.0, 550.0, 600.0, 650.0, 700.0, 750.0, 800.0
-	};
-	for (int i = 0; i < sizeof(groundCheckHeight) / sizeof(float); i++)
-	{
-		ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, location.x, location.y, groundCheckHeight[i], 0, 0, 1);
-		WAIT(100);
-		if (GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(location.x, location.y, groundCheckHeight[i], &location.z))
+	if (trustZValue == false) {
+		// load needed map region and check height levels for ground existence
+		bool groundFound = false;
+		static float groundCheckHeight[] = {
+			100.0, 150.0, 50.0, 0.0, 200.0, 250.0, 300.0, 350.0, 400.0,
+			450.0, 500.0, 550.0, 600.0, 650.0, 700.0, 750.0, 800.0
+		};
+		for (int i = 0; i < sizeof(groundCheckHeight) / sizeof(float); i++)
 		{
-			groundFound = true;
-			location.z += 3.0;
-			break;
+			ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, location.x, location.y, groundCheckHeight[i], 0, 0, 1);
+			WAIT(100);
+			if (GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(location.x, location.y, groundCheckHeight[i], &location.z))
+			{
+				groundFound = true;
+				location.z += 3.0;
+				break;
+			}
 		}
-	}
-	// if ground not found then set Z in air and give player a parachute
-	if (!groundFound)
-	{
-		location.z = 1000.0;
-		WEAPON::GIVE_DELAYED_WEAPON_TO_PED(PLAYER::PLAYER_PED_ID(), 0xFBAB5776, 1, 0);
+		// if ground not found then set Z in air and give player a parachute
+		if (!groundFound)
+		{
+			location.z = 1000.0;
+			WEAPON::GIVE_DELAYED_WEAPON_TO_PED(PLAYER::PLAYER_PED_ID(), 0xFBAB5776, 1, 0);
+		}
 	}
 
 	ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, location.x, location.y, location.z, 0, 0, 1);
@@ -385,7 +387,7 @@ void teleport_player_to_waypoint() {
 		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
 		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 
-		teleport_entity_to_location(entityToTeleport, waypointCoord);
+		teleport_entity_to_location(entityToTeleport, waypointCoord,false);
 	}
 	else {
 		set_status_text("Set waypoint before teleporting");
@@ -1098,7 +1100,7 @@ void action_set_same_waypoint_for_all_actors() {
 		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 		log_to_file("action_set_same_waypoint_for_all_actors x:" + std::to_string(waypointCoord.x)+ " y:" + std::to_string(waypointCoord.y) + " z:" + std::to_string(waypointCoord.z));
 
-		set_status_text("Waypoint set to all actors");
+		set_status_text("Waypoint set for all actors");
 
 		//add waypoint to all actors in slots
 		//But ignore ALT+0 as this a duplicate
@@ -1158,7 +1160,7 @@ void action_teleport_to_start_locations() {
 			PED::SET_PED_FLEE_ATTRIBUTES(actorShortcut[i], 0, 0);
 
 			//teleport and wait
-			teleport_entity_to_location(entityToTeleport, actorStartLocation[i]);
+			teleport_entity_to_location(entityToTeleport, actorStartLocation[i], true);
 
 			WAIT(300);
 			//set back this block
@@ -1242,8 +1244,8 @@ void action_toggle_scene_mode() {
 			actorStartLocation[i] = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
 			actorHasStartLocation[i] = true;
 
-			//move the actor if he has a waypoint
-			if (actorHasWaypoint[i]) {
+			//move the actor if he has a waypoint and if he's not the player
+			if (actorHasWaypoint[i] && actorStatus[i] != PLAYER::PLAYER_PED_ID()) {
 				//first if he's a driver
 				move_to_waypoint(actorShortcut[i], actorWaypoint[i], true);
 				//second if he's a passenger
