@@ -17,6 +17,7 @@ Vector3 actorWaypoint[10] = {};
 //location when scene was set to active last time
 bool actorHasStartLocation[10] = {};
 Vector3 actorStartLocation[10] = {};
+float actorStartLocationHeading[10] = {};
 float actorDriverAgressiveness[] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f };
 
 int blipIdShortcuts[10] = {};
@@ -28,6 +29,8 @@ bool is_escort_player_engaged = false;
 int escort_player_index = -1;
 
 DWORD actorHashGroup = 0x5F0783F1;
+Hash* actorHashGroupP = &actorHashGroup;
+
 
 enum SCENE_MODE {
 	SCENE_MODE_ACTIVE = 1,
@@ -237,8 +240,6 @@ void ensure_max_driving_ability(Ped ped) {
 
 void create_relationship_groups() {
 	log_to_file("set_relationships_between_actors");
-	DWORD actorHashGroup = 0x5F0783F1;
-	Hash* actorHashGroupP = &actorHashGroup;
 
 	PED::ADD_RELATIONSHIP_GROUP("ACTOR1_GROUP", actorHashGroupP);
 	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, actorHashGroup, 0x6F0783F5);
@@ -248,11 +249,8 @@ void create_relationship_groups() {
 }
 
 void assign_actor_to_relationship_group(Ped ped) {
-	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorShortcut[i] != 0) {
-			PED::SET_PED_RELATIONSHIP_GROUP_HASH(ped, actorHashGroup);
-		}
-	}
+	log_to_file("Adding actor to relationship group");
+	PED::SET_PED_RELATIONSHIP_GROUP_HASH(ped, actorHashGroup);
 }
 
 
@@ -924,7 +922,7 @@ void action_reset_scene_director() {
 
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 
-	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 		if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
 			Ped actor = actorShortcut[i];
 			if (PED::IS_PED_IN_ANY_VEHICLE(actor, 0)) {
@@ -957,7 +955,7 @@ void action_vehicle_chase() {
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 
 	if (is_chase_player_engaged) {
-		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
 				AI::TASK_PAUSE(actorShortcut[i], 500);
 			}
@@ -974,7 +972,7 @@ void action_vehicle_chase() {
 
 		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
 
-		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
 				ensure_ped_and_vehicle_is_not_deleted(actorShortcut[i]);
 
@@ -1025,7 +1023,7 @@ void action_vehicle_escort() {
 	log_to_file("action_vehicle_escort");
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 	if (is_escort_player_engaged) {
-		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
 				AI::TASK_PAUSE(actorShortcut[i], 500);
 			}
@@ -1039,7 +1037,7 @@ void action_vehicle_escort() {
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
 		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
-		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
 				ensure_ped_and_vehicle_is_not_deleted(actorShortcut[i]);
 
@@ -1055,7 +1053,7 @@ void action_vehicle_escort() {
 
 						//works
 						//AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 13.0, 786603, 8.0, 20, 5.0);
-						log_to_file("action_vehicle_escort:AI::TASK_VEHICLE_ESCORT Driver:" + std::to_string(pedDriver));
+						log_to_file("action_vehicle_escort:AI::TASK_VEHICLE_ESCORT Driver: " + std::to_string(pedDriver));
 						AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 45.0, 786469, 8.0, 20, 5.0);
 
 					}
@@ -1175,6 +1173,7 @@ void action_teleport_to_start_locations() {
 
 			//teleport and wait
 			teleport_entity_to_location(entityToTeleport, actorStartLocation[i], true);
+			ENTITY::SET_ENTITY_HEADING(entityToTeleport, actorStartLocationHeading[i]);
 
 			WAIT(300);
 			//set back this block
@@ -1256,6 +1255,7 @@ void action_toggle_scene_mode() {
 
 			//store the current location of all actors, so that we can reset it
 			actorStartLocation[i] = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
+			actorStartLocationHeading[i] = ENTITY::GET_ENTITY_HEADING(actorShortcut[i]);
 			actorHasStartLocation[i] = true;
 
 			//move the actor if he has a waypoint and if he's not the player
