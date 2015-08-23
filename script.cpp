@@ -31,6 +31,30 @@ int escort_player_index = -1;
 DWORD actorHashGroup = 0x5F0783F1;
 Hash* actorHashGroupP = &actorHashGroup;
 
+enum RECORDING_TYPE {
+	RECORDING_TYPE_LOCATION,
+	RECORDING_TYPE_EQUIP_WEAPON,
+	RECORDING_TYPE_ENTER_VEHICLE,
+};
+
+
+class ActorRecordingItem {
+	Vector3 location;
+	float heading;
+public:
+	ActorRecordingItem(Vector3 aLocation, float aHeading) {
+		location = aLocation;
+		heading = aHeading;
+	}
+	void addToTaskSequence(Ped ped) {
+		AI::TASK_GO_STRAIGHT_TO_COORD(ped, location.x, location.y, location.z, 1.0f, -1, 27.0f, 0.5f);
+	}
+	std::string to_string() {
+		return "ActorRecordingItem x:" + std::to_string(location.x) + " y : " + std::to_string(location.y) + " z : " + std::to_string(location.z) + " heading:" + std::to_string(heading);
+	}
+};
+
+
 
 enum SCENE_MODE {
 	SCENE_MODE_ACTIVE = 1,
@@ -1283,6 +1307,81 @@ void action_toggle_scene_mode() {
 	nextWaitTicks = 500;
 }
 
+bool record_scene_for_actor_key_press() {
+	//ALT+ R
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x52)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void action_record_scene_for_actor() {
+
+
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex == -1) {
+		set_status_text("Actor must be assigned slot 1-9 before recording actions");
+	}
+	else {
+		set_status_text("Recording actions for current actions. Press ALT+R to stop recording");
+		Ped actorPed = actorShortcut[actorIndex];
+
+		//the actual recording
+		std::vector<ActorRecordingItem> actorRecording;
+		actorRecording.reserve(1000);
+
+		//1. Store start location
+		actorStartLocation[actorIndex] = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+		actorStartLocationHeading[actorIndex] = ENTITY::GET_ENTITY_HEADING(actorPed);
+		actorHasStartLocation[actorIndex] = true;
+
+		WAIT(300);
+
+		bool bRecording = true;
+		DWORD tickStart = GetTickCount();
+		DWORD tickLast = tickStart;
+		DWORD tickNow = tickStart;
+		CONST DWORD DELTA_TICKS = 500;
+
+		//main loop
+		while (bRecording == true) {
+			tickNow = GetTickCount();
+
+			//record only once pr DELTA_TICKS
+			if (tickNow - tickLast >= DELTA_TICKS) {
+				 
+
+				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+				float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+
+				ActorRecordingItem recordingItem(actorLocation, actorHeading);
+				actorRecording.push_back(recordingItem);
+
+				log_to_file(recordingItem.to_string());
+
+
+				tickLast = tickNow;
+			}
+
+
+
+			if (record_scene_for_actor_key_press()) {
+				bRecording = false;
+			}
+			WAIT(0);
+		}
+		log_to_file("Recorded " + std::to_string(actorRecording.size()) + " instructions");
+
+		set_status_text("Recording stopped");
+		nextWaitTicks = 400;
+
+	}
+
+
+}
+
 
 bool possess_key_pressed()
 {
@@ -1439,6 +1538,8 @@ bool reset_scene_director_key_pressed() {
 
 
 
+
+
 void main()
 {
 	while (true)
@@ -1515,6 +1616,11 @@ void main()
 		action_if_ped_execute_shortcut_key_pressed();
 
 		check_if_player_is_passenger_and_has_waypoint();
+
+		if (record_scene_for_actor_key_press()) {
+			action_record_scene_for_actor();
+		}
+
 
 		//check if the player is dead/arrested, in order to swap back to original
 		check_player_model();
