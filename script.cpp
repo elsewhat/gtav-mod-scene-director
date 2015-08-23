@@ -286,7 +286,10 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 					}
 				}
 				else if (PED::IS_PED_IN_ANY_PLANE(ped)) {
-					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+					//z dimension is on ground level so add a bit to it
+					AI::TASK_PLANE_MISSION(pedDriver, pedVehicle, 0, 0, waypointCoord.x, waypointCoord.y, waypointCoord.z + 200.0, 4, 30.0, 50.0, -1, vehicleMaxSpeed, 50);
+
+					//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, 500.0, vehicleMaxSpeed, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
 					log_to_file("move_to_waypoint: Flying in plane with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
 					if (suppress_msgs != true) {
 						set_status_text("Flying to waypoint");
@@ -516,6 +519,7 @@ void action_clone_player() {
 		Vehicle vehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
 		PED::SET_PED_INTO_VEHICLE(clonedPed, vehicle, -2);
 	}
+	assign_actor_to_relationship_group(clonedPed);
 
 	set_status_text("Cloned myself. Possess clone with ALT+0");
 	nextWaitTicks = 500;
@@ -545,7 +549,7 @@ void action_clone_player_with_vehicle() {
 			}
 			else if (zAboveGround > 3.0 && PED::IS_PED_IN_ANY_PLANE(playerPed)) {//in air plane
 			 //30.0 in front and 100.0 above
-				clonedVehicleCoords = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(playerPed, 0.0, 30.0, 100.0);
+				clonedVehicleCoords = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(playerPed, 0.0, 30.0, 200.0);
 			}
 			else {//on ground
 				clonedVehicleCoords = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(playerPed, 0.0, 15.0, 0.0);
@@ -1093,7 +1097,7 @@ void action_autopilot_for_player() {
 
 			//check if player is a passenger
 			Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
-			//log_to_file("action_autopilot_for_player " + std::to_string(pedDriver) +" vs " + std::to_string(actorShortcut[actorIndex]) + " vehicle " + std::to_string(pedVehicle));
+			log_to_file("action_autopilot_for_player " + std::to_string(pedDriver) +" vs " + std::to_string(actorShortcut[actorIndex]) + " vehicle " + std::to_string(pedVehicle));
 			if (pedDriver == actorShortcut[actorIndex]) {
 				move_to_waypoint(actorShortcut[actorIndex], actorWaypoint[actorIndex],true);
 				log_to_file("Autopilot engaged for player. ALT+" + std::to_string(actorIndex));
@@ -1102,6 +1106,8 @@ void action_autopilot_for_player() {
 				is_autopilot_engaged_for_player = true;
 			}
 		}
+	} else {
+		set_status_text("Actor must be assigned a slot 1-9 before autopilot can be started");
 	}
 }
 
@@ -1520,7 +1526,7 @@ void main()
 
 void ScriptMain()
 {
-	set_status_text("Scene director 1.0 by elsewhat");
+	set_status_text("Scene director 1.0.2 by elsewhat");
 	set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
 	create_relationship_groups();
 	//log_to_file("Screen Director initialized");
