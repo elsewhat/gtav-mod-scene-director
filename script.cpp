@@ -46,6 +46,12 @@ public:
 		location = aLocation;
 		heading = aHeading;
 	}
+	Vector3 getLocation() {
+		return location;
+	}
+	float getHeading() {
+		return heading;
+	}
 	void addToTaskSequence(Ped ped) {
 		AI::TASK_GO_STRAIGHT_TO_COORD(ped, location.x, location.y, location.z, 1.0f, -1, 27.0f, 0.5f);
 	}
@@ -1343,7 +1349,7 @@ void action_record_scene_for_actor() {
 		DWORD tickStart = GetTickCount();
 		DWORD tickLast = tickStart;
 		DWORD tickNow = tickStart;
-		CONST DWORD DELTA_TICKS = 500;
+		CONST DWORD DELTA_TICKS = 1000;
 
 		//main loop
 		while (bRecording == true) {
@@ -1373,6 +1379,34 @@ void action_record_scene_for_actor() {
 			WAIT(0);
 		}
 		log_to_file("Recorded " + std::to_string(actorRecording.size()) + " instructions");
+
+		//action_possess_ped();
+
+		teleport_entity_to_location(actorPed, actorStartLocation[actorIndex], true);
+
+
+		TaskSequence actorSeq;
+		AI::OPEN_SEQUENCE_TASK(&actorSeq);
+		
+		//0xec17e58, 0xbac0f10b, 0x3f67c6af, 0x422d7a25, 0xbd8817db, 0x916e828c -> "motionstate_idle", "motionstate_walk", "motionstate_run", "motionstate_actionmode_idle", and "motionstate_actionmode_walk"
+		AI::TASK_FORCE_MOTION_STATE(0, 0xbac0f10b, 0);
+		
+		for (int i =0; i < actorRecording.size(); i++) {
+			ActorRecordingItem recordingItem = actorRecording[i];
+
+			//AI::TASK_ACHIEVE_HEADING(0, recordingItem.getHeading(), 0);
+
+			AI::TASK_GO_STRAIGHT_TO_COORD(0, recordingItem.getLocation().x, recordingItem.getLocation().y, recordingItem.getLocation().z, 2.0f, -1, recordingItem.getHeading(), 0);
+			//AI::TASK_GO_STRAIGHT_TO_COORD(0, recordingItem.getLocation().x, recordingItem.getLocation().y, recordingItem.getLocation().z, 1.0f, -1, recordingItem.getHeading(), 0x3f000000);
+			//AI::TASK_FORCE_MOTION_STATE(0, 0xbac0f10b, 0);
+			//AI::TASK_GO_STRAIGHT_TO_COORD(0, 717.690979, -974.1834716796875, 23.914499282836914, 1.0, -1, 0x471c4000, 0x3f000000);
+		}
+
+
+		AI::CLOSE_SEQUENCE_TASK(actorSeq);
+		AI::TASK_PERFORM_SEQUENCE(actorPed, actorSeq);
+		AI::CLEAR_SEQUENCE_TASK(&actorSeq); 
+
 
 		set_status_text("Recording stopped");
 		nextWaitTicks = 400;
