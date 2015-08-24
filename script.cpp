@@ -250,7 +250,13 @@ void create_relationship_groups() {
 
 void assign_actor_to_relationship_group(Ped ped) {
 	log_to_file("Adding actor to relationship group");
-	PED::SET_PED_RELATIONSHIP_GROUP_HASH(ped, actorHashGroup);
+	 
+	if(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped) == actorHashGroup) {
+		log_to_file("Ped already belongs to actor relationship group");
+	}else {
+		PED::SET_PED_RELATIONSHIP_GROUP_HASH(ped, actorHashGroup);
+	}
+
 }
 
 
