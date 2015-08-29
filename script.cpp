@@ -1413,12 +1413,13 @@ void action_record_scene_for_actor() {
 		//AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
 		//AI::CLEAR_PED_TASKS(actorPed);
 		
-		AI::TASK_FLUSH_ROUTE();
 
 		double routeX;
 		double routeY;
 		double routeZ;
-		
+		//		AI::TASK_FLUSH_ROUTE();
+
+		/*
 		for (int i = 0; i < actorRecording.size(); i++) {
 			ActorRecordingItem recordingItem = actorRecording[i];
 			double routeX = recordingItem.getLocation().x;
@@ -1429,30 +1430,35 @@ void action_record_scene_for_actor() {
 			AI::TASK_EXTEND_ROUTE(recordingItem.getLocation().x, recordingItem.getLocation().y, recordingItem.getLocation().z);
 			//log_to_file("TASK_EXTEND_ROUTE " + std::to_string(recordingItem.getLocation().x) + "," + std::to_string(recordingItem.getLocation().y) + "," + std::to_string(recordingItem.getLocation().z));
 			log_to_file("AI::TASK_EXTEND_ROUTE(" + std::to_string(recordingItem.getLocation().x) + "," + std::to_string(recordingItem.getLocation().y) + "," + std::to_string(recordingItem.getLocation().z) + ");");
-		}
-
+		}*/
+		
+		//AI::TASK_EXTEND_ROUTE(1378.694702,3174.594971,40.470604);
+		//AI::TASK_EXTEND_ROUTE(1378, 3174, 40);
 		/*
-		AI::TASK_EXTEND_ROUTE(1493.701050, 3207.538086, 40.488457);
-		AI::TASK_EXTEND_ROUTE(1494.887085, 3206.563965, 40.475758);
-		AI::TASK_EXTEND_ROUTE(1495.713867, 3205.021484, 40.458157);
-		AI::TASK_EXTEND_ROUTE(1495.904053, 3203.387695, 40.441357);
-		 AI::TASK_EXTEND_ROUTE(1495.119141, 3201.909668, 40.428406);
-		AI::TASK_EXTEND_ROUTE(1493.574585, 3201.151367, 40.424965);
-		AI::TASK_EXTEND_ROUTE(1491.877563, 3200.801758, 40.425854);
-		AI::TASK_EXTEND_ROUTE(1490.175781, 3201.069824, 40.432968);
-		AI::TASK_EXTEND_ROUTE(1489.523193, 3201.263184, 40.436768);
-		AI::TASK_EXTEND_ROUTE(379.8407897949219, 152.34010314941406, 102.0718);
-		AI::TASK_EXTEND_ROUTE(380.4872131347656, 158.653, 102.12920379638672);
-		AI::TASK_EXTEND_ROUTE(388.7568054199219, 179.65769958496094, 102.13169860839844);
+		AI::TASK_EXTEND_ROUTE(1379.367554,3173.189209,40.455093);
+		AI::TASK_EXTEND_ROUTE(1380.481201,3170.556885,40.426697);
+		AI::TASK_EXTEND_ROUTE(1383.024658,3164.550049,40.414001);
+		AI::TASK_EXTEND_ROUTE(1385.547119,3161.313721,40.414085);
+		AI::TASK_EXTEND_ROUTE(1387.853027,3161.880127,40.414085);
+		 AI::TASK_EXTEND_ROUTE(1393.839844,3164.030518,40.414085);
+		AI::TASK_EXTEND_ROUTE(1399.310547,3166.468018,40.414085);
+		AI::TASK_EXTEND_ROUTE(1399.910889,3169.155273,40.414085);
 		*/
 
 
-		AI::TASK_FOLLOW_POINT_ROUTE(actorPed, 1.0f, 0);
+		TaskSequence actorSeq;
+		AI::OPEN_SEQUENCE_TASK(&actorSeq);
+
+		AI::TASK_EXTEND_ROUTE(1379.367554, 3173.189209, 40.455093);
+		AI::TASK_EXTEND_ROUTE(1380.481201, 3170.556885, 40.426697);
+		AI::TASK_EXTEND_ROUTE(1383.024658, 3164.550049, 40.414001);
+		AI::TASK_FOLLOW_POINT_ROUTE(0, 2.0f, 0);
 
 
-		//AI::CLOSE_SEQUENCE_TASK(actorSeq);
-		//AI::TASK_PERFORM_SEQUENCE(actorPed, actorSeq);
-		//AI::CLEAR_SEQUENCE_TASK(&actorSeq);
+		AI::CLOSE_SEQUENCE_TASK(actorSeq);
+		AI::TASK_PERFORM_SEQUENCE(actorPed, actorSeq);
+		AI::CLEAR_SEQUENCE_TASK(&actorSeq);
+
 		int i = 0;
 		while (i < 10) {
 			log_to_file("Distance " + std::to_string(SYSTEM::VDIST(ENTITY::GET_ENTITY_COORDS(actorPed, 1).x, ENTITY::GET_ENTITY_COORDS(actorPed, 1).y, ENTITY::GET_ENTITY_COORDS(actorPed, 1).z, actorRecording[0].getLocation().x, actorRecording[0].getLocation().y, actorRecording[0].getLocation().z)) );
