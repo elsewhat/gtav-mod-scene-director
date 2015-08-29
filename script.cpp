@@ -1290,6 +1290,90 @@ void action_toggle_scene_mode() {
 }
 
 
+bool copy_player_actions_key_pressed() {
+	//ALT+ C
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void action_copy_player_actions() {
+
+
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex == -1) {
+		set_status_text("Actor must be assigned slot 1-9 before recording actions");
+	}
+	else {
+		set_status_text("Actors will now copy the actions of the player");
+		Ped playerPed = actorShortcut[actorIndex];
+
+		WAIT(500);
+
+		bool bCopying = true;
+		DWORD tickStart = GetTickCount();
+		DWORD tickLast = tickStart;
+		DWORD tickNow = tickStart;
+		CONST DWORD DELTA_TICKS = 10;
+		float previousHeading;
+
+		//main loop
+		while (bCopying == true) {
+			tickNow = GetTickCount();
+
+			//check only once pr DELTA_TICKS
+			if (tickNow - tickLast >= DELTA_TICKS) {
+
+
+				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
+
+				float actorHeading = ENTITY::GET_ENTITY_HEADING(playerPed);
+				if (actorHeading != previousHeading) {
+					log_to_file("Changing heading to " + std::to_string(actorHeading));
+					previousHeading = actorHeading;
+					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+						if (actorShortcut[i] != 0 && actorShortcut[i]!= playerPed) {
+							log_to_file("Changing heading to " + std::to_string(actorHeading) + " for actor " + std::to_string(actorShortcut[i]));
+							PED::SET_PED_DESIRED_HEADING(actorShortcut[i], actorHeading);
+						}
+					}
+				}
+
+
+				/*
+				if (PLAYER::IS_PLAYER_FREE_AIMING(playerPed)) {
+					Entity targetEntity;
+					PLAYER::_GET_AIMED_ENTITY(playerPed, &targetEntity);
+
+					if (ENTITY::DOES_ENTITY_EXIST(targetEntity)) {
+
+					}
+
+				}*/
+
+				tickLast = tickNow;
+			}
+
+
+
+			if (copy_player_actions_key_pressed()) {
+				bCopying = false;
+			}
+			WAIT(0);
+		}
+		
+		set_status_text("Copying of actions stopped");
+		nextWaitTicks = 400;
+
+	}
+
+
+}
+
+
 bool possess_key_pressed()
 {
 	return IsKeyJustUp(VK_F9);
@@ -1445,6 +1529,8 @@ bool reset_scene_director_key_pressed() {
 
 
 
+
+
 void main()
 {
 	while (true)
@@ -1479,6 +1565,10 @@ void main()
 
 		if (reset_scene_director_key_pressed()) {
 			action_reset_scene_director();
+		}
+
+		if (copy_player_actions_key_pressed()) {
+			action_copy_player_actions();
 		}
 
 		/*
