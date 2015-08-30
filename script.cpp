@@ -7,6 +7,10 @@
 #include <vector>
 #include <fstream>
 
+//Key attributes
+DWORD key_possess = VK_F9;
+DWORD key_clone = VK_F10;
+
 
 //attributes to the actors in the slot 1-9 
 //index 0 is reserved for the last actor
@@ -95,10 +99,10 @@ void log_to_file(std::string message, bool bAppend = true) {
 }
 
 // Config file - test
-/*
-LPCSTR config_path = ".\\screen_director.ini";
-int test_property = GetPrivateProfileInt("keys", "test_key", 42, config_path);
-*/
+
+LPCSTR config_path = ".\\scene_director.ini";
+//int test_property = GetPrivateProfileInt("keys", "test_key", 42, config_path);
+
 
 static LPCSTR weaponNames[] = {
 	"WEAPON_KNIFE", "WEAPON_NIGHTSTICK", "WEAPON_HAMMER", "WEAPON_BAT", "WEAPON_GOLFCLUB", "WEAPON_CROWBAR",
@@ -286,18 +290,21 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 				float vehicleMaxSpeed = VEHICLE::_GET_VEHICLE_MAX_SPEED(ENTITY::GET_ENTITY_MODEL(pedVehicle));
 
 				if (PED::IS_PED_IN_ANY_HELI(ped)) {
-					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
-					log_to_file("move_to_waypoint: Flying in heli with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
+					int height_above_ground = GetPrivateProfileInt("waypoint", "heli_waypoint_height_above_ground", 50, config_path);
+
+					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z+height_above_ground, vehicleMaxSpeed, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+					log_to_file("move_to_waypoint: Flying in heli with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed) + " height above ground " + std::to_string(height_above_ground));
 					if (suppress_msgs != true) {
 						set_status_text("Flying to waypoint");
 					}
 				}
 				else if (PED::IS_PED_IN_ANY_PLANE(ped)) {
+					int height_above_ground = GetPrivateProfileInt("waypoint", "plane_waypoint_height_above_ground",50, config_path);
 					//z dimension is on ground level so add a bit to it
-					AI::TASK_PLANE_MISSION(pedDriver, pedVehicle, 0, 0, waypointCoord.x, waypointCoord.y, waypointCoord.z + 200.0, 4, 30.0, 50.0, -1, vehicleMaxSpeed, 50);
+					AI::TASK_PLANE_MISSION(pedDriver, pedVehicle, 0, 0, waypointCoord.x, waypointCoord.y, waypointCoord.z + height_above_ground, 4, 30.0, 50.0, -1, vehicleMaxSpeed, 50);
 
 					//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, 500.0, vehicleMaxSpeed, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
-					log_to_file("move_to_waypoint: Flying in plane with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
+					log_to_file("move_to_waypoint: Flying in plane with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed) + " height above ground " + std::to_string(height_above_ground));
 					if (suppress_msgs != true) {
 						set_status_text("Flying to waypoint");
 					}
@@ -1441,20 +1448,45 @@ void action_copy_player_actions() {
 
 }
 
+/*
+* Read keys from ini file
+*/
+void init_read_keys_from_ini() {
+	char iniKeyPossess[256];
+	char iniKeyClone[256];
+
+	GetPrivateProfileString("keys", "key_possess", "F9", iniKeyPossess, sizeof(iniKeyPossess), config_path);
+	GetPrivateProfileString("keys", "key_clone", "F10", iniKeyClone, sizeof(iniKeyClone), config_path);
+
+	log_to_file("Read keys from ini file key_possess " + std::string(iniKeyPossess) + " key_clone " + std::string(iniKeyClone));
+
+	key_possess = str2key(std::string(iniKeyPossess));
+	if (key_possess == 0) {
+		log_to_file(std::string(iniKeyPossess) + " is not a valid key");
+		key_possess = str2key("F9");
+	}
+	key_clone = str2key(std::string(iniKeyClone));
+	if (key_clone == 0) {
+		log_to_file(std::string(iniKeyClone) + " is not a valid key");
+		key_clone = str2key("F10");
+	}
+
+	log_to_file("Converted keys to dword  key_possess " + std::to_string(key_possess) + " key_clone " + std::to_string(key_clone));
+}
 
 bool possess_key_pressed()
 {
-	return IsKeyJustUp(VK_F9);
+	return IsKeyJustUp(key_possess);
 }
 
 bool clone_key_pressed()
 {
-	return IsKeyJustUp(VK_F10);
+	return IsKeyJustUp(key_clone);
 }
 
 bool clone_player_with_vehicle_key_pressed()
 {
-	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_F10)) {
+	if (IsKeyDown(VK_MENU) && IsKeyDown(key_clone)) {
 		return true;
 	}
 	else {
@@ -1692,6 +1724,8 @@ void ScriptMain()
 {
 	set_status_text("Scene director 1.0.3 by elsewhat");
 	set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
+	init_read_keys_from_ini();
+
 	create_relationship_groups();
 	//log_to_file("Screen Director initialized");
 	//log_to_file("Value of test property from config file: " + std::to_string(test_property));
