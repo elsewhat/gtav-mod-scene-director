@@ -242,21 +242,22 @@ void create_relationship_groups() {
 	log_to_file("set_relationships_between_actors");
 
 	PED::ADD_RELATIONSHIP_GROUP("ACTOR1_GROUP", actorHashGroupP);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, actorHashGroup, 0x6F0783F5);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, actorHashGroup, actorHashGroup);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, 0x6F0783F5, actorHashGroup);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, GAMEPLAY::GET_HASH_KEY("player"));
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, actorHashGroup);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), actorHashGroup);
 
 }
 
 void assign_actor_to_relationship_group(Ped ped) {
-	log_to_file("Adding actor to relationship group");
+	log_to_file("Adding actor to relationship group . Existing hash is " +std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped))+ " actorHashGroup is " + std::to_string(actorHashGroup));
+	
 	 
 	if(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped) == actorHashGroup) {
 		log_to_file("Ped already belongs to actor relationship group");
 	}else {
 		PED::SET_PED_RELATIONSHIP_GROUP_HASH(ped, actorHashGroup);
 	}
-
+	log_to_file("Relationship group after add " + std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped)) + " actorHashGroup is " + std::to_string(actorHashGroup));
 }
 
 
@@ -1319,6 +1320,18 @@ void action_copy_player_actions() {
 		DWORD tickNow = tickStart;
 		CONST DWORD DELTA_TICKS = 10;
 		float previousHeading;
+		Hash previousWeapon;
+		bool isFreeAiming = false;
+		bool isShooting = false;
+		Entity currentTarget;
+
+		//try to avoid them fleeing on gunshots
+		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorShortcut[i], true);
+			}
+		}
+
 
 		//main loop
 		while (bCopying == true) {
@@ -1332,27 +1345,82 @@ void action_copy_player_actions() {
 
 				float actorHeading = ENTITY::GET_ENTITY_HEADING(playerPed);
 				if (actorHeading != previousHeading) {
-					log_to_file("Changing heading to " + std::to_string(actorHeading));
+					//log_to_file("Changing heading to " + std::to_string(actorHeading));
 					previousHeading = actorHeading;
 					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 						if (actorShortcut[i] != 0 && actorShortcut[i]!= playerPed) {
-							log_to_file("Changing heading to " + std::to_string(actorHeading) + " for actor " + std::to_string(actorShortcut[i]));
+							//log_to_file("Changing heading to " + std::to_string(actorHeading) + " for actor " + std::to_string(actorShortcut[i]));
 							PED::SET_PED_DESIRED_HEADING(actorShortcut[i], actorHeading);
 						}
 					}
 				}
 
+				if (WEAPON::IS_PED_ARMED(playerPed, 6)) {
+					Hash currentWeapon;
+					WEAPON::GET_CURRENT_PED_WEAPON(playerPed, &currentWeapon, 1);
+					if (currentWeapon != previousWeapon) {
+						previousWeapon = currentWeapon;
+						//give and equip weapon to all other actors
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								log_to_file("Giving weapon " + std::to_string(currentWeapon) + " to actor " + std::to_string(actorShortcut[i]));
+								WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], currentWeapon, 1000, 1, 1);
+							}
+						}
+					}
+				}
 
-				/*
-				if (PLAYER::IS_PLAYER_FREE_AIMING(playerPed)) {
+				if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
+					isFreeAiming = true;
 					Entity targetEntity;
-					PLAYER::_GET_AIMED_ENTITY(playerPed, &targetEntity);
-
-					if (ENTITY::DOES_ENTITY_EXIST(targetEntity)) {
-
+					PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
+					//log_to_file("Player aiming at " + std::to_string(targetEntity));
+					//if new target which exist, make all actors aim at it
+					if (ENTITY::DOES_ENTITY_EXIST(targetEntity) && targetEntity!=currentTarget) {
+						currentTarget = targetEntity;
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								log_to_file("Aim at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
+								AI::TASK_AIM_GUN_AT_ENTITY(actorShortcut[i], targetEntity, -1, 0);
+							}
+						}
 					}
 
-				}*/
+					if (PED::IS_PED_SHOOTING(playerPed)) {
+						isShooting = true;
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								log_to_file("Shoot at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
+								AI::TASK_SHOOT_AT_ENTITY(actorShortcut[i], currentTarget, -1,GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+							}
+						}
+						WAIT(120);
+					}
+					else if (isShooting) {//make actors stop shooting
+						isShooting = false;
+						currentTarget = 0;
+
+						/*
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								log_to_file("Clearing tasks for actor " + std::to_string(actorShortcut[i]));
+								AI::CLEAR_PED_TASKS(actorShortcut[i]);
+							}
+						}*/
+					}
+
+
+				} else if (isFreeAiming) {//make actors peds stop aiming
+					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+						if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+							log_to_file("Clearing tasks for actor " + std::to_string(actorShortcut[i]));
+							AI::CLEAR_PED_TASKS(actorShortcut[i]);
+						}
+					}
+					currentTarget = 0;
+					isFreeAiming = false;
+					isShooting=false;
+				}
 
 				tickLast = tickNow;
 			}
@@ -1622,7 +1690,7 @@ void main()
 
 void ScriptMain()
 {
-	set_status_text("Scene director 1.0.2 by elsewhat");
+	set_status_text("Scene director 1.0.3 by elsewhat");
 	set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
 	create_relationship_groups();
 	//log_to_file("Screen Director initialized");
