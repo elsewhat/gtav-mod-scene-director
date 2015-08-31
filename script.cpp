@@ -1350,6 +1350,7 @@ void action_copy_player_actions() {
 
 				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
 
+				/* Will not update heading
 				float actorHeading = ENTITY::GET_ENTITY_HEADING(playerPed);
 				if (actorHeading != previousHeading) {
 					//log_to_file("Changing heading to " + std::to_string(actorHeading));
@@ -1360,7 +1361,7 @@ void action_copy_player_actions() {
 							PED::SET_PED_DESIRED_HEADING(actorShortcut[i], actorHeading);
 						}
 					}
-				}
+				}*/
 
 				if (WEAPON::IS_PED_ARMED(playerPed, 6)) {
 					Hash currentWeapon;
@@ -1387,7 +1388,7 @@ void action_copy_player_actions() {
 						currentTarget = targetEntity;
 						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								log_to_file("Aim at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
+								//log_to_file("Aim at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
 								AI::TASK_AIM_GUN_AT_ENTITY(actorShortcut[i], targetEntity, -1, 0);
 							}
 						}
@@ -1396,31 +1397,24 @@ void action_copy_player_actions() {
 					if (PED::IS_PED_SHOOTING(playerPed)) {
 						isShooting = true;
 						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								log_to_file("Shoot at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && actorShortcut[i]!= currentTarget) {
+								//log_to_file("Shoot at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
 								AI::TASK_SHOOT_AT_ENTITY(actorShortcut[i], currentTarget, -1,GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
 							}
 						}
-						WAIT(120);
+						WAIT(50);
 					}
 					else if (isShooting) {//make actors stop shooting
 						isShooting = false;
 						currentTarget = 0;
 
-						/*
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								log_to_file("Clearing tasks for actor " + std::to_string(actorShortcut[i]));
-								AI::CLEAR_PED_TASKS(actorShortcut[i]);
-							}
-						}*/
 					}
 
 
 				} else if (isFreeAiming) {//make actors peds stop aiming
 					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 						if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-							log_to_file("Clearing tasks for actor " + std::to_string(actorShortcut[i]));
+							//log_to_file("Clearing tasks for actor " + std::to_string(actorShortcut[i]));
 							AI::CLEAR_PED_TASKS(actorShortcut[i]);
 						}
 					}
