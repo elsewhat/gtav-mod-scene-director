@@ -533,6 +533,10 @@ void action_clone_player() {
 		Vehicle vehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
 		PED::SET_PED_INTO_VEHICLE(clonedPed, vehicle, -2);
 	}
+	else {//clone a bit ahead of the player and facing towards you
+		ENTITY::SET_ENTITY_HEADING(clonedPed, ENTITY::GET_ENTITY_HEADING(playerPed)+180.0);
+		teleport_entity_to_location(clonedPed, ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(playerPed, 1.0, 3.0, 0.0), false);
+	}
 
 	PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(clonedPed, true);
 	assign_actor_to_relationship_group(clonedPed);
@@ -1318,7 +1322,7 @@ void action_copy_player_actions() {
 		set_status_text("Actor must be assigned slot 1-9 before recording actions");
 	}
 	else {
-		set_status_text("Actors will now copy the actions of the player");
+		set_status_text("Actors will now copy the actions of the player. Exit with ALT+C");
 		Ped playerPed = actorShortcut[actorIndex];
 
 		WAIT(500);
@@ -1399,8 +1403,18 @@ void action_copy_player_actions() {
 						currentTarget = targetEntity;
 						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								log_to_file("Aim at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
-								AI::TASK_AIM_GUN_AT_ENTITY(actorShortcut[i], targetEntity, -1, 0);
+
+								if (isSkydiving == false) {//TASK_AIM_GUN_AT_ENTITY while skydiving has a tiny sideeffect
+									//log_to_file("Aim at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
+									if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+										//doesn't work :(
+										AI::TASK_VEHICLE_AIM_AT_PED(lastVehicle, targetEntity);
+			
+									}else {
+										AI::TASK_AIM_GUN_AT_ENTITY(actorShortcut[i], targetEntity, -1, 0);
+									}
+									
+								}
 							}
 						}
 					}
@@ -1410,7 +1424,15 @@ void action_copy_player_actions() {
 						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && actorShortcut[i]!= currentTarget) {
 								//log_to_file("Shoot at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
-								AI::TASK_SHOOT_AT_ENTITY(actorShortcut[i], currentTarget, -1,GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+								if (isSkydiving == false) {//TASK_SHOOT_AT_ENTITY while skydiving has a tiny sideeffect
+									if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+										//doesn't work :(
+										AI::TASK_VEHICLE_SHOOT_AT_PED(lastVehicle, targetEntity, 0x41a00000);
+									}
+									else {
+										AI::TASK_SHOOT_AT_ENTITY(actorShortcut[i], currentTarget, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+									}
+								}
 							}
 						}
 						WAIT(50);
@@ -1441,16 +1463,26 @@ void action_copy_player_actions() {
 				//check if the player is in a vehicle
 				if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
 					Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
+
 					if (pedVehicle != lastVehicle) {
 						isSkydiving = false;
 						hasGivenParachute = false;
 						lastVehicle = pedVehicle;
 						log_to_file("Actors should enter vehicle " + std::to_string(pedVehicle));
 						int seatIndex = 0;
+						if (PED::IS_PED_IN_ANY_PLANE(playerPed)) {
+							log_to_file("In plane with seats " + std::to_string(VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(pedVehicle)));
+						}
+
 						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
 								log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should enter vehicle " + std::to_string(pedVehicle) + " in seat " + std::to_string(seatIndex));
-								AI::TASK_ENTER_VEHICLE(actorShortcut[i], pedVehicle, -1, seatIndex, 1.0, 1, 0);
+								
+								if (PED::IS_PED_IN_ANY_PLANE(playerPed)) {
+									PED::SET_PED_INTO_VEHICLE(actorShortcut[i], pedVehicle, -2);
+								} else {
+									AI::TASK_ENTER_VEHICLE(actorShortcut[i], pedVehicle, -1, seatIndex, 1.0, 1, 0);
+								}
 								seatIndex++;
 							}
 						}
@@ -1461,12 +1493,16 @@ void action_copy_player_actions() {
 				//check if the player is falling
 				if (PED::GET_PED_PARACHUTE_STATE(playerPed) == 0) {	
 					if (hasGivenParachute == false) {
-						log_to_file("Giving parachutes to all actors and leaving vehicle ");
+						log_to_file("Everyone leave vehicle");
+						//AI::TASK_EVERYONE_LEAVE_VEHICLE(lastVehicle);
+
+						log_to_file("Giving parachutes to all actors and task sky dive");
 						hasGivenParachute = true;
 						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
 								WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
-								AI::TASK_SKY_DIVE(actorShortcut[i]);
+								//AI::TASK_SKY_DIVE(actorShortcut[i]);
+								AI::TASK_LEAVE_VEHICLE(actorShortcut[i], lastVehicle, 4160);
 							}
 						}
 					}
@@ -1486,21 +1522,38 @@ void action_copy_player_actions() {
 						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
 								if (PED::GET_PED_PARACHUTE_STATE(actorShortcut[i]) == 0) {
-									log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should deploy parachute");
+									//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should deploy parachute");
 
 									AI::TASK_PARACHUTE_TO_TARGET(actorShortcut[i], playerLocation.x, playerLocation.y, zGroundLevel);
 
 								}else if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
-									log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should sky dive");
-									AI::TASK_SKY_DIVE(actorShortcut[i]);
+									//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should sky dive");
+									//had some issues with them not exiting the vehicle so use TASK_LEAVE_VEHICLE with a teleport flag instead
+									//AI::TASK_SKY_DIVE(actorShortcut[i]);
+									AI::TASK_LEAVE_VEHICLE(actorShortcut[i], lastVehicle, 4160);
 									WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
 								}
 							}
 						}
 						WAIT(50);
 					}
-				}
+				} else if (isSkydiving) {//check if we have landed
+					if (PED::GET_PED_PARACHUTE_STATE(playerPed) == -1) {
+						bool allActorsOnGround = true;
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && PED::GET_PED_PARACHUTE_STATE(actorShortcut[i]) != -1) {
+								//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " has not yet landed");
+								allActorsOnGround = false;
+							}
+						}
+						if (allActorsOnGround) {
+							log_to_file("All actors has landed. Skydiving is finished");
+							isSkydiving = false;
+							hasGivenParachute = false;
+						}
+					}
 
+				}
 
 				tickLast = tickNow;
 			}
