@@ -163,6 +163,54 @@ void check_player_model()
 		}
 }
 
+void draw_instructional_button() {
+	set_status_text("Drawing instructional buttons");
+
+	//var scaleform = new Scaleform(0);
+	//scaleform.Load("instructional_buttons");
+	DWORD scaleForm = GRAPHICS::_REQUEST_SCALEFORM_MOVIE2("instructional_buttons");
+	
+	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
+		log_to_file("Scale form has loaded");
+		//_instructionalButtonsScaleform.CallFunction("CLEAR_ALL");
+		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+
+		//_instructionalButtonsScaleform.CallFunction("TOGGLE_MOUSE_BUTTONS", 0);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		//_instructionalButtonsScaleform.CallFunction("CREATE_CONTAINER");
+		//not used in scripts, so skipping for now
+		//GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+
+		//_instructionalButtonsScaleform.CallFunction("SET_DATA_SLOT", 0, Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int)Control.PhoneSelect, 0), "Select");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+
+		//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F5");
+
+		char* controlKey = CONTROLS::_0x0499D7B09FC9B407(2, 176, 1);
+		GRAPHICS::_0xE83A3E3557A56640(controlKey);
+
+		//CONTROLS::_0x0499D7B09FC9B407(2, "t_F5", 0);
+
+		//GRAPHICS::_BEGIN_TEXT_COMPONENT("Select");
+		//GRAPHICS::_END_TEXT_COMPONENT();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("This is a very long text");
+
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		//_instructionalButtonsScaleform.CallFunction("DRAW_INSTRUCTIONAL_BUTTONS", -1);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		WAIT(5000);
+	}
+	nextWaitTicks = 3000;
+}
+
 void store_current_waypoint_for_actor(Ped ped) {
 
 	if (UI::IS_WAYPOINT_ACTIVE()) {
@@ -1753,6 +1801,16 @@ bool reset_scene_director_key_pressed() {
 	}
 }
 
+bool control_overlay_key_pressed() {
+	//ALT+ Pause/break
+	if (IsKeyDown(VK_F2)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 
 
 
@@ -1830,6 +1888,10 @@ void main()
 
 		if (teleport_player_key_pressed()) {
 			teleport_player_to_waypoint();
+		}
+
+		if (control_overlay_key_pressed()) {
+			draw_instructional_button();
 		}
 
 		action_if_ped_assign_shortcut_key_pressed();
