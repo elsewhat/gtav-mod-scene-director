@@ -173,55 +173,65 @@ void draw_instructional_button() {
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
 
 		log_to_file("Scale form has loaded with id " + std::to_string(scaleForm));
-		GRAPHICS::_0x0DF606929C105BE1(scaleForm, 255, 255, 255, 0);
-
-		//_instructionalButtonsScaleform.CallFunction("CLEAR_ALL");
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
-
-		//_instructionalButtonsScaleform.CallFunction("TOGGLE_MOUSE_BUTTONS", 0);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		//_instructionalButtonsScaleform.CallFunction("CREATE_CONTAINER");
-		//not used in scripts, but doesn't seem to matter
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
-
-		//_instructionalButtonsScaleform.CallFunction("SET_DATA_SLOT", 0, Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int)Control.PhoneSelect, 0), "Select");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
-
-		//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F5");
-		char* controlKey = CONTROLS::_0x0499D7B09FC9B407(2, 176, 1);
-		GRAPHICS::_0xE83A3E3557A56640(controlKey);
-
-		//alternative if you need to display any key icon (not tested)
-		//CONTROLS::_0x0499D7B09FC9B407(2, "t_F5", 0);
-		//GRAPHICS::_BEGIN_TEXT_COMPONENT("F5 key icon text");
-		//GRAPHICS::_END_TEXT_COMPONENT();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("This is a very long text");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		//_instructionalButtonsScaleform.CallFunction("DRAW_INSTRUCTIONAL_BUTTONS", -1);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
-		//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_FLOAT(-1.0f);
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		//_instructionalButtonsScaleform.Render2D(), see https://github.com/crosire/scripthookvdotnet/blob/a970eed061a599f8a77d8ed405da5dde890fa9e7/source/Scaleform.cpp#L82
-		//Native::Function::Call(Native::Hash::_0xCF537FDE4FBD4CE5, this->mHandle, 255, 255, 255, 255);
-		
 		//Proof of concept. Try to draw scaleform instructional_buttons every 50 ticks
 		int i = 0;
 		while (i < 50) {
-			invoke<Void>(0xCF537FDE4FBD4CE5, scaleForm, 255, 255, 255, 255);
+
+			//_instructionalButtonsScaleform.CallFunction("CLEAR_ALL");
+			GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+
+			//_instructionalButtonsScaleform.CallFunction("TOGGLE_MOUSE_BUTTONS", 0);
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
+			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+			//_instructionalButtonsScaleform.CallFunction("CREATE_CONTAINER");
+			//not used in scripts, but doesn't seem to matter
+			GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+
+			//_instructionalButtonsScaleform.CallFunction("SET_DATA_SLOT", 0, Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int)Control.PhoneSelect, 0), "Select");
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+
+			//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F5");
+			char* controlKey = CONTROLS::_0x0499D7B09FC9B407(2, 176, 1);
+			GRAPHICS::_0xE83A3E3557A56640(controlKey);
+
+			//alternative if you need to display any key icon (not tested)
+			//CONTROLS::_0x0499D7B09FC9B407(2, "t_F5", 0);
+			//GRAPHICS::_BEGIN_TEXT_COMPONENT("F5 key icon text");
+			//GRAPHICS::_END_TEXT_COMPONENT();
+
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("This is a very long text");
+			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
+
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F5");
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_ALT");
+
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Text for F5");
+			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+
+			//_instructionalButtonsScaleform.CallFunction("DRAW_INSTRUCTIONAL_BUTTONS", -1);
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
+			//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_FLOAT(-1.0f);
+			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+			//_instructionalButtonsScaleform.Render2D(), see https://github.com/crosire/scripthookvdotnet/blob/a970eed061a599f8a77d8ed405da5dde890fa9e7/source/Scaleform.cpp#L82
+			//Native::Function::Call(Native::Hash::_0xCF537FDE4FBD4CE5, this->mHandle, 255, 255, 255, 255);
+		
+
+			//invoke<Void>(0xCF537FDE4FBD4CE5, scaleForm, 255, 255, 255, 255);
 
 			//other calls which fails
 			//GRAPHICS::_0xCF537FDE4FBD4CE5(scaleForm, 255, 255, 255, 255, 0);
 			//invoke<Void>(0xCF537FDE4FBD4CE5, scaleForm, 255, 255, 255, 255);
 			//GRAPHICS::_0x0DF606929C105BE1(scaleForm, 255, 255, 255, 255);
-			WAIT(50);
+			WAIT(0);
 			i++;
 		}
 
