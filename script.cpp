@@ -57,7 +57,10 @@ std::string statusText;
 DWORD statusTextDrawTicksMax;
 bool statusTextGxtEntry;
 
-int nextWaitTicks = 0;
+//Used for determining wait time after actions
+DWORD mainTickLast=0;
+DWORD nextWaitTicks = 0;
+
 int forceSlotIndexOverWrite = -1;
 
 void set_status_text(std::string text)
@@ -164,101 +167,87 @@ void check_player_model()
 }
 
 void draw_instructional_button() {
-	set_status_text("Drawing instructional buttons");
-
-	//var scaleform = new Scaleform(0);
-	//scaleform.Load("instructional_buttons");
 	int scaleForm = GRAPHICS::REQUEST_SCALEFORM_MOVIE("instructional_buttons");
 	
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
+		//_instructionalButtonsScaleform.CallFunction("CLEAR_ALL");
+		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
 
-		log_to_file("Scale form has loaded with id " + std::to_string(scaleForm));
-		//Proof of concept. Try to draw scaleform instructional_buttons every 50 ticks
-		int i = 0;
-		while (i < 1000) {
+		//_instructionalButtonsScaleform.CallFunction("TOGGLE_MOUSE_BUTTONS", 0);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-			//_instructionalButtonsScaleform.CallFunction("CLEAR_ALL");
-			GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+		//_instructionalButtonsScaleform.CallFunction("CREATE_CONTAINER");
+		//not used in scripts, but doesn't seem to matter
+		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
 
-			//_instructionalButtonsScaleform.CallFunction("TOGGLE_MOUSE_BUTTONS", 0);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		//_instructionalButtonsScaleform.CallFunction("SET_DATA_SLOT", 0, Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int)Control.PhoneSelect, 0), "Select");
 
-			//_instructionalButtonsScaleform.CallFunction("CREATE_CONTAINER");
-			//not used in scripts, but doesn't seem to matter
-			GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+		char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
+		char* spaceControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 22, 1);
+		char* delControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 178, 1);
+		char* insControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 121, 1);
 
-			//_instructionalButtonsScaleform.CallFunction("SET_DATA_SLOT", 0, Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int)Control.PhoneSelect, 0), "Select");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F10");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Clone player");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-			char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
-			char* spaceControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 22, 1);
-			char* delControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 178, 1);
-			char* insControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 121, 1);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F9");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Possess ped");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F10");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Clone player");
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
+		GRAPHICS::_0xE83A3E3557A56640(insControlKey);
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Waypoint to all");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F9");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Possess ped");
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
-			GRAPHICS::_0xE83A3E3557A56640(insControlKey);
-			GRAPHICS::_0xE83A3E3557A56640(altControlKey);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Waypoint to all");
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_A");
-			GRAPHICS::_0xE83A3E3557A56640(altControlKey);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Autopilot");
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_A");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Autopilot");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_C");
-			GRAPHICS::_0xE83A3E3557A56640(altControlKey);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Firing squad");
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_C");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Firing squad");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
-			GRAPHICS::_0xE83A3E3557A56640(delControlKey);
-			GRAPHICS::_0xE83A3E3557A56640(altControlKey);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Reset scene");
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
+		GRAPHICS::_0xE83A3E3557A56640(delControlKey);
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Reset scene");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
-			GRAPHICS::_0xE83A3E3557A56640(spaceControlKey);
-			GRAPHICS::_0xE83A3E3557A56640(altControlKey);
-			//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_SPACE");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
+		GRAPHICS::_0xE83A3E3557A56640(spaceControlKey);
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_SPACE");
 
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Scene mode");
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Scene mode");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 
-			//_instructionalButtonsScaleform.CallFunction("DRAW_INSTRUCTIONAL_BUTTONS", -1);
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
-			//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_FLOAT(-1.0f);
-			GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-			WAIT(0);
-			i++;
-		}
+		//_instructionalButtonsScaleform.CallFunction("DRAW_INSTRUCTIONAL_BUTTONS", -1);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
+		//GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_FLOAT(-1.0f);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 	}
-	nextWaitTicks = 3000;
+
 }
 
 void store_current_waypoint_for_actor(Ped ped) {
@@ -1851,115 +1840,124 @@ bool reset_scene_director_key_pressed() {
 	}
 }
 
-bool control_overlay_key_pressed() {
-	//ALT+ Pause/break
-	if (IsKeyDown(VK_F3)) {
-		return true;
-	}
-	else {
-		return false;
-	}
+bool should_display_app_hud() {
+	return true;
 }
-
 
 
 
 
 void main()
 {
+
+
 	while (true)
 	{
-		if (scene_mode_toggle_key_pressed()) {
-			action_toggle_scene_mode();
+		/* ACTIONS WHICH ARE MAY NEED TO WAIT A FEW TICKS */
+		if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
+			//nextWaitTicks will be set by action methods in order to define how long before next input can be processed
+			nextWaitTicks = 0;
+
+			if (scene_mode_toggle_key_pressed()) {
+				action_toggle_scene_mode();
+			}
+
+			if (scene_teleport_to_start_locations_key_pressed()) {
+				action_teleport_to_start_locations();
+			}
+
+			if (set_same_waypoint_for_all_actors_key_pressed()) {
+				action_set_same_waypoint_for_all_actors();
+			}
+
+			if (possess_key_pressed()) {
+				action_possess_ped();
+			}
+
+			if (autopilot_for_player_key_pressed()) {
+				action_autopilot_for_player();
+			}
+
+			if (vehicle_chase_key_pressed()) {
+				action_vehicle_chase();
+			}
+
+			if (vehicle_escort_key_pressed()) {
+				action_vehicle_escort();
+			}
+
+			if (reset_scene_director_key_pressed()) {
+				action_reset_scene_director();
+			}
+
+			if (copy_player_actions_key_pressed()) {
+				action_copy_player_actions();
+			}
+
+			/*
+			if (increase_aggressiveness_key_pressed()) {
+				action_increase_aggressiveness(PLAYER::PLAYER_PED_ID(), false);
+			}
+
+			if (decrease_aggressiveness_key_pressed()) {
+				action_decrease_aggressiveness(PLAYER::PLAYER_PED_ID(),false);
+			}
+
+			if (increase_aggressiveness_for_all_actors_key_pressed()) {
+				action_increase_aggressiveness_for_all_actors();
+			}
+
+			if (decrease_aggressiveness_for_all_actors_key_pressed()) {
+				action_decrease_aggressiveness_for_all_actors();
+			}*/
+
+
+
+			if (clone_player_with_vehicle_key_pressed()) {
+				action_clone_player_with_vehicle();
+			}
+			else if (clone_key_pressed()) {
+				action_clone_player();
+			}
+
+
+			if (enter_nearest_vehicle_as_passenger_key_pressed()) {
+				action_enter_nearest_vehicle_as_passenger();
+			}
+
+			if (teleport_player_key_pressed()) {
+				teleport_player_to_waypoint();
+			}
+
+
+
+			action_if_ped_assign_shortcut_key_pressed();
+
+			action_if_ped_execute_shortcut_key_pressed();
+
+			check_if_player_is_passenger_and_has_waypoint();
+
+			mainTickLast = GetTickCount();
 		}
 
-		if (scene_teleport_to_start_locations_key_pressed()) {
-			action_teleport_to_start_locations();
-		}
+		/* ACTIONS WHICH ARE PERFORMMED EVERY TICK */
 
-		if (set_same_waypoint_for_all_actors_key_pressed()) {
-			action_set_same_waypoint_for_all_actors();
-		}
-
-		if (possess_key_pressed()) {
-			action_possess_ped();
-		}
-
-		if (autopilot_for_player_key_pressed()) {
-			action_autopilot_for_player();
-		}
-
-		if (vehicle_chase_key_pressed()) {
-			action_vehicle_chase();
-		}
-
-		if (vehicle_escort_key_pressed()) {
-			action_vehicle_escort();
-		}
-
-		if (reset_scene_director_key_pressed()) {
-			action_reset_scene_director();
-		}
-
-		if (copy_player_actions_key_pressed()) {
-			action_copy_player_actions();
-		}
-
-		/*
-		if (increase_aggressiveness_key_pressed()) {
-			action_increase_aggressiveness(PLAYER::PLAYER_PED_ID(), false);
-		}
-
-		if (decrease_aggressiveness_key_pressed()) {
-			action_decrease_aggressiveness(PLAYER::PLAYER_PED_ID(),false);
-		}
-
-		if (increase_aggressiveness_for_all_actors_key_pressed()) {
-			action_increase_aggressiveness_for_all_actors();
-		}
-
-		if (decrease_aggressiveness_for_all_actors_key_pressed()) {
-			action_decrease_aggressiveness_for_all_actors();
-		}*/
-
-
-
-		if (clone_player_with_vehicle_key_pressed()) {
-			action_clone_player_with_vehicle();
-		}
-		else if (clone_key_pressed()) {
-			action_clone_player();
-		}
-
-
-		if (enter_nearest_vehicle_as_passenger_key_pressed()) {
-			action_enter_nearest_vehicle_as_passenger();
-		}
-
-		if (teleport_player_key_pressed()) {
-			teleport_player_to_waypoint();
-		}
-
-		if (control_overlay_key_pressed()) {
+		//Display HUD for app
+		if (should_display_app_hud()) {
 			draw_instructional_button();
 		}
 
-		action_if_ped_assign_shortcut_key_pressed();
-
-		action_if_ped_execute_shortcut_key_pressed();
-
-		check_if_player_is_passenger_and_has_waypoint();
-
-		//check if the player is dead/arrested, in order to swap back to original
+		//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
 		check_player_model();
 
-		WAIT(nextWaitTicks);
-		nextWaitTicks = 0;
+		//Wait for next tick
+		WAIT(0);
 	}
 }
 
 void ScriptMain()
 {
+
 	set_status_text("Scene director 1.1 by elsewhat");
 	set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
 	init_read_keys_from_ini();
