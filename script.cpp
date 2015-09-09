@@ -11,6 +11,29 @@
 DWORD key_possess = VK_F9;
 DWORD key_clone = VK_F10;
 
+enum SCENE_MODE {
+	SCENE_MODE_ACTIVE = 1,
+	SCENE_MODE_SETUP = 0
+};
+
+enum MENU_ITEM {
+	MENU_ITEM_ACTOR_1 = 1,
+	MENU_ITEM_ACTOR_2 = 2,
+	MENU_ITEM_ACTOR_3 = 3,
+	MENU_ITEM_ACTOR_4 = 4,
+	MENU_ITEM_ACTOR_5 = 5,
+	MENU_ITEM_ACTOR_6 = 6,
+	MENU_ITEM_ACTOR_7 = 7,
+	MENU_ITEM_ACTOR_8 = 8,
+	MENU_ITEM_ACTOR_9 = 9,
+	MENU_ITEM_SCENE_MODE = 10,
+	MENU_ITEM_AUTOPILOT = 11,
+	MENU_ITEM_ESCORT = 12,
+	MENU_ITEM_CHASE = 13,
+	MENU_ITEM_FIRING_SQUAD = 14,
+
+};
+
 
 //attributes to the actors in the slot 1-9 
 //index 0 is reserved for the last actor
@@ -37,11 +60,9 @@ bool is_firing_squad_engaged = false;
 DWORD actorHashGroup = 0x5F0783F1;
 Hash* actorHashGroupP = &actorHashGroup;
 
-
-enum SCENE_MODE {
-	SCENE_MODE_ACTIVE = 1,
-	SCENE_MODE_SETUP = 0
-};
+int menu_active_index = 0;
+MENU_ITEM menu_active_action = MENU_ITEM_SCENE_MODE;
+int menu_max_index = 0;
 
 SCENE_MODE sceneMode = SCENE_MODE_ACTIVE;
 
@@ -368,49 +389,106 @@ void draw_instructional_button() {
 	}
 }
 
-void draw_actor_overview() {
+
+void draw_menu() {
 	int drawIndex = 0;
 	int actorIndexPlayer = get_index_for_actor(PLAYER::PLAYER_PED_ID());
 
-	if (sceneMode == SCENE_MODE_ACTIVE) {
-		DRAW_TEXT("Scene mode: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+	//colors for swapping from active to inactive... messy
+	int textColorR = 255, textColorG = 255, textColorB=255;
+	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_SCENE_MODE;
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	} else {
-		DRAW_TEXT("Scene mode: Setup", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
+
+	if (sceneMode == SCENE_MODE_ACTIVE) {
+		DRAW_TEXT("Scene mode: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	} else {
+		DRAW_TEXT("Scene mode: Setup", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+
 	drawIndex++;
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	} else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
 
 	if (is_autopilot_engaged_for_player) {
-		DRAW_TEXT("Autopilot: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		DRAW_TEXT("Autopilot: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_AUTOPILOT;
+		}
+
 		drawIndex++;
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
 	}
 
 	if (is_chase_player_engaged) {
-		DRAW_TEXT("Player chase: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		DRAW_TEXT("Player chase: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_CHASE;
+		}
+
 		drawIndex++;
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
 	}
 
 	if (is_escort_player_engaged) {
-		DRAW_TEXT("Player escort: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		DRAW_TEXT("Player escort: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_ESCORT;
+		}
+
 		drawIndex++;
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
 	}
 
 	if (is_firing_squad_engaged) {
-		DRAW_TEXT("Firing squad: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		DRAW_TEXT("Firing squad: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_FIRING_SQUAD;
+		}
+
 		drawIndex++;
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
 	}
 
 
 	for (int i = (sizeof(actorShortcut) / sizeof(Ped))-1 ; i >0 ; i--) {
 		if (actorShortcut[i] != 0) {
 			char* actorText = strdup(("Actor "+ std::to_string(i)).c_str());
-			DRAW_TEXT(actorText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
-			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+			DRAW_TEXT(actorText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 			/*
 			if (GRAPHICS::HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu") && actorHasWaypoint[i]) {
@@ -418,14 +496,30 @@ void draw_actor_overview() {
 			}*/
 
 			if (actorHasWaypoint[i] != 0) {
-				DRAW_TEXT("Waypoint", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, 255, 255, 255, 200);
+				DRAW_TEXT("Waypoint", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			}
 
 			if (actorIndexPlayer == i) {
 				GRAPHICS::DRAW_RECT(0.93, 0.883 - (0.04)*drawIndex, 0.113, 0.002, 100, 255, 0, 100);
 			}
+
+			if (menu_active_index == drawIndex) {
+				//i should match value of MENU_ITEM_ACTOR_X
+				menu_active_action = (MENU_ITEM)i;
+			}
+
 			drawIndex++;
+			if (menu_active_index == drawIndex) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
 		}
+	}
+	menu_max_index = drawIndex - 1;
+	if (menu_active_index > menu_max_index) {
+		menu_active_index = menu_max_index;
 	}
 }
 
@@ -1036,6 +1130,28 @@ void action_if_ped_assign_shortcut_key_pressed()
 	}
 }
 
+void swap_to_actor_with_index(int pedShortcutsIndex) {
+	if (actorShortcut[pedShortcutsIndex] == 0) {
+		set_status_text("No stored actor. Store with CTRL+" + std::to_string(pedShortcutsIndex));
+	}
+	else {
+		log_to_file("action_if_ped_execute_shortcut_key_pressed: Retrieve ped in slot " + std::to_string(pedShortcutsIndex));
+		Ped pedInSlot = actorShortcut[pedShortcutsIndex];
+		if (ENTITY::IS_ENTITY_DEAD(pedInSlot)) {
+			log_to_file("action_if_ped_execute_shortcut_key_pressed: Dead ped in slot " + std::to_string(pedShortcutsIndex));
+			set_status_text("Thou shalt not swap to a dead actor");
+		}
+		else {
+			log_to_file("action_if_ped_execute_shortcut_key_pressed: Switching to ped:  " + std::to_string(actorShortcut[pedShortcutsIndex]));
+
+			//first store the waypoint for the current actor
+			store_current_waypoint_for_actor(PLAYER::PLAYER_PED_ID());
+
+			possess_ped(actorShortcut[pedShortcutsIndex]);
+		}
+	}
+}
+
 void action_if_ped_execute_shortcut_key_pressed()
 {
 	//ALT key
@@ -1081,28 +1197,12 @@ void action_if_ped_execute_shortcut_key_pressed()
 			//TODO: Check if it exist
 			nextWaitTicks = 300;
 
-			if (actorShortcut[pedShortcutsIndex] == 0) {
-				set_status_text("No stored actor. Store with CTRL+" + std::to_string(pedShortcutsIndex));
-			}
-			else {
-				log_to_file("action_if_ped_execute_shortcut_key_pressed: Retrieve ped in slot " + std::to_string(pedShortcutsIndex));
-				Ped pedInSlot = actorShortcut[pedShortcutsIndex];
-				if (ENTITY::IS_ENTITY_DEAD(pedInSlot)) {
-					log_to_file("action_if_ped_execute_shortcut_key_pressed: Dead ped in slot " + std::to_string(pedShortcutsIndex));
-					set_status_text("Thou shalt not swap to a dead actor");
-				}
-				else {
-					log_to_file("action_if_ped_execute_shortcut_key_pressed: Switching to ped:  " + std::to_string(actorShortcut[pedShortcutsIndex]));
-
-					//first store the waypoint for the current actor
-					store_current_waypoint_for_actor(PLAYER::PLAYER_PED_ID());
-
-					possess_ped(actorShortcut[pedShortcutsIndex]);
-				}
-			}
+			swap_to_actor_with_index(pedShortcutsIndex);
 		}
 	}
 }
+
+
 
 void action_reset_scene_director() {
 	set_status_text("Resetting scene director to initial status");
@@ -1522,7 +1622,7 @@ void action_copy_player_actions() {
 			//Display HUD for app on every tick
 			if (should_display_app_hud()) {
 				draw_instructional_button();
-				draw_actor_overview();
+				draw_menu();
 			}
 
 			//check if we're waiting nextWaitTicks number of ticks
@@ -1750,6 +1850,34 @@ void action_copy_player_actions() {
 
 }
 
+void action_menu_active_selected() {
+	//switch to actor
+	if (menu_active_action >= 1 && menu_active_action <= 9) {
+		swap_to_actor_with_index(menu_active_action);
+	}
+	else if (menu_active_action == MENU_ITEM_AUTOPILOT) {
+		//autpilot is cancelled by switching to current actor
+		int currentIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+		if (currentIndex != -1) {
+			swap_to_actor_with_index(menu_active_action);
+		}
+	}
+	else if (menu_active_action == MENU_ITEM_CHASE) {
+		action_vehicle_chase();
+	}
+	else if (menu_active_action == MENU_ITEM_ESCORT) {
+		action_vehicle_escort();
+	}
+	else if (menu_active_action == MENU_ITEM_SCENE_MODE) {
+		action_toggle_scene_mode();
+	}
+	else if (menu_active_action == MENU_ITEM_FIRING_SQUAD) {
+		set_status_text("TODO: Cancel firing squad mode");
+	}
+
+}
+
+
 /*
 * Read keys from ini file
 */
@@ -1775,6 +1903,7 @@ void init_read_keys_from_ini() {
 
 	log_to_file("Converted keys to dword  key_possess " + std::to_string(key_possess) + " key_clone " + std::to_string(key_clone));
 }
+
 
 bool possess_key_pressed()
 {
@@ -1928,7 +2057,32 @@ bool reset_scene_director_key_pressed() {
 		return false;
 	}
 }
+bool menu_up_key_pressed() {
+	if (IsKeyDown(VK_NUMPAD8)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
+bool menu_down_key_pressed() {
+	if (IsKeyDown(VK_NUMPAD2)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool menu_select_key_pressed() {
+	if (IsKeyDown(VK_NUMPAD5)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 
 
@@ -2015,6 +2169,23 @@ void main()
 				teleport_player_to_waypoint();
 			}
 
+			if (should_display_app_hud()) {
+				if (menu_up_key_pressed()) {
+					menu_active_index++;
+					if (menu_active_index > menu_max_index) {
+						menu_active_index = menu_max_index;
+					}
+					nextWaitTicks = 100;
+				} else if (menu_down_key_pressed()) {
+					menu_active_index--;
+					if (menu_active_index < 0) {
+						menu_active_index = 0;
+					}
+					nextWaitTicks = 100;
+				} else if (menu_select_key_pressed()) {
+					action_menu_active_selected();
+				}
+			}
 
 
 			action_if_ped_assign_shortcut_key_pressed();
@@ -2031,7 +2202,7 @@ void main()
 		//Display HUD for app
 		if (should_display_app_hud()) {
 			draw_instructional_button();
-			draw_actor_overview();
+			draw_menu();
 		}
 
 		//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
