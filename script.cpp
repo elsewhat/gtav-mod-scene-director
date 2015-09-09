@@ -32,6 +32,8 @@ int chase_player_index = -1;
 bool is_escort_player_engaged = false;
 int escort_player_index = -1;
 
+bool is_firing_squad_engaged = false;
+
 DWORD actorHashGroup = 0x5F0783F1;
 Hash* actorHashGroupP = &actorHashGroup;
 
@@ -243,6 +245,11 @@ bool is_ped_actor_active(Ped ped) {
 
 }
 
+
+bool should_display_app_hud() {
+	return true;
+}
+
 void ensure_ped_and_vehicle_is_not_deleted(Ped ped) {
 	if (!ENTITY::DOES_ENTITY_EXIST(ped)){
 		return;
@@ -374,17 +381,43 @@ void draw_actor_overview() {
 	}
 	drawIndex++;
 
+	if (is_autopilot_engaged_for_player) {
+		DRAW_TEXT("Autopilot: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		drawIndex++;
+	}
+
+	if (is_chase_player_engaged) {
+		DRAW_TEXT("Player chase: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		drawIndex++;
+	}
+
+	if (is_escort_player_engaged) {
+		DRAW_TEXT("Player escort: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		drawIndex++;
+	}
+
+	if (is_firing_squad_engaged) {
+		DRAW_TEXT("Firing squad: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
+		drawIndex++;
+	}
+
+
 	for (int i = (sizeof(actorShortcut) / sizeof(Ped))-1 ; i >0 ; i--) {
-		if (true || actorShortcut[i] != 0) {
+		if (actorShortcut[i] != 0) {
 			char* actorText = strdup(("Actor "+ std::to_string(i)).c_str());
 			DRAW_TEXT(actorText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 200);
 			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, 0, 0, 0, 100);
 
+			/*
 			if (GRAPHICS::HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu") && actorHasWaypoint[i]) {
 				GRAPHICS::DRAW_SPRITE("CommonMenu", "MP_AlertTriangle", 0.95, 0.888 - (0.04)*drawIndex, 0.08, 0.08, 0, 255, 255, 255, 50);
-			}
+			}*/
 
-			if (true || actorHasWaypoint[i] != 0) {
+			if (actorHasWaypoint[i] != 0) {
 				DRAW_TEXT("Waypoint", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, 255, 255, 255, 200);
 			}
 
@@ -1454,6 +1487,7 @@ void action_copy_player_actions() {
 		set_status_text("Actor must be assigned slot 1-9 before recording actions");
 	}
 	else {
+		is_firing_squad_engaged = true;
 		set_status_text("Actors will now copy the actions of the player. Exit with ALT+C");
 		Ped playerPed = actorShortcut[actorIndex];
 
@@ -1485,8 +1519,18 @@ void action_copy_player_actions() {
 		while (bCopying == true) {
 			tickNow = GetTickCount();
 
-			//check only once pr DELTA_TICKS
-			if (tickNow - tickLast >= DELTA_TICKS) {
+			//Display HUD for app on every tick
+			if (should_display_app_hud()) {
+				draw_instructional_button();
+				draw_actor_overview();
+			}
+
+			//check if we're waiting nextWaitTicks number of ticks
+			if (nextWaitTicks != 0 && tickNow - tickLast < nextWaitTicks) {
+				//do nothing 
+
+			} else if (tickNow - tickLast >= DELTA_TICKS) {//check only once pr DELTA_TICKS
+				nextWaitTicks = 0;
 
 
 				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
@@ -1567,7 +1611,8 @@ void action_copy_player_actions() {
 								}
 							}
 						}
-						WAIT(50);
+						//WAIT(50);
+						nextWaitTicks = 50;
 					}
 					else if (isShooting) {//make actors stop shooting
 						isShooting = false;
@@ -1688,16 +1733,15 @@ void action_copy_player_actions() {
 				}
 
 				tickLast = tickNow;
+
+				if (copy_player_actions_key_pressed()) {
+					bCopying = false;
+				}
 			}
 
-
-
-			if (copy_player_actions_key_pressed()) {
-				bCopying = false;
-			}
 			WAIT(0);
 		}
-		
+		is_firing_squad_engaged = false;
 		set_status_text("Copying of actions stopped");
 		nextWaitTicks = 400;
 
@@ -1885,9 +1929,6 @@ bool reset_scene_director_key_pressed() {
 	}
 }
 
-bool should_display_app_hud() {
-	return true;
-}
 
 
 
@@ -1985,7 +2026,7 @@ void main()
 			mainTickLast = GetTickCount();
 		}
 
-		/* ACTIONS WHICH ARE PERFORMMED EVERY TICK */
+		/* ACTIONS WHICH ARE PERFORMED EVERY TICK */
 
 		//Display HUD for app
 		if (should_display_app_hud()) {
