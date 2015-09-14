@@ -31,6 +31,11 @@ enum MENU_ITEM {
 	MENU_ITEM_ESCORT = 12,
 	MENU_ITEM_CHASE = 13,
 	MENU_ITEM_FIRING_SQUAD = 14,
+	MENU_ITEM_ADD_TO_SLOT=15,
+	MENU_ITEM_ADD_CLONE_TO_SLOT = 16,
+	MENU_ITEM_CLONE = 17,
+	MENU_ITEM_CLONE_WITH_VEHICLE = 18,
+	MENU_ITEM_POSSESS = 19,
 
 };
 
@@ -38,6 +43,7 @@ enum MENU_ITEM {
 //attributes to the actors in the slot 1-9 
 //index 0 is reserved for the last actor
 Ped actorShortcut[10] = {};
+bool actor0IsClone = false;
 //waypoint for the acto
 bool actorHasWaypoint[10] = {};
 Vector3 actorWaypoint[10] = {};
@@ -60,9 +66,11 @@ bool is_firing_squad_engaged = false;
 DWORD actorHashGroup = 0x5F0783F1;
 Hash* actorHashGroupP = &actorHashGroup;
 
+//if menu_active_index ==-1 , then menu_active_ped is used to show selected index
 int menu_active_index = 0;
 MENU_ITEM menu_active_action = MENU_ITEM_SCENE_MODE;
 int menu_max_index = 0;
+Ped menu_active_ped = 0;
 
 SCENE_MODE sceneMode = SCENE_MODE_ACTIVE;
 
@@ -311,7 +319,7 @@ void assign_actor_to_relationship_group(Ped ped) {
 	log_to_file("Relationship group after add " + std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped)) + " actorHashGroup is " + std::to_string(actorHashGroup));
 }
 
-void draw_instructional_button() {
+void draw_instructional_buttons() {
 	int scaleForm = GRAPHICS::REQUEST_SCALEFORM_MOVIE("instructional_buttons");
 
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
@@ -334,17 +342,21 @@ void draw_instructional_button() {
 		char* delControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 178, 1);
 		char* insControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 121, 1);
 
+		/* Clone moved to menu
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F10");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Clone player");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
+		*/
+		
+		/* Possess moved to menu
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F9");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Possess ped");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		*/
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
@@ -375,12 +387,14 @@ void draw_instructional_button() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Reset scene");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
+		/* Hiding scene mode
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
 		GRAPHICS::_0xE83A3E3557A56640(spaceControlKey);
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Scene mode");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		*/
 
 		//_instructionalButtonsScaleform.CallFunction("DRAW_INSTRUCTIONAL_BUTTONS", -1);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
@@ -392,18 +406,69 @@ void draw_instructional_button() {
 
 void draw_menu() {
 	int drawIndex = 0;
-	int actorIndexPlayer = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	int actorIndexPlayer = get_index_for_actor(playerPed);
 
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB=255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	if (menu_active_index == drawIndex) {
-		menu_active_action = MENU_ITEM_SCENE_MODE;
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	} else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
+
+	//1. If actor is not assigned to any slot
+	if (actorIndexPlayer == -1) {
+		int available_slot = get_next_free_slot();
+		if (available_slot != -1) {
+			char* slotText = strdup(("Add actor to slot " + std::to_string(available_slot)).c_str());
+			DRAW_TEXT(slotText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			if (menu_active_index == drawIndex) {
+				menu_active_action = MENU_ITEM_ADD_TO_SLOT;
+			}
+
+			drawIndex++;
+			if (menu_active_index == drawIndex) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+
+		}
+
+	}
+
+
+	//2. If clone has just been created
+	if (actor0IsClone) {
+		int available_slot = get_next_free_slot();
+		if (available_slot != -1) {
+			char* slotText = strdup(("Add clone to slot " + std::to_string(available_slot)).c_str());
+			DRAW_TEXT(slotText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			if (menu_active_index == drawIndex) {
+				menu_active_action = MENU_ITEM_ADD_CLONE_TO_SLOT;
+			}
+
+			drawIndex++;
+			if (menu_active_index == drawIndex) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+
+		}
+	}
+
+
+	//3. Scene mode
 	if (sceneMode == SCENE_MODE_ACTIVE) {
 		DRAW_TEXT("Scene mode: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
@@ -412,13 +477,18 @@ void draw_menu() {
 		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 	}
 
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_SCENE_MODE;
+	}
 	drawIndex++;
+
 	if (menu_active_index == drawIndex) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	} else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
+	//4. If autopilot is engaged
 	if (is_autopilot_engaged_for_player) {
 		DRAW_TEXT("Autopilot: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
@@ -435,6 +505,7 @@ void draw_menu() {
 		}
 	}
 
+	//5. If chase is engaged
 	if (is_chase_player_engaged) {
 		DRAW_TEXT("Player chase: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
@@ -451,6 +522,8 @@ void draw_menu() {
 		}
 	}
 
+
+	//6. If escort is engaged
 	if (is_escort_player_engaged) {
 		DRAW_TEXT("Player escort: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
@@ -467,6 +540,7 @@ void draw_menu() {
 		}
 	}
 
+	//7. If firing squad is engaged
 	if (is_firing_squad_engaged) {
 		DRAW_TEXT("Firing squad: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
@@ -483,14 +557,82 @@ void draw_menu() {
 		}
 	}
 
+	//8. Clone actor
+	DRAW_TEXT("Clone actor", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_CLONE;
+	}
 
+	drawIndex++;
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	//11. If in vehicle, show option to clone with  vehicle
+	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		char* cloneWithVehicleText;
+		if (PED::IS_PED_IN_ANY_HELI(playerPed)) {
+			cloneWithVehicleText = "Clone actor and heli";
+		}
+		else if (PED::IS_PED_IN_ANY_PLANE(playerPed)) {
+			cloneWithVehicleText = "Clone actor and plane";
+		}
+		else if (PED::IS_PED_IN_ANY_BOAT(playerPed)) {
+			cloneWithVehicleText = "Clone actor and boat";
+		}
+		else {
+			cloneWithVehicleText = "Clone actor and car";
+		}
+
+		DRAW_TEXT(cloneWithVehicleText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_CLONE_WITH_VEHICLE;
+		}
+
+		drawIndex++;
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+	}
+
+	//10. Possess actor
+	DRAW_TEXT("Possess nearest/aimed", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_POSSESS;
+	}
+
+	drawIndex++;
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	//11. Actors 1-9 if they exist
 	for (int i = (sizeof(actorShortcut) / sizeof(Ped))-1 ; i >0 ; i--) {
 		if (actorShortcut[i] != 0) {
+			//check if we should move the selected index to this actor ( menu_active_ped is set when switching to an actor)
+			if (menu_active_index == -1 && actorIndexPlayer == i) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				menu_active_index = drawIndex;
+				menu_active_ped = 0;
+			}
+
 			char* actorText = strdup(("Actor "+ std::to_string(i)).c_str());
 			DRAW_TEXT(actorText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-			/*
+			/* Can't find icon for waypoint, so just using text for now
 			if (GRAPHICS::HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu") && actorHasWaypoint[i]) {
 				GRAPHICS::DRAW_SPRITE("CommonMenu", "MP_AlertTriangle", 0.95, 0.888 - (0.04)*drawIndex, 0.08, 0.08, 0, 255, 255, 255, 50);
 			}*/
@@ -517,6 +659,12 @@ void draw_menu() {
 			}
 		}
 	}
+
+
+	if (menu_active_index == -1) {
+		menu_active_index = 0;
+	}
+
 	menu_max_index = drawIndex - 1;
 	if (menu_active_index > menu_max_index) {
 		menu_active_index = menu_max_index;
@@ -708,6 +856,7 @@ void possess_ped(Ped swapToPed) {
 		is_autopilot_engaged_for_player = false;
 
 		actorShortcut[0] = swapFromPed;
+		actor0IsClone = false;
 	}
 	else {
 		log_to_file("possess_ped: Could not possess ped (entity may be probably dead) Ped:" + std::to_string(swapToPed));
@@ -786,6 +935,7 @@ void action_clone_player() {
 
 	Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
 	actorShortcut[0] = clonedPed;
+	actor0IsClone = true;
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0))
 	{
@@ -800,7 +950,8 @@ void action_clone_player() {
 	PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(clonedPed, true);
 	assign_actor_to_relationship_group(clonedPed);
 
-	set_status_text("Cloned myself. Possess clone with ALT+0");
+	set_status_text("Cloned player");
+	menu_active_index = 0;
 	nextWaitTicks = 500;
 }
 
@@ -852,40 +1003,22 @@ void action_clone_player_with_vehicle() {
 
 		//clone the player and assign into car
 		Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
+
+		actorShortcut[0] = clonedPed;
+		actor0IsClone = true;
+
 		//try to prevent fleeing during teleport
 		AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(clonedPed, true);
 		PED::SET_PED_FLEE_ATTRIBUTES(clonedPed, 0, 0);
 
 		PED::SET_PED_INTO_VEHICLE(clonedPed, clonedVehicle, -1);
 
-		WAIT(200);
-
-		//assign to a slot if one exists
-		int actorSlotIndex = get_next_free_slot();
-		if (actorSlotIndex != -1) {
-			actorShortcut[actorSlotIndex] = clonedPed;
-			assign_actor_to_relationship_group(clonedPed);
-			ensure_max_driving_ability(clonedPed);
-
-			int blipId = UI::ADD_BLIP_FOR_ENTITY(clonedPed);
-			blipIdShortcuts[actorSlotIndex] = blipId;
-
-			//BLIP Sprite for nr1=17, nr9=25
-			UI::SET_BLIP_SPRITE(blipId, 16 + actorSlotIndex);
-
-			set_status_text("Cloned player and vehicle into slot ALT+" + std::to_string(actorSlotIndex));
-		}
-		else {
-			set_status_text("Cloned player and vehicle (but found no free actor slot)");
-		}
-
-		WAIT(500);
 		AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(clonedPed, false);
 
-		nextWaitTicks = 200;
+		nextWaitTicks = 300;
 	}
 	else {
-		set_status_text("ALT+F10 clone requires that you're in a vehicle");
+		set_status_text("Clone with vehicle requires that you're in an actual vehicle");
 	}
 
 }
@@ -1042,6 +1175,49 @@ bool swap_to_previous_possessed_key_pressed()
 	return IsKeyDown(VK_CONTROL) && IsKeyDown(0x30);
 }
 
+void add_ped_to_slot(int slotIndex, Ped ped) {
+	//check if there exist an actor for this index
+	if (actorShortcut[slotIndex] != 0) {
+		if (forceSlotIndexOverWrite != slotIndex) {
+			log_to_file("action_if_ped_assign_shortcut_key_pressed: Slot already exists");
+			set_status_text("Actor already exist in slot. CTRL+" + std::to_string(slotIndex) + " once more to overwrite");
+			forceSlotIndexOverWrite = slotIndex;
+			return;
+		}
+		else {
+			log_to_file("action_if_ped_assign_shortcut_key_pressed: Slot will be overwritten");
+			forceSlotIndexOverWrite = -1;
+			//Remove old blip
+			int blipIdsToRemove[1] = { blipIdShortcuts[slotIndex] };
+			UI::REMOVE_BLIP(blipIdsToRemove);
+			//and continue storing the actor
+		}
+
+	}
+
+	actorShortcut[slotIndex] = ped;
+
+	assign_actor_to_relationship_group(ped);
+
+	int blipId = UI::ADD_BLIP_FOR_ENTITY(ped);
+	blipIdShortcuts[slotIndex] = blipId;
+	//BLIP Sprite for nr1=17, nr9=25
+	UI::SET_BLIP_SPRITE(blipId, 16 + slotIndex);
+
+	//Store current waypoint
+	if (UI::IS_WAYPOINT_ACTIVE()) {
+		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
+		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
+		actorWaypoint[slotIndex] = waypointCoord;
+		actorHasWaypoint[slotIndex] = true;
+	}
+
+	ensure_ped_and_vehicle_is_not_deleted(ped);
+
+	ensure_max_driving_ability(ped);
+
+}
+
 void action_if_ped_assign_shortcut_key_pressed()
 {
 	//ALT key
@@ -1082,47 +1258,8 @@ void action_if_ped_assign_shortcut_key_pressed()
 
 			log_to_file("action_if_ped_assign_shortcut_key_pressed");
 
-			//check if there exist an actor for this index
-			if (actorShortcut[pedShortcutsIndex] != 0) {
-				if (forceSlotIndexOverWrite != pedShortcutsIndex) {
-					log_to_file("action_if_ped_assign_shortcut_key_pressed: Slot already exists");
-					set_status_text("Actor already exist in slot. CTRL+" + std::to_string(pedShortcutsIndex) + " once more to overwrite");
-					forceSlotIndexOverWrite = pedShortcutsIndex;
-					return;
-				}
-				else {
-					log_to_file("action_if_ped_assign_shortcut_key_pressed: Slot will be overwritten");
-					forceSlotIndexOverWrite = -1;
-					//Remove old blip
-					int blipIdsToRemove[1] = { blipIdShortcuts[pedShortcutsIndex] };
-					UI::REMOVE_BLIP(blipIdsToRemove);
-					//and continue storing the actor
-				}
-
-			}
-
-			Ped playerPed = PLAYER::PLAYER_PED_ID();
-			actorShortcut[pedShortcutsIndex] = playerPed;
-
-			assign_actor_to_relationship_group(playerPed);
-
-			int blipId = UI::ADD_BLIP_FOR_ENTITY(playerPed);
-			blipIdShortcuts[pedShortcutsIndex] = blipId;
-			//BLIP Sprite for nr1=17, nr9=25
-			UI::SET_BLIP_SPRITE(blipId, 16 + pedShortcutsIndex);
-
-			//Store current waypoint
-			if (UI::IS_WAYPOINT_ACTIVE()) {
-				int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
-				Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
-				actorWaypoint[pedShortcutsIndex] = waypointCoord;
-				actorHasWaypoint[pedShortcutsIndex] = true;
-			}
-
-			ensure_ped_and_vehicle_is_not_deleted(playerPed);
-
-			ensure_max_driving_ability(playerPed);
-
+			add_ped_to_slot(pedShortcutsIndex, PLAYER::PLAYER_PED_ID());
+			
 			log_to_file("action_if_ped_assign_shortcut_key_pressed: Stored current ped in slot " + std::to_string(pedShortcutsIndex));
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
 
@@ -1385,8 +1522,8 @@ void action_autopilot_for_player() {
 			log_to_file("action_autopilot_for_player " + std::to_string(pedDriver) +" vs " + std::to_string(actorShortcut[actorIndex]) + " vehicle " + std::to_string(pedVehicle));
 			if (pedDriver == actorShortcut[actorIndex]) {
 				move_to_waypoint(actorShortcut[actorIndex], actorWaypoint[actorIndex],true);
-				log_to_file("Autopilot engaged for player. ALT+" + std::to_string(actorIndex));
-				set_status_text("Autopilot engaged for player. ALT+" + std::to_string(actorIndex) + " to turn it off");
+				log_to_file("Autopilot engaged for player " + std::to_string(actorIndex));
+				set_status_text("Autopilot engaged for player");
 
 				is_autopilot_engaged_for_player = true;
 			}
@@ -1517,12 +1654,12 @@ void action_teleport_to_start_locations() {
 void action_toggle_scene_mode() {
 	if (sceneMode == SCENE_MODE_ACTIVE) {
 		sceneMode = SCENE_MODE_SETUP;
-		set_status_text("Scene is now in setup mode. Press ALT+SPACE to active all actors. Press ALT+DEL to teleport actors back to start location");
+		set_status_text("Scene is now in setup mode. Press ALT+DEL to teleport actors back to start location");
 		log_to_file("SCENE SETUP");
 	}
 	else {
 		sceneMode = SCENE_MODE_ACTIVE;
-		set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
+		set_status_text("Scene is now active!");
 		log_to_file("SCENE ACTIVE");
 	}
 
@@ -1569,291 +1706,14 @@ void action_toggle_scene_mode() {
 }
 
 
-bool copy_player_actions_key_pressed() {
-	//ALT+ C
-	if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-void action_copy_player_actions() {
-
-
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex == -1) {
-		set_status_text("Actor must be assigned slot 1-9 before recording actions");
-	}
-	else {
-		is_firing_squad_engaged = true;
-		set_status_text("Actors will now copy the actions of the player. Exit with ALT+C");
-		Ped playerPed = actorShortcut[actorIndex];
-
-		WAIT(500);
-
-		bool bCopying = true;
-		DWORD tickStart = GetTickCount();
-		DWORD tickLast = tickStart;
-		DWORD tickNow = tickStart;
-		CONST DWORD DELTA_TICKS = 10;
-		float previousHeading;
-		Hash previousWeapon;
-		bool isFreeAiming = false;
-		bool isShooting = false;
-		Entity currentTarget;
-		Vehicle lastVehicle;
-		bool hasGivenParachute = false;
-		bool isSkydiving = false;
-
-		//try to avoid them fleeing on gunshots
-		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorShortcut[i], true);
-			}
-		}
-
-
-		//main loop
-		while (bCopying == true) {
-			tickNow = GetTickCount();
-
-			//Display HUD for app on every tick
-			if (should_display_app_hud()) {
-				draw_instructional_button();
-				draw_menu();
-			}
-
-			//check if we're waiting nextWaitTicks number of ticks
-			if (nextWaitTicks != 0 && tickNow - tickLast < nextWaitTicks) {
-				//do nothing 
-
-			} else if (tickNow - tickLast >= DELTA_TICKS) {//check only once pr DELTA_TICKS
-				nextWaitTicks = 0;
-
-
-				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
-
-				/* Will not update heading
-				float actorHeading = ENTITY::GET_ENTITY_HEADING(playerPed);
-				if (actorHeading != previousHeading) {
-					//log_to_file("Changing heading to " + std::to_string(actorHeading));
-					previousHeading = actorHeading;
-					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-						if (actorShortcut[i] != 0 && actorShortcut[i]!= playerPed) {
-							//log_to_file("Changing heading to " + std::to_string(actorHeading) + " for actor " + std::to_string(actorShortcut[i]));
-							PED::SET_PED_DESIRED_HEADING(actorShortcut[i], actorHeading);
-						}
-					}
-				}*/
-
-				//check if the player is armed
-				if (WEAPON::IS_PED_ARMED(playerPed, 6)) {
-					Hash currentWeapon;
-					WEAPON::GET_CURRENT_PED_WEAPON(playerPed, &currentWeapon, 1);
-					if (currentWeapon != previousWeapon) {
-						previousWeapon = currentWeapon;
-						//give and equip weapon to all other actors
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								if (isSkydiving == false) {
-									log_to_file("Giving weapon " + std::to_string(currentWeapon) + " to actor " + std::to_string(actorShortcut[i]));
-									WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], currentWeapon, 1000, 1, 1);
-								} else {
-									log_to_file("Not giving weapon to actor as we are skydiving");
-								}
-							}
-						}
-					}
-				}
-
-				//check if the player is aiming or firing
-				if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
-					isFreeAiming = true;
-					Entity targetEntity;
-					PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
-					log_to_file("Player aiming at " + std::to_string(targetEntity));
-					//if new target which exist, make all actors aim at it
-					if (ENTITY::DOES_ENTITY_EXIST(targetEntity) && targetEntity!=currentTarget) {
-						currentTarget = targetEntity;
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-
-								if (isSkydiving == false) {//TASK_AIM_GUN_AT_ENTITY while skydiving has a tiny sideeffect
-									//log_to_file("Aim at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
-									if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
-										//doesn't work :(
-										AI::TASK_VEHICLE_AIM_AT_PED(lastVehicle, targetEntity);
-			
-									}else {
-										AI::TASK_AIM_GUN_AT_ENTITY(actorShortcut[i], targetEntity, -1, 0);
-									}
-									
-								}
-							}
-						}
-					}
-
-					if (PED::IS_PED_SHOOTING(playerPed)) {
-						isShooting = true;
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && actorShortcut[i]!= currentTarget) {
-								//log_to_file("Shoot at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
-								if (isSkydiving == false) {//TASK_SHOOT_AT_ENTITY while skydiving has a tiny sideeffect
-									if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
-										//doesn't work :(
-										AI::TASK_VEHICLE_SHOOT_AT_PED(lastVehicle, targetEntity, 0x41a00000);
-									}
-									else {
-										AI::TASK_SHOOT_AT_ENTITY(actorShortcut[i], currentTarget, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
-									}
-								}
-							}
-						}
-						//WAIT(50);
-						nextWaitTicks = 50;
-					}
-					else if (isShooting) {//make actors stop shooting
-						isShooting = false;
-						currentTarget = 0;
-
-					}
-
-
-				} else if (isFreeAiming) {//make actors peds stop aiming
-					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-						if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-							
-							if (isSkydiving == false) {//clear_ped_tasks while skydiving has a tiny sideeffect
-								log_to_file("Clearing tasks for actor " + std::to_string(actorShortcut[i]));
-								AI::CLEAR_PED_TASKS(actorShortcut[i]);
-							}
-							
-						}
-					}
-					currentTarget = 0;
-					isFreeAiming = false;
-					isShooting=false;
-				}
-
-				//check if the player is in a vehicle
-				if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
-					Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
-
-					if (pedVehicle != lastVehicle) {
-						isSkydiving = false;
-						hasGivenParachute = false;
-						lastVehicle = pedVehicle;
-						log_to_file("Actors should enter vehicle " + std::to_string(pedVehicle));
-						int seatIndex = 0;
-						if (PED::IS_PED_IN_ANY_PLANE(playerPed)) {
-							log_to_file("In plane with seats " + std::to_string(VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(pedVehicle)));
-						}
-
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should enter vehicle " + std::to_string(pedVehicle) + " in seat " + std::to_string(seatIndex));
-								
-								if (PED::IS_PED_IN_ANY_PLANE(playerPed)) {
-									PED::SET_PED_INTO_VEHICLE(actorShortcut[i], pedVehicle, -2);
-								} else {
-									AI::TASK_ENTER_VEHICLE(actorShortcut[i], pedVehicle, -1, seatIndex, 1.0, 1, 0);
-								}
-								seatIndex++;
-							}
-						}
-
-					}
-				}
-
-				//check if the player is falling
-				if (PED::GET_PED_PARACHUTE_STATE(playerPed) == 0) {	
-					if (hasGivenParachute == false) {
-						log_to_file("Everyone leave vehicle");
-						//AI::TASK_EVERYONE_LEAVE_VEHICLE(lastVehicle);
-
-						log_to_file("Giving parachutes to all actors and task sky dive");
-						hasGivenParachute = true;
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
-								//AI::TASK_SKY_DIVE(actorShortcut[i]);
-								AI::TASK_LEAVE_VEHICLE(actorShortcut[i], lastVehicle, 4160);
-							}
-						}
-					}
-
-				} else if (PED::GET_PED_PARACHUTE_STATE(playerPed) == 1 || PED::GET_PED_PARACHUTE_STATE(playerPed) == 2) {
-
-					if (isSkydiving == false) {
-						isSkydiving = true;
-						log_to_file("Actors should deploy parachute");
-					}else {//isSkydiving = true;
-						Vector3 playerLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
-						float zGroundLevel;
-						GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(playerLocation.x, playerLocation.y, playerLocation.z, &zGroundLevel);
-
-						//log_to_file("Ground level to parachute to is " +std::to_string(zGroundLevel));
-
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								if (PED::GET_PED_PARACHUTE_STATE(actorShortcut[i]) == 0) {
-									//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should deploy parachute");
-
-									AI::TASK_PARACHUTE_TO_TARGET(actorShortcut[i], playerLocation.x, playerLocation.y, zGroundLevel);
-
-								}else if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
-									//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should sky dive");
-									//had some issues with them not exiting the vehicle so use TASK_LEAVE_VEHICLE with a teleport flag instead
-									//AI::TASK_SKY_DIVE(actorShortcut[i]);
-									AI::TASK_LEAVE_VEHICLE(actorShortcut[i], lastVehicle, 4160);
-									WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
-								}
-							}
-						}
-						WAIT(50);
-					}
-				} else if (isSkydiving) {//check if we have landed
-					if (PED::GET_PED_PARACHUTE_STATE(playerPed) == -1) {
-						bool allActorsOnGround = true;
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && PED::GET_PED_PARACHUTE_STATE(actorShortcut[i]) != -1) {
-								//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " has not yet landed");
-								allActorsOnGround = false;
-							}
-						}
-						if (allActorsOnGround) {
-							log_to_file("All actors has landed. Skydiving is finished");
-							isSkydiving = false;
-							hasGivenParachute = false;
-						}
-					}
-
-				}
-
-				tickLast = tickNow;
-
-				if (copy_player_actions_key_pressed()) {
-					bCopying = false;
-				}
-			}
-
-			WAIT(0);
-		}
-		is_firing_squad_engaged = false;
-		set_status_text("Copying of actions stopped");
-		nextWaitTicks = 400;
-
-	}
-
-
-}
 
 void action_menu_active_selected() {
 	//switch to actor
 	if (menu_active_action >= 1 && menu_active_action <= 9) {
 		swap_to_actor_with_index(menu_active_action);
+		//force the active menu to be set to the new actor
+		menu_active_index = -1;
+		menu_active_ped = PLAYER::PLAYER_PED_ID();
 	}
 	else if (menu_active_action == MENU_ITEM_AUTOPILOT) {
 		//autpilot is cancelled by switching to current actor
@@ -1871,8 +1731,38 @@ void action_menu_active_selected() {
 	else if (menu_active_action == MENU_ITEM_SCENE_MODE) {
 		action_toggle_scene_mode();
 	}
+	else if (menu_active_action == MENU_ITEM_ADD_TO_SLOT) {
+		add_ped_to_slot(get_next_free_slot(), PLAYER::PLAYER_PED_ID());
+		//force the active menu to be set to the new actor
+		menu_active_index = -1;
+		menu_active_ped = PLAYER::PLAYER_PED_ID();
+	}
+	else if (menu_active_action == MENU_ITEM_ADD_CLONE_TO_SLOT && actor0IsClone) {
+		if (get_index_for_actor(actorShortcut[0] == -1)) {
+			int slot = get_next_free_slot();
+			if (slot != -1) {
+				add_ped_to_slot(slot, actorShortcut[0]);
+				actor0IsClone = false;
+				swap_to_actor_with_index(slot);
+				//force the active menu to be set to the new actor
+				menu_active_index = -1;
+			}
+		}
+	}
+	else if (menu_active_action == MENU_ITEM_CLONE) {
+		action_clone_player();
+		menu_active_index = 0;
+	}
+	else if (menu_active_action == MENU_ITEM_CLONE_WITH_VEHICLE) {
+		action_clone_player_with_vehicle();
+		menu_active_index = 0;
+	}
+	else if (menu_active_action == MENU_ITEM_POSSESS) {
+		action_possess_ped();
+		menu_active_index = -1;
+	}
 	else if (menu_active_action == MENU_ITEM_FIRING_SQUAD) {
-		set_status_text("TODO: Cancel firing squad mode");
+		is_firing_squad_engaged = false;
 	}
 
 }
@@ -2085,6 +1975,327 @@ bool menu_select_key_pressed() {
 }
 
 
+bool copy_player_actions_key_pressed() {
+	//ALT+ C
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void action_copy_player_actions() {
+
+
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex == -1) {
+		set_status_text("Actor must be assigned slot 1-9 before recording actions");
+	}
+	else {
+		is_firing_squad_engaged = true;
+		set_status_text("Firing squad mode: Actors will now copy the actions of the player");
+		Ped playerPed = actorShortcut[actorIndex];
+
+		WAIT(500);
+
+		bool bCopying = true;
+		DWORD tickStart = GetTickCount();
+		DWORD tickLast = tickStart;
+		DWORD tickNow = tickStart;
+		CONST DWORD DELTA_TICKS = 10;
+		float previousHeading;
+		Hash previousWeapon;
+		bool isFreeAiming = false;
+		bool isShooting = false;
+		Entity currentTarget;
+		Vehicle lastVehicle;
+		bool hasGivenParachute = false;
+		bool isSkydiving = false;
+
+		//try to avoid them fleeing on gunshots
+		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorShortcut[i], true);
+			}
+		}
+
+
+		//main loop
+		while (is_firing_squad_engaged) {
+			tickNow = GetTickCount();
+
+			//Display HUD for app on every tick
+			if (should_display_app_hud()) {
+				draw_instructional_buttons();
+				draw_menu();
+			}
+
+			//check if we're waiting nextWaitTicks number of ticks
+			if (nextWaitTicks != 0 && tickNow - tickLast < nextWaitTicks) {
+				//do nothing 
+
+			}
+			else if (tickNow - tickLast >= DELTA_TICKS) {//check only once pr DELTA_TICKS
+				if (playerPed != PLAYER::PLAYER_PED_ID()) {
+					playerPed = PLAYER::PLAYER_PED_ID();
+					log_to_file("Swapping players during firing squad mode. Not sure if this will work well");
+					previousWeapon = 0;
+					hasGivenParachute = false;
+					lastVehicle = 0;
+					currentTarget = 0;
+				}
+
+				nextWaitTicks = 0;
+
+
+				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
+
+				/* Will not update heading
+				float actorHeading = ENTITY::GET_ENTITY_HEADING(playerPed);
+				if (actorHeading != previousHeading) {
+				//log_to_file("Changing heading to " + std::to_string(actorHeading));
+				previousHeading = actorHeading;
+				for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+				if (actorShortcut[i] != 0 && actorShortcut[i]!= playerPed) {
+				//log_to_file("Changing heading to " + std::to_string(actorHeading) + " for actor " + std::to_string(actorShortcut[i]));
+				PED::SET_PED_DESIRED_HEADING(actorShortcut[i], actorHeading);
+				}
+				}
+				}*/
+
+				//check if the player is armed
+				if (WEAPON::IS_PED_ARMED(playerPed, 6)) {
+					Hash currentWeapon;
+					WEAPON::GET_CURRENT_PED_WEAPON(playerPed, &currentWeapon, 1);
+					if (currentWeapon != previousWeapon) {
+						previousWeapon = currentWeapon;
+						//give and equip weapon to all other actors
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								if (isSkydiving == false) {
+									log_to_file("Giving weapon " + std::to_string(currentWeapon) + " to actor " + std::to_string(actorShortcut[i]));
+									WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], currentWeapon, 1000, 1, 1);
+								}
+								else {
+									log_to_file("Not giving weapon to actor as we are skydiving");
+								}
+							}
+						}
+					}
+				}
+
+				//check if the player is aiming or firing
+				if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
+					isFreeAiming = true;
+					Entity targetEntity;
+					PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
+					log_to_file("Player aiming at " + std::to_string(targetEntity));
+					//if new target which exist, make all actors aim at it
+					if (ENTITY::DOES_ENTITY_EXIST(targetEntity) && targetEntity != currentTarget) {
+						currentTarget = targetEntity;
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+
+								if (isSkydiving == false) {//TASK_AIM_GUN_AT_ENTITY while skydiving has a tiny sideeffect
+														   //log_to_file("Aim at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
+									if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+										//doesn't work :(
+										AI::TASK_VEHICLE_AIM_AT_PED(lastVehicle, targetEntity);
+
+									}
+									else {
+										AI::TASK_AIM_GUN_AT_ENTITY(actorShortcut[i], targetEntity, -1, 0);
+									}
+
+								}
+							}
+						}
+					}
+
+					if (PED::IS_PED_SHOOTING(playerPed)) {
+						isShooting = true;
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && actorShortcut[i] != currentTarget) {
+								//log_to_file("Shoot at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
+								if (isSkydiving == false) {//TASK_SHOOT_AT_ENTITY while skydiving has a tiny sideeffect
+									if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+										//doesn't work :(
+										AI::TASK_VEHICLE_SHOOT_AT_PED(lastVehicle, targetEntity, 0x41a00000);
+									}
+									else {
+										AI::TASK_SHOOT_AT_ENTITY(actorShortcut[i], currentTarget, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+									}
+								}
+							}
+						}
+						//WAIT(50);
+						nextWaitTicks = 50;
+					}
+					else if (isShooting) {//make actors stop shooting
+						isShooting = false;
+						currentTarget = 0;
+
+					}
+
+
+				}
+				else if (isFreeAiming) {//make actors peds stop aiming
+					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+						if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+
+							if (isSkydiving == false) {//clear_ped_tasks while skydiving has a tiny sideeffect
+								log_to_file("Clearing tasks for actor " + std::to_string(actorShortcut[i]));
+								AI::CLEAR_PED_TASKS(actorShortcut[i]);
+							}
+
+						}
+					}
+					currentTarget = 0;
+					isFreeAiming = false;
+					isShooting = false;
+				}
+
+				//check if the player is in a vehicle
+				if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+					Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
+
+					if (pedVehicle != lastVehicle) {
+						isSkydiving = false;
+						hasGivenParachute = false;
+						lastVehicle = pedVehicle;
+						log_to_file("Actors should enter vehicle " + std::to_string(pedVehicle));
+						int seatIndex = 0;
+						if (PED::IS_PED_IN_ANY_PLANE(playerPed)) {
+							log_to_file("In plane with seats " + std::to_string(VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(pedVehicle)));
+						}
+
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should enter vehicle " + std::to_string(pedVehicle) + " in seat " + std::to_string(seatIndex));
+
+								if (PED::IS_PED_IN_ANY_PLANE(playerPed)) {
+									PED::SET_PED_INTO_VEHICLE(actorShortcut[i], pedVehicle, -2);
+								}
+								else {
+									AI::TASK_ENTER_VEHICLE(actorShortcut[i], pedVehicle, -1, seatIndex, 1.0, 1, 0);
+								}
+								seatIndex++;
+							}
+						}
+
+					}
+				}
+
+				//check if the player is falling
+				if (PED::GET_PED_PARACHUTE_STATE(playerPed) == 0) {
+					if (hasGivenParachute == false) {
+						log_to_file("Everyone leave vehicle");
+						//AI::TASK_EVERYONE_LEAVE_VEHICLE(lastVehicle);
+
+						log_to_file("Giving parachutes to all actors and task sky dive");
+						hasGivenParachute = true;
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
+								//AI::TASK_SKY_DIVE(actorShortcut[i]);
+								AI::TASK_LEAVE_VEHICLE(actorShortcut[i], lastVehicle, 4160);
+							}
+						}
+					}
+
+				}
+				else if (PED::GET_PED_PARACHUTE_STATE(playerPed) == 1 || PED::GET_PED_PARACHUTE_STATE(playerPed) == 2) {
+
+					if (isSkydiving == false) {
+						isSkydiving = true;
+						log_to_file("Actors should deploy parachute");
+					}
+					else {//isSkydiving = true;
+						Vector3 playerLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
+						float zGroundLevel;
+						GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(playerLocation.x, playerLocation.y, playerLocation.z, &zGroundLevel);
+
+						//log_to_file("Ground level to parachute to is " +std::to_string(zGroundLevel));
+
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								if (PED::GET_PED_PARACHUTE_STATE(actorShortcut[i]) == 0) {
+									//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should deploy parachute");
+
+									AI::TASK_PARACHUTE_TO_TARGET(actorShortcut[i], playerLocation.x, playerLocation.y, zGroundLevel);
+
+								}
+								else if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
+									//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should sky dive");
+									//had some issues with them not exiting the vehicle so use TASK_LEAVE_VEHICLE with a teleport flag instead
+									//AI::TASK_SKY_DIVE(actorShortcut[i]);
+									AI::TASK_LEAVE_VEHICLE(actorShortcut[i], lastVehicle, 4160);
+									WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
+								}
+							}
+						}
+						WAIT(50);
+					}
+				}
+				else if (isSkydiving) {//check if we have landed
+					if (PED::GET_PED_PARACHUTE_STATE(playerPed) == -1) {
+						bool allActorsOnGround = true;
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && PED::GET_PED_PARACHUTE_STATE(actorShortcut[i]) != -1) {
+								//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " has not yet landed");
+								allActorsOnGround = false;
+							}
+						}
+						if (allActorsOnGround) {
+							log_to_file("All actors has landed. Skydiving is finished");
+							isSkydiving = false;
+							hasGivenParachute = false;
+						}
+					}
+
+				}
+
+				if (should_display_app_hud()) {
+					if (menu_up_key_pressed()) {
+						menu_active_index++;
+						if (menu_active_index > menu_max_index) {
+							menu_active_index = menu_max_index;
+						}
+						nextWaitTicks = 100;
+					}
+					else if (menu_down_key_pressed()) {
+						menu_active_index--;
+						if (menu_active_index < 0) {
+							menu_active_index = 0;
+						}
+						nextWaitTicks = 100;
+					}
+					else if (menu_select_key_pressed()) {
+						action_menu_active_selected();
+						nextWaitTicks = 100;
+					}
+				}
+
+				tickLast = tickNow;
+
+				if (copy_player_actions_key_pressed()) {
+					is_firing_squad_engaged = false;
+				}
+			}
+
+			WAIT(0);
+		}
+		is_firing_squad_engaged = false;
+		set_status_text("Firing squad mode stopped");
+		nextWaitTicks = 400;
+
+	}
+
+
+}
+
+
 
 
 void main()
@@ -2093,7 +2304,7 @@ void main()
 
 	while (true)
 	{
-		/* ACTIONS WHICH ARE MAY NEED TO WAIT A FEW TICKS */
+		/* ACTIONS WHICH MAY NEED TO WAIT A FEW TICKS */
 		if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
 			//nextWaitTicks will be set by action methods in order to define how long before next input can be processed
 			nextWaitTicks = 0;
@@ -2184,6 +2395,7 @@ void main()
 					nextWaitTicks = 100;
 				} else if (menu_select_key_pressed()) {
 					action_menu_active_selected();
+					nextWaitTicks = 100;
 				}
 			}
 
@@ -2201,7 +2413,7 @@ void main()
 
 		//Display HUD for app
 		if (should_display_app_hud()) {
-			draw_instructional_button();
+			draw_instructional_buttons();
 			draw_menu();
 		}
 
