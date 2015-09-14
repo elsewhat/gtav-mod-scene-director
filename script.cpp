@@ -8,8 +8,8 @@
 #include <fstream>
 
 //Key attributes
-DWORD key_possess = VK_F9;
-DWORD key_clone = VK_F10;
+DWORD key_hud = VK_F10;
+char key_hud_str[256];
 
 enum SCENE_MODE {
 	SCENE_MODE_ACTIVE = 1,
@@ -39,6 +39,7 @@ enum MENU_ITEM {
 
 };
 
+bool should_display_hud = false;
 
 //attributes to the actors in the slot 1-9 
 //index 0 is reserved for the last actor
@@ -276,7 +277,7 @@ bool is_ped_actor_active(Ped ped) {
 
 
 bool should_display_app_hud() {
-	return true;
+	return should_display_hud;
 }
 
 void ensure_ped_and_vehicle_is_not_deleted(Ped ped) {
@@ -341,6 +342,13 @@ void draw_instructional_buttons() {
 		char* spaceControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 22, 1);
 		char* delControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 178, 1);
 		char* insControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 121, 1);
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+		std::string scaleFormKey = "t_" + std::string(key_hud_str);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(scaleFormKey.c_str()));
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Hide HUD menu");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		/* Clone moved to menu
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
@@ -1772,48 +1780,20 @@ void action_menu_active_selected() {
 * Read keys from ini file
 */
 void init_read_keys_from_ini() {
-	char iniKeyPossess[256];
-	char iniKeyClone[256];
+	GetPrivateProfileString("keys", "key_hud", "F10", key_hud_str, sizeof(key_hud_str), config_path);
 
-	GetPrivateProfileString("keys", "key_possess", "F9", iniKeyPossess, sizeof(iniKeyPossess), config_path);
-	GetPrivateProfileString("keys", "key_clone", "F10", iniKeyClone, sizeof(iniKeyClone), config_path);
+	log_to_file("Read keys from ini file key_hud " + std::string(key_hud_str));
 
-	log_to_file("Read keys from ini file key_possess " + std::string(iniKeyPossess) + " key_clone " + std::string(iniKeyClone));
-
-	key_possess = str2key(std::string(iniKeyPossess));
-	if (key_possess == 0) {
-		log_to_file(std::string(iniKeyPossess) + " is not a valid key");
-		key_possess = str2key("F9");
-	}
-	key_clone = str2key(std::string(iniKeyClone));
-	if (key_clone == 0) {
-		log_to_file(std::string(iniKeyClone) + " is not a valid key");
-		key_clone = str2key("F10");
+	key_hud = str2key(std::string(key_hud_str));
+	if (key_hud == 0) {
+		log_to_file(std::string(key_hud_str) + " is not a valid key");
+		key_hud = str2key("F10");
 	}
 
-	log_to_file("Converted keys to dword  key_possess " + std::to_string(key_possess) + " key_clone " + std::to_string(key_clone));
+	log_to_file("Converted keys to dword key_possess " + std::to_string(key_hud));
 }
 
 
-bool possess_key_pressed()
-{
-	return IsKeyJustUp(key_possess);
-}
-
-bool clone_key_pressed()
-{
-	return IsKeyJustUp(key_clone);
-}
-
-bool clone_player_with_vehicle_key_pressed()
-{
-	if (IsKeyDown(VK_MENU) && IsKeyDown(key_clone)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
 
 
 
@@ -1837,15 +1817,6 @@ bool teleport_player_key_pressed() {
 	}
 }
 
-bool scene_mode_toggle_key_pressed() {
-	//ALT+SPACE
-	if (IsKeyDown(VK_MENU) && IsKeyDown(VK_SPACE)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
 
 bool scene_teleport_to_start_locations_key_pressed() {
 	//ALT+END
@@ -1983,6 +1954,11 @@ bool copy_player_actions_key_pressed() {
 	else {
 		return false;
 	}
+}
+
+bool hud_toggle_key_pressed()
+{
+	return IsKeyJustUp(key_hud);
 }
 
 void action_copy_player_actions() {
@@ -2309,10 +2285,6 @@ void main()
 			//nextWaitTicks will be set by action methods in order to define how long before next input can be processed
 			nextWaitTicks = 0;
 
-			if (scene_mode_toggle_key_pressed()) {
-				action_toggle_scene_mode();
-			}
-
 			if (scene_teleport_to_start_locations_key_pressed()) {
 				action_teleport_to_start_locations();
 			}
@@ -2321,9 +2293,15 @@ void main()
 				action_set_same_waypoint_for_all_actors();
 			}
 
-			if (possess_key_pressed()) {
-				action_possess_ped();
+			if (hud_toggle_key_pressed()) {
+				if (should_display_hud == true) {
+					should_display_hud = false;
+				}
+				else {
+					should_display_hud = true;
+				}
 			}
+
 
 			if (autopilot_for_player_key_pressed()) {
 				action_autopilot_for_player();
@@ -2361,15 +2339,6 @@ void main()
 			if (decrease_aggressiveness_for_all_actors_key_pressed()) {
 				action_decrease_aggressiveness_for_all_actors();
 			}*/
-
-
-
-			if (clone_player_with_vehicle_key_pressed()) {
-				action_clone_player_with_vehicle();
-			}
-			else if (clone_key_pressed()) {
-				action_clone_player();
-			}
 
 
 			if (enter_nearest_vehicle_as_passenger_key_pressed()) {
