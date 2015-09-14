@@ -1271,6 +1271,8 @@ void action_if_ped_assign_shortcut_key_pressed()
 			log_to_file("action_if_ped_assign_shortcut_key_pressed: Stored current ped in slot " + std::to_string(pedShortcutsIndex));
 			set_status_text("Stored current ped. Retrieve with ALT+" + std::to_string(pedShortcutsIndex));
 
+			should_display_hud = true;
+
 		}
 	}
 }
