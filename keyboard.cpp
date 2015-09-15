@@ -117,7 +117,7 @@ DWORD str2key(std::string humanReadableKey)
 	keymap["*"] = VK_MULTIPLY;
 	keymap["PLUS"] = VK_ADD;
 	keymap[","] = VK_SEPARATOR;
-	keymap["-"] = VK_SUBTRACT;
+	keymap["MINUS"] = VK_SUBTRACT;
 	keymap["."] = VK_DECIMAL;
 	keymap["/"] = VK_DIVIDE;
 	keymap["F1"] = VK_F1;

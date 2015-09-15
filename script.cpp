@@ -8,7 +8,11 @@
 #include <fstream>
 
 //Key attributes
+//These are overwrittein in init_read_keys_from_ini()
 DWORD key_hud = VK_F10;
+DWORD key_menu_up = VK_NUMPAD8;
+DWORD key_menu_down = VK_NUMPAD2;
+DWORD key_menu_select = VK_NUMPAD5;
 char key_hud_str[256];
 
 enum SCENE_MODE {
@@ -73,13 +77,13 @@ MENU_ITEM menu_active_action = MENU_ITEM_SCENE_MODE;
 int menu_max_index = 0;
 Ped menu_active_ped = 0;
 
-SCENE_MODE sceneMode = SCENE_MODE_ACTIVE;
+SCENE_MODE sceneMode = SCENE_MODE_SETUP;
 
 //Represents the scene status of each actor
 //1=Act on instructions immediately
 //0=No action (scene setup mode)
 //x=Not used (yet)
-SCENE_MODE actorStatus[10] = { SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE,SCENE_MODE_ACTIVE };
+SCENE_MODE actorStatus[10] = { SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP };
 
 
 //used in passenger waypoint
@@ -528,12 +532,40 @@ void draw_menu() {
 		else {
 			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 		}
+	} else if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		DRAW_TEXT("Activate chase", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_CHASE;
+		}
+
+		drawIndex++;
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
 	}
 
 
 	//6. If escort is engaged
 	if (is_escort_player_engaged) {
 		DRAW_TEXT("Player escort: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_ESCORT;
+		}
+
+		drawIndex++;
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+	} else if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		DRAW_TEXT("Activate escort", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 		if (menu_active_index == drawIndex) {
 			menu_active_action = MENU_ITEM_ESCORT;
@@ -1729,7 +1761,7 @@ void action_menu_active_selected() {
 		//autpilot is cancelled by switching to current actor
 		int currentIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
 		if (currentIndex != -1) {
-			swap_to_actor_with_index(menu_active_action);
+			swap_to_actor_with_index(currentIndex);
 		}
 	}
 	else if (menu_active_action == MENU_ITEM_CHASE) {
@@ -1793,6 +1825,31 @@ void init_read_keys_from_ini() {
 	}
 
 	log_to_file("Converted keys to dword key_possess " + std::to_string(key_hud));
+
+
+	char key_menu_down_str[256], key_menu_up_str[256], key_menu_select_str[256];
+	GetPrivateProfileString("keys", "key_menu_down", "NUM2", key_menu_down_str, sizeof(key_menu_down_str), config_path);
+	GetPrivateProfileString("keys", "key_menu_up", "NUM8", key_menu_up_str, sizeof(key_menu_up_str), config_path);
+	GetPrivateProfileString("keys", "key_menu_select", "NUM5", key_menu_select_str, sizeof(key_menu_select_str), config_path);
+
+
+	key_menu_down = str2key(std::string(key_menu_down_str));
+	if (key_menu_down == 0) {
+		log_to_file(std::string(key_menu_down_str) + " is not a valid key");
+		key_menu_down = str2key("NUM2");
+	}
+
+	key_menu_up = str2key(std::string(key_menu_up_str));
+	if (key_menu_up == 0) {
+		log_to_file(std::string(key_menu_up_str) + " is not a valid key");
+		key_menu_up = str2key("NUM8");
+	}
+
+	key_menu_select = str2key(std::string(key_menu_select_str));
+	if (key_menu_select == 0) {
+		log_to_file(std::string(key_menu_select_str) + " is not a valid key");
+		key_menu_select = str2key("NUM5");
+	}
 }
 
 
@@ -1921,7 +1978,7 @@ bool reset_scene_director_key_pressed() {
 	}
 }
 bool menu_up_key_pressed() {
-	if (IsKeyDown(VK_NUMPAD8)) {
+	if (IsKeyDown(key_menu_up)) {
 		return true;
 	}
 	else {
@@ -1930,7 +1987,7 @@ bool menu_up_key_pressed() {
 }
 
 bool menu_down_key_pressed() {
-	if (IsKeyDown(VK_NUMPAD2)) {
+	if (IsKeyDown(key_menu_down)) {
 		return true;
 	}
 	else {
@@ -1939,7 +1996,7 @@ bool menu_down_key_pressed() {
 }
 
 bool menu_select_key_pressed() {
-	if (IsKeyDown(VK_NUMPAD5)) {
+	if (IsKeyDown(key_menu_select)) {
 		return true;
 	}
 	else {
@@ -2401,7 +2458,7 @@ void ScriptMain()
 	GRAPHICS::REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
 
 	set_status_text("Scene director 1.2 by elsewhat");
-	set_status_text("Scene is now active! Press ALT+SPACE for setup mode");
+	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 
 	create_relationship_groups();
