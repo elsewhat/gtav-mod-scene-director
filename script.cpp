@@ -71,6 +71,9 @@ bool is_firing_squad_engaged = false;
 DWORD actorHashGroup = 0x5F0783F1;
 Hash* actorHashGroupP = &actorHashGroup;
 
+//scaleform instructional_buttons reference
+int scaleForm; 
+
 //if menu_active_index ==-1 , then menu_active_ped is used to show selected index
 int menu_active_index = 0;
 MENU_ITEM menu_active_action = MENU_ITEM_SCENE_MODE;
@@ -325,8 +328,6 @@ void assign_actor_to_relationship_group(Ped ped) {
 }
 
 void draw_instructional_buttons() {
-	int scaleForm = GRAPHICS::REQUEST_SCALEFORM_MOVIE("instructional_buttons");
-
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
 		//_instructionalButtonsScaleform.CallFunction("CLEAR_ALL");
 		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
@@ -412,6 +413,11 @@ void draw_instructional_buttons() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		invoke<Void>(0xCF537FDE4FBD4CE5, scaleForm, 255, 255, 255, 255);
+	}
+	else {
+		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
 	}
 }
 
@@ -2457,7 +2463,14 @@ void ScriptMain()
 {
 	GRAPHICS::REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
 
-	set_status_text("Scene director 1.2 by elsewhat");
+	scaleForm = GRAPHICS::_REQUEST_SCALEFORM_MOVIE2("instructional_buttons");
+	log_to_file("Waiting for instructional_buttons to load");
+	while (!GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
+		WAIT(0);
+	}
+	log_to_file("instructional_buttons have loaded");
+
+	set_status_text("Scene director 1.2.1 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 

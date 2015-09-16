@@ -11,6 +11,9 @@ Demo video: http://youtu.be/RATa0J01Vis
 Installation: Requires Scripthook V. Copy SceneDirector.asi and scene_director.ini into game directory
 
 Changelog 
+Version 1.2.1 
+Bugfix for instructional buttons with new GTA V/Scripthook V version
+
 Version 1.2 
 Context sensitive menu system and HUD. No need to remember key combinations any more
 
