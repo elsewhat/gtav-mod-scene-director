@@ -414,7 +414,9 @@ void draw_instructional_buttons() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-		invoke<Void>(0xCF537FDE4FBD4CE5, scaleForm, 255, 255, 255, 255);
+		//causes the stability bug in NativeUI
+		//invoke<Void>(0xCF537FDE4FBD4CE5, scaleForm, 255, 255, 255, 255);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_RGBA(scaleForm, 255, 255, 255, 255);
 	}
 	else {
 		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
@@ -2470,7 +2472,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 1.2.1 by elsewhat");
+	set_status_text("Scene director 1.2.2 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 
