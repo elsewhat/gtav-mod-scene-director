@@ -9,6 +9,7 @@
   <ItemGroup>
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="scenario.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
@@ -18,6 +19,7 @@
     <ClInclude Include="..\..\inc\natives.h" />
     <ClInclude Include="..\..\inc\types.h" />
     <ClInclude Include="keyboard.h" />
+    <ClInclude Include="scenario.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>

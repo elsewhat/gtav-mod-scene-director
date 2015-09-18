@@ -1,6 +1,7 @@
 #include "script.h"
 #include "keyboard.h"
 #include "utils.h"
+#include "scenario.h"
 
 #include <string>
 #include <ctime>
@@ -88,6 +89,8 @@ SCENE_MODE sceneMode = SCENE_MODE_SETUP;
 //x=Not used (yet)
 SCENE_MODE actorStatus[10] = { SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP };
 
+
+std::vector<char *> gtaScenarios;
 
 //used in passenger waypoint
 int lastWaypointID = -1;
@@ -2056,6 +2059,8 @@ void action_copy_player_actions() {
 		bool hasGivenParachute = false;
 		bool isSkydiving = false;
 
+		bool isPedUsingScenario = false;
+		char* currentScenarioName;
 		//try to avoid them fleeing on gunshots
 		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
@@ -2094,6 +2099,16 @@ void action_copy_player_actions() {
 
 				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
 
+				if (hud_toggle_key_pressed()) {
+					if (should_display_hud == true) {
+						should_display_hud = false;
+					}
+					else {
+						should_display_hud = true;
+					}
+					nextWaitTicks = 100;
+				}
+
 				/* Will not update heading
 				float actorHeading = ENTITY::GET_ENTITY_HEADING(playerPed);
 				if (actorHeading != previousHeading) {
@@ -2106,6 +2121,46 @@ void action_copy_player_actions() {
 				}
 				}
 				}*/
+
+				//Copy scenarios applied to player to other actors
+				//No way of retrieving which scenario is active, so we have to brute force it over the 458 scenarios which exist
+				if (PED::IS_PED_USING_ANY_SCENARIO(playerPed)) {
+					
+					bool applyCurrentScenarioToActors = false;
+					if (isPedUsingScenario == false || (isPedUsingScenario == true && PED::IS_PED_USING_SCENARIO(playerPed, currentScenarioName) == false)) {
+						log_to_file("Ped is using new scenario");
+						isPedUsingScenario = true;
+
+						for (const auto scenarioName : gtaScenarios) {
+							if (PED::IS_PED_USING_SCENARIO(playerPed, scenarioName)) {
+								log_to_file("found scenario player is using");
+								log_to_file(scenarioName);
+								currentScenarioName = scenarioName;
+								applyCurrentScenarioToActors = true;
+							}
+						}
+					}
+
+					if (applyCurrentScenarioToActors) {
+						log_to_file("Applying scenario to actors");
+						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+								AI::TASK_START_SCENARIO_IN_PLACE(actorShortcut[i], currentScenarioName, -1, 1);
+							}
+						}
+					}
+				}
+				else if (isPedUsingScenario) {
+					log_to_file("Removing scenario from actors");
+					isPedUsingScenario = false;
+
+					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+						if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+							AI::CLEAR_PED_TASKS(actorShortcut[i]);
+						}
+					}
+				}
+
 
 				//check if the player is armed
 				if (WEAPON::IS_PED_ARMED(playerPed, 6)) {
@@ -2475,6 +2530,9 @@ void ScriptMain()
 	set_status_text("Scene director 1.2.2 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
+
+	gtaScenarios = getAllGTAScenarios();
+	
 
 	create_relationship_groups();
 	//log_to_file("Screen Director initialized");
