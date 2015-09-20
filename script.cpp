@@ -2,6 +2,7 @@
 #include "keyboard.h"
 #include "utils.h"
 #include "scenario.h"
+#include "weather.h"
 
 #include <string>
 #include <ctime>
@@ -13,6 +14,8 @@
 DWORD key_hud = VK_F10;
 DWORD key_menu_up = VK_NUMPAD8;
 DWORD key_menu_down = VK_NUMPAD2;
+DWORD key_menu_left = VK_NUMPAD4;
+DWORD key_menu_right = VK_NUMPAD6;
 DWORD key_menu_select = VK_NUMPAD5;
 char key_hud_str[256];
 
@@ -36,11 +39,19 @@ enum MENU_ITEM {
 	MENU_ITEM_ESCORT = 12,
 	MENU_ITEM_CHASE = 13,
 	MENU_ITEM_FIRING_SQUAD = 14,
-	MENU_ITEM_ADD_TO_SLOT=15,
+	MENU_ITEM_ADD_TO_SLOT = 15,
 	MENU_ITEM_ADD_CLONE_TO_SLOT = 16,
 	MENU_ITEM_CLONE = 17,
 	MENU_ITEM_CLONE_WITH_VEHICLE = 18,
 	MENU_ITEM_POSSESS = 19,
+	MENU_ITEM_WORLD = 20,
+	SUBMENU_ITEM_RECORD_PLAYER = 40,
+	SUBMENU_ITEM_REMOVE_FROM_SLOT = 41,
+	SUBMENU_ITEM_BLACKOUT = 42,
+	SUBMENU_ITEM_TIMELAPSE = 43,
+	SUBMENU_ITEM_WEATHER = 44,
+	SUBMENU_ITEM_WIND = 45,
+	SUBMENU_ITEM_SPOT_LIGHT = 46,
 
 };
 
@@ -58,6 +69,7 @@ bool actorHasStartLocation[10] = {};
 Vector3 actorStartLocation[10] = {};
 float actorStartLocationHeading[10] = {};
 float actorDriverAgressiveness[] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f };
+bool actorHasSpotlight[10] = {};
 
 int blipIdShortcuts[10] = {};
 
@@ -81,6 +93,12 @@ MENU_ITEM menu_active_action = MENU_ITEM_SCENE_MODE;
 int menu_max_index = 0;
 Ped menu_active_ped = 0;
 
+bool submenu_is_displayed = false;
+bool submenu_is_active = false;
+int submenu_active_index = -1;
+int submenu_max_index = 0;
+MENU_ITEM submenu_active_action = MENU_ITEM_SCENE_MODE;
+
 SCENE_MODE sceneMode = SCENE_MODE_SETUP;
 
 //Represents the scene status of each actor
@@ -90,10 +108,24 @@ SCENE_MODE sceneMode = SCENE_MODE_SETUP;
 SCENE_MODE actorStatus[10] = { SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP };
 
 
-std::vector<char *> gtaScenarios;
+std::vector<Scenario> gtaScenarios;
 
 //used in passenger waypoint
 int lastWaypointID = -1;
+
+//used for world -> blackout
+bool is_world_blackout = false;
+bool is_timlapse_active = false;
+int timelapse_delta_seconds = 0;
+int timelapse_delta_minutes = 2;
+DWORD timelapseLastTick = 0;
+DWORD timelapseDeltaTicks = 1000;
+
+std::vector<Weather> gtaWeathers;
+int index_weather = -1;
+
+bool is_wind_active = false;
+
 
 std::string statusText;
 DWORD statusTextDrawTicksMax;
@@ -104,6 +136,36 @@ DWORD mainTickLast=0;
 DWORD nextWaitTicks = 0;
 
 int forceSlotIndexOverWrite = -1;
+
+
+enum RECORDING_TYPE {
+	RECORDING_TYPE_LOCATION,
+	RECORDING_TYPE_EQUIP_WEAPON,
+	RECORDING_TYPE_ENTER_VEHICLE,
+};
+
+
+class ActorRecordingItem {
+	Vector3 location;
+	float heading;
+public:
+	ActorRecordingItem(Vector3 aLocation, float aHeading) {
+		location = aLocation;
+		heading = aHeading;
+	}
+	Vector3 getLocation() {
+		return location;
+	}
+	float getHeading() {
+		return heading;
+	}
+	void addToTaskSequence(Ped ped) {
+		AI::TASK_GO_STRAIGHT_TO_COORD(ped, location.x, location.y, location.z, 1.0f, -1, 27.0f, 0.5f);
+	}
+	std::string to_string() {
+		return "ActorRecordingItem x:" + std::to_string(location.x) + " y : " + std::to_string(location.y) + " z : " + std::to_string(location.z) + " heading:" + std::to_string(heading);
+	}
+};
 
 void set_status_text(std::string text)
 {
@@ -426,11 +488,150 @@ void draw_instructional_buttons() {
 	}
 }
 
+void draw_submenu_world(int drawIndex) {
+	int submenu_index = 0;
+
+	//colors for swapping from active to inactive... messy
+	int textColorR = 255, textColorG = 255, textColorB = 255;
+	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_BLACKOUT;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	char* blackoutText = "Blackout";
+	if (is_world_blackout) {
+		blackoutText = "Blackout: Active";
+	}
+	DRAW_TEXT(blackoutText, 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_TIMELAPSE;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	char* timelapseText = "Timelapse";
+	if (is_timlapse_active) {
+		timelapseText = "Timelapse: Active";
+	}
+	DRAW_TEXT(timelapseText, 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_WEATHER;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	char* weatherText = "Weather";
+	if (index_weather!=-1) {
+		Weather weather = gtaWeathers[index_weather];
+		std::string weatherTextString = "Weather: " + std::string(weather.id);
+		weatherText = strdup(weatherTextString.c_str());
+	}
+	DRAW_TEXT(weatherText, 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_WIND;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	char* windText = "Wind";
+	if (is_wind_active) {
+		windText = "Wind: Active";
+	}
+	DRAW_TEXT(windText, 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	submenu_max_index = submenu_index;
+
+}
+
+void draw_submenu_player(int drawIndex) {
+	int submenu_index = 0;
+
+	//colors for swapping from active to inactive... messy
+	int textColorR = 255, textColorG = 255, textColorB = 255;
+	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_RECORD_PLAYER;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Start recording", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_REMOVE_FROM_SLOT;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Remove from slot", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_SPOT_LIGHT;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	int actorIndex= get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex != -1 && actorHasSpotlight[actorIndex] == true) {
+		DRAW_TEXT("Spot light: Active", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}
+	else {
+		DRAW_TEXT("Spot light", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	submenu_max_index = submenu_index;
+}
+
 
 void draw_menu() {
 	int drawIndex = 0;
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 	int actorIndexPlayer = get_index_for_actor(playerPed);
+
 
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB=255;
@@ -508,6 +709,32 @@ void draw_menu() {
 	if (menu_active_index == drawIndex) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	} else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	//4. World options
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_SCENE_MODE;
+		draw_submenu_world(drawIndex);
+		submenu_is_displayed = true;
+		if (submenu_active_index == -1) {
+			submenu_active_index = 0;
+		}
+		//dim the main menu selector if sub menu is active
+		if (submenu_is_active) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 180, bgColorG = 180, bgColorB = 180;
+		}
+
+	}
+	DRAW_TEXT("World options", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
@@ -679,6 +906,19 @@ void draw_menu() {
 				menu_active_ped = 0;
 			}
 
+			//show submenu for active player
+			if (menu_active_index == drawIndex && actorIndexPlayer == i) {
+				submenu_is_displayed = true;
+				if (submenu_active_index == -1) {
+					submenu_active_index = 0;
+				}
+				draw_submenu_player(drawIndex);
+				//dim the main menu selector if sub menu is active
+				if (submenu_is_active) {
+					textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 180, bgColorG = 180, bgColorB = 180;
+				}
+			}
+
 			char* actorText = strdup(("Actor "+ std::to_string(i)).c_str());
 			DRAW_TEXT(actorText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
@@ -693,13 +933,16 @@ void draw_menu() {
 			}
 
 			if (actorIndexPlayer == i) {
-				GRAPHICS::DRAW_RECT(0.93, 0.883 - (0.04)*drawIndex, 0.113, 0.002, 100, 255, 0, 100);
+				GRAPHICS::DRAW_RECT(0.93, 0.883 - (0.04)*drawIndex, 0.113, 0.002, 100, 255, 0, 100);				
 			}
+
 
 			if (menu_active_index == drawIndex) {
 				//i should match value of MENU_ITEM_ACTOR_X
 				menu_active_action = (MENU_ITEM)i;
 			}
+
+
 
 			drawIndex++;
 			if (menu_active_index == drawIndex) {
@@ -720,6 +963,12 @@ void draw_menu() {
 	if (menu_active_index > menu_max_index) {
 		menu_active_index = menu_max_index;
 	}
+
+	if (submenu_is_displayed == false) {
+		submenu_is_active = false;
+		submenu_active_index = -1;
+	}
+
 }
 
 
@@ -1320,6 +1569,24 @@ void action_if_ped_assign_shortcut_key_pressed()
 	}
 }
 
+void action_remove_actor_from_index(int pedShortcutsIndex) {
+	if (actorShortcut[pedShortcutsIndex] == 0) {
+		set_status_text("No stored actor in slot " + std::to_string(pedShortcutsIndex));
+	}
+	else {
+		actorShortcut[pedShortcutsIndex] = 0;
+		actorHasWaypoint[pedShortcutsIndex] = false;
+		actorWaypoint[pedShortcutsIndex] = Vector3();
+		actorHasStartLocation[pedShortcutsIndex] = false;
+		actorStartLocation[pedShortcutsIndex] = Vector3();
+		actorStartLocationHeading[pedShortcutsIndex] = 0.0;
+		//remove blip
+		int blipIdsToRemove[1] = { blipIdShortcuts[pedShortcutsIndex] };
+		UI::REMOVE_BLIP(blipIdsToRemove);
+		blipIdShortcuts[pedShortcutsIndex] = 0;
+	}
+}
+
 void swap_to_actor_with_index(int pedShortcutsIndex) {
 	if (actorShortcut[pedShortcutsIndex] == 0) {
 		set_status_text("No stored actor. Store with CTRL+" + std::to_string(pedShortcutsIndex));
@@ -1704,6 +1971,88 @@ void action_teleport_to_start_locations() {
 
 }
 
+void action_timelapse_tick() {
+	TIME::ADD_TO_CLOCK_TIME(0, timelapse_delta_minutes, 0);
+	//log_to_file("Clock after timelapse: " + std::to_string(TIME::GET_CLOCK_HOURS()) + ":" + std::to_string(TIME::GET_CLOCK_MINUTES()) + ":" + std::to_string(TIME::GET_CLOCK_SECONDS()));
+}
+
+void action_toggle_timelapse() {
+	if (is_timlapse_active == false) {
+		is_timlapse_active = true;
+		timelapse_delta_seconds = GetPrivateProfileInt("timelapse", "timelapse_delta_seconds", 0, config_path);
+		timelapse_delta_minutes = GetPrivateProfileInt("timelapse", "timelapse_delta_minutes", 2, config_path);
+
+		set_status_text("Timelapse is active. Adding " + std::to_string(timelapse_delta_minutes) + " minutes and " +std::to_string(timelapse_delta_seconds) + " seconds to game clock every second. Adjustable in .ini file.");
+	}
+	else {
+		is_timlapse_active = false;
+		set_status_text("Timelapse is stopped");
+	}
+	nextWaitTicks = 100;
+}
+
+void action_toggle_blackout() {
+	if (is_world_blackout == false) {
+		GRAPHICS::_SET_BLACKOUT(true);
+		is_world_blackout = true;
+		set_status_text("Blackout of world started");
+	}
+	else {
+		GRAPHICS::_SET_BLACKOUT(false);
+		is_world_blackout = false;
+		set_status_text("Blackout of world stopped");
+	}
+	nextWaitTicks = 100;
+}
+
+void action_next_weather() {
+	index_weather++;
+	if (index_weather > gtaWeathers.size() - 1) {
+		GAMEPLAY::CLEAR_WEATHER_TYPE_PERSIST();
+		GAMEPLAY::SET_RANDOM_WEATHER_TYPE();
+		index_weather = -1;
+		set_status_text("Weather is now back to normal");
+	}
+	else {
+		Weather weather = gtaWeathers[index_weather];
+
+		GAMEPLAY::SET_WEATHER_TYPE_NOW_PERSIST(weather.id);
+		//set_status_text("Weather is now: " + std::string(weather.id));
+	}
+}
+
+void action_toggle_wind() {
+	if (is_wind_active ==false) {
+		is_wind_active = true;
+		GAMEPLAY::SET_WIND(1.0);
+		GAMEPLAY::SET_WIND_SPEED(11.99f);
+		GAMEPLAY::SET_WIND_DIRECTION(ENTITY::GET_ENTITY_HEADING(PLAYER::PLAYER_PED_ID()));
+		set_status_text("Strong winds activated");
+	}
+	else {
+		is_wind_active = false;
+		GAMEPLAY::SET_WIND(0.0);
+		GAMEPLAY::SET_WIND_SPEED(0.0);
+		set_status_text("Winds back to normal");
+	}
+}
+
+void action_toggle_spot_light() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if(actorIndex != -1){
+		if (actorHasSpotlight[actorIndex] == false) {
+			log_to_file("Turning on spot light for index " + std::to_string(actorIndex));
+			actorHasSpotlight[actorIndex] = true;
+		}
+		else {
+			log_to_file("Turning off spot light for index " + std::to_string(actorIndex));
+			actorHasSpotlight[actorIndex] = false;
+		}
+	}
+}
+
+
+
 void action_toggle_scene_mode() {
 	if (sceneMode == SCENE_MODE_ACTIVE) {
 		sceneMode = SCENE_MODE_SETUP;
@@ -1759,6 +2108,184 @@ void action_toggle_scene_mode() {
 }
 
 
+
+
+bool record_scene_for_actor_key_press() {
+	//ALT+ R
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x52)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void action_record_scene_for_actor() {
+
+
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex == -1) {
+		set_status_text("Actor must be assigned slot 1-9 before recording actions");
+	}
+	else {
+		set_status_text("Recording actions for current actions. Press ALT+R to stop recording");
+		Ped actorPed = actorShortcut[actorIndex];
+
+		//the actual recording
+		std::vector<ActorRecordingItem> actorRecording;
+		actorRecording.reserve(1000);
+
+		//1. Store start location
+		actorStartLocation[actorIndex] = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+		actorStartLocationHeading[actorIndex] = ENTITY::GET_ENTITY_HEADING(actorPed);
+		actorHasStartLocation[actorIndex] = true;
+
+		WAIT(300);
+
+		bool bRecording = true;
+		DWORD tickStart = GetTickCount();
+		DWORD tickLast = tickStart;
+		DWORD tickNow = tickStart;
+		CONST DWORD DELTA_TICKS = 1000;
+
+		//main loop
+		while (bRecording == true) {
+			tickNow = GetTickCount();
+
+			//record only once pr DELTA_TICKS
+			if (tickNow - tickLast >= DELTA_TICKS) {
+
+
+				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+				float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+
+				ActorRecordingItem recordingItem(actorLocation, actorHeading);
+				actorRecording.push_back(recordingItem);
+
+				log_to_file(recordingItem.to_string());
+
+
+				tickLast = tickNow;
+			}
+
+
+
+			if (record_scene_for_actor_key_press()) {
+				bRecording = false;
+			}
+			WAIT(0);
+		}
+		log_to_file("Recorded " + std::to_string(actorRecording.size()) + " instructions");
+
+		//action_possess_ped();
+
+
+		Entity entityToTeleport = actorPed;
+		if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
+			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
+		}
+
+		teleport_entity_to_location(entityToTeleport, actorStartLocation[actorIndex], true);
+
+
+		/* Attempt 1: AI::TASK_GO_STRAIGHT_TO_COORD  - Kind of works, but the actor pauses between each coord before moving to the next
+		TaskSequence actorSeq;
+		AI::OPEN_SEQUENCE_TASK(&actorSeq);
+		//0xec17e58, 0xbac0f10b, 0x3f67c6af, 0x422d7a25, 0xbd8817db, 0x916e828c -> "motionstate_idle", "motionstate_walk", "motionstate_run", "motionstate_actionmode_idle", and "motionstate_actionmode_walk"
+		//not really necessary
+		AI::TASK_FORCE_MOTION_STATE(0, 0xbac0f10b, 0);
+		for (int i =0; i < actorRecording.size(); i++) {
+		ActorRecordingItem recordingItem = actorRecording[i];
+		AI::TASK_GO_STRAIGHT_TO_COORD(0, recordingItem.getLocation().x, recordingItem.getLocation().y, recordingItem.getLocation().z, 2.0f, -1, recordingItem.getHeading(), 0);
+		}
+		AI::CLOSE_SEQUENCE_TASK(actorSeq);
+		AI::TASK_PERFORM_SEQUENCE(actorPed, actorSeq);
+		AI::CLEAR_SEQUENCE_TASK(&actorSeq);
+		*/
+
+		//TaskSequence actorSeq;
+		//AI::OPEN_SEQUENCE_TASK(&actorSeq);
+
+		//AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
+		//AI::CLEAR_PED_TASKS(actorPed);
+
+
+		double routeX;
+		double routeY;
+		double routeZ;
+		
+		AI::TASK_FLUSH_ROUTE();
+
+		for (int i = 0; i < actorRecording.size(); i++) {
+			ActorRecordingItem recordingItem = actorRecording[i];
+		/*
+			double routeX = recordingItem.getLocation().x;
+			double routeY = recordingItem.getLocation().y;
+			double routeZ = recordingItem.getLocation().z;
+			AI::TASK_EXTEND_ROUTE(routeX, routeY, routeZ);
+			log_to_file("TASK_EXTEND_ROUTE " + std::to_string(recordingItem.getLocation().x) + "," + std::to_string(recordingItem.getLocation().y) + "," + std::to_string(recordingItem.getLocation().z));
+		*/
+			AI::TASK_EXTEND_ROUTE(recordingItem.getLocation().x, recordingItem.getLocation().y, recordingItem.getLocation().z);
+		
+			log_to_file("AI::TASK_EXTEND_ROUTE(" + std::to_string(recordingItem.getLocation().x) + "," + std::to_string(recordingItem.getLocation().y) + "," + std::to_string(recordingItem.getLocation().z) + ");");
+		}
+
+
+		AI::TASK_FOLLOW_POINT_ROUTE(actorPed, 2.0f, 0);
+
+		/*
+		TaskSequence actorSeq;
+		AI::OPEN_SEQUENCE_TASK(&actorSeq);
+		
+		AI::TASK_FOLLOW_POINT_ROUTE(0, 2.0f, 0);
+		AI::CLOSE_SEQUENCE_TASK(actorSeq);
+		AI::TASK_PERFORM_SEQUENCE(actorPed, actorSeq);
+		AI::CLEAR_SEQUENCE_TASK(&actorSeq);*/
+
+		int i = 0;
+		while (i < 10) {
+			log_to_file("Distance " + std::to_string(SYSTEM::VDIST(ENTITY::GET_ENTITY_COORDS(actorPed, 1).x, ENTITY::GET_ENTITY_COORDS(actorPed, 1).y, ENTITY::GET_ENTITY_COORDS(actorPed, 1).z, actorRecording[0].getLocation().x, actorRecording[0].getLocation().y, actorRecording[0].getLocation().z)));
+
+			WAIT(300);
+			i++;
+		}
+
+
+
+		set_status_text("Recording stopped");
+		nextWaitTicks = 400;
+
+	}
+
+
+}
+
+void action_submenu_active_selected() {
+	//switch to actor
+	if (submenu_active_action == SUBMENU_ITEM_RECORD_PLAYER) {
+		action_record_scene_for_actor();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_REMOVE_FROM_SLOT) {
+		//menu_active_action is the index of the actor from the main menu
+		action_remove_actor_from_index(menu_active_action);
+		submenu_is_displayed = false;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_BLACKOUT) {
+		action_toggle_blackout();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_TIMELAPSE) {
+		action_toggle_timelapse();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_WEATHER) {
+		action_next_weather();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_WIND) {
+		action_toggle_wind();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT) {
+		action_toggle_spot_light();
+	}
+}
 
 void action_menu_active_selected() {
 	//switch to actor
@@ -1838,10 +2365,12 @@ void init_read_keys_from_ini() {
 	log_to_file("Converted keys to dword key_possess " + std::to_string(key_hud));
 
 
-	char key_menu_down_str[256], key_menu_up_str[256], key_menu_select_str[256];
+	char key_menu_down_str[256], key_menu_up_str[256], key_menu_select_str[256], key_menu_left_str[256], key_menu_right_str[256];
 	GetPrivateProfileString("keys", "key_menu_down", "NUM2", key_menu_down_str, sizeof(key_menu_down_str), config_path);
 	GetPrivateProfileString("keys", "key_menu_up", "NUM8", key_menu_up_str, sizeof(key_menu_up_str), config_path);
 	GetPrivateProfileString("keys", "key_menu_select", "NUM5", key_menu_select_str, sizeof(key_menu_select_str), config_path);
+	GetPrivateProfileString("keys", "key_menu_left", "NUM4", key_menu_left_str, sizeof(key_menu_left_str), config_path);
+	GetPrivateProfileString("keys", "key_menu_right", "NUM6", key_menu_right_str, sizeof(key_menu_right_str), config_path);
 
 
 	key_menu_down = str2key(std::string(key_menu_down_str));
@@ -1861,6 +2390,19 @@ void init_read_keys_from_ini() {
 		log_to_file(std::string(key_menu_select_str) + " is not a valid key");
 		key_menu_select = str2key("NUM5");
 	}
+
+	key_menu_left = str2key(std::string(key_menu_left_str));
+	if (key_menu_left == 0) {
+		log_to_file(std::string(key_menu_left_str) + " is not a valid key");
+		key_menu_left = str2key("NUM4");
+	}
+
+	key_menu_right = str2key(std::string(key_menu_right_str));
+	if (key_menu_left == 0) {
+		log_to_file(std::string(key_menu_right_str) + " is not a valid key");
+		key_menu_right = str2key("NUM6");
+	}
+
 }
 
 
@@ -1988,6 +2530,22 @@ bool reset_scene_director_key_pressed() {
 		return false;
 	}
 }
+
+bool copy_player_actions_key_pressed() {
+	//ALT+ C
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool hud_toggle_key_pressed()
+{
+	return IsKeyJustUp(key_hud);
+}
+
 bool menu_up_key_pressed() {
 	if (IsKeyDown(key_menu_up)) {
 		return true;
@@ -2006,6 +2564,25 @@ bool menu_down_key_pressed() {
 	}
 }
 
+bool menu_left_key_pressed() {
+	if (IsKeyDown(key_menu_left)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool menu_right_key_pressed() {
+	if (IsKeyDown(key_menu_right)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+
 bool menu_select_key_pressed() {
 	if (IsKeyDown(key_menu_select)) {
 		return true;
@@ -2016,19 +2593,70 @@ bool menu_select_key_pressed() {
 }
 
 
-bool copy_player_actions_key_pressed() {
-	//ALT+ C
-	if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {
-		return true;
+
+void menu_action_up() {
+	if(submenu_is_active == false){
+		menu_active_index++;
+		if (menu_active_index > menu_max_index) {
+			menu_active_index = menu_max_index;
+		}
+		else {
+			submenu_is_displayed = false;
+			submenu_is_active = false;
+			submenu_active_index = -1;
+		}
 	}
 	else {
-		return false;
+		submenu_active_index++;
+		if (submenu_active_index > submenu_max_index) {
+			submenu_active_index = submenu_max_index;
+		}
+	}
+	nextWaitTicks = 100;
+}
+
+void menu_action_down() {
+	if (submenu_is_active == false) {
+		menu_active_index--;
+		if (menu_active_index < 0) {
+			menu_active_index = 0;
+		}
+		else {
+			submenu_is_displayed = false;
+			submenu_is_active = false;
+			submenu_active_index = -1;
+		}
+	}
+	else {
+		submenu_active_index--;
+		if (submenu_active_index < 0) {
+			submenu_active_index = 0;
+		}
+	}
+	nextWaitTicks = 100;
+}
+
+void menu_action_left() {
+	if (submenu_is_displayed) {
+		submenu_is_active = true;
+		submenu_active_index = 0;
 	}
 }
 
-bool hud_toggle_key_pressed()
-{
-	return IsKeyJustUp(key_hud);
+void menu_action_right() {
+	if (submenu_is_displayed) {
+		submenu_is_active = false;
+	}
+}
+
+void menu_action_select() {
+	if (submenu_is_active) {
+		action_submenu_active_selected();
+	}
+	else {
+		action_menu_active_selected();
+	}
+	nextWaitTicks = 100;
 }
 
 void action_copy_player_actions() {
@@ -2060,7 +2688,7 @@ void action_copy_player_actions() {
 		bool isSkydiving = false;
 
 		bool isPedUsingScenario = false;
-		char* currentScenarioName;
+		Scenario currentScenario;
 		//try to avoid them fleeing on gunshots
 		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
@@ -2127,15 +2755,15 @@ void action_copy_player_actions() {
 				if (PED::IS_PED_USING_ANY_SCENARIO(playerPed)) {
 					
 					bool applyCurrentScenarioToActors = false;
-					if (isPedUsingScenario == false || (isPedUsingScenario == true && PED::IS_PED_USING_SCENARIO(playerPed, currentScenarioName) == false)) {
+					if (isPedUsingScenario == false || (isPedUsingScenario == true && PED::IS_PED_USING_SCENARIO(playerPed, currentScenario.name) == false)) {
 						log_to_file("Ped is using new scenario");
 						isPedUsingScenario = true;
 
-						for (const auto scenarioName : gtaScenarios) {
-							if (PED::IS_PED_USING_SCENARIO(playerPed, scenarioName)) {
+						for (const auto scenario : gtaScenarios) {
+							if (PED::IS_PED_USING_SCENARIO(playerPed, scenario.name)) {
 								log_to_file("found scenario player is using");
-								log_to_file(scenarioName);
-								currentScenarioName = scenarioName;
+								log_to_file(scenario.name);
+								currentScenario = scenario;
 								applyCurrentScenarioToActors = true;
 							}
 						}
@@ -2145,7 +2773,13 @@ void action_copy_player_actions() {
 						log_to_file("Applying scenario to actors");
 						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								AI::TASK_START_SCENARIO_IN_PLACE(actorShortcut[i], currentScenarioName, -1, 1);
+								if (currentScenario.hasEnterAnim) {
+									AI::TASK_START_SCENARIO_IN_PLACE(actorShortcut[i], currentScenario.name, -1, 1);
+								}
+								else {
+									AI::TASK_START_SCENARIO_IN_PLACE(actorShortcut[i], currentScenario.name, -1, 0);
+								}
+								
 							}
 						}
 					}
@@ -2356,22 +2990,19 @@ void action_copy_player_actions() {
 
 				if (should_display_app_hud()) {
 					if (menu_up_key_pressed()) {
-						menu_active_index++;
-						if (menu_active_index > menu_max_index) {
-							menu_active_index = menu_max_index;
-						}
-						nextWaitTicks = 100;
+						menu_action_up();
 					}
 					else if (menu_down_key_pressed()) {
-						menu_active_index--;
-						if (menu_active_index < 0) {
-							menu_active_index = 0;
-						}
-						nextWaitTicks = 100;
+						menu_action_down();
+					}
+					else if (menu_left_key_pressed()) {
+						menu_action_left();
+					}
+					else if (menu_right_key_pressed()) {
+						menu_action_right();
 					}
 					else if (menu_select_key_pressed()) {
-						action_menu_active_selected();
-						nextWaitTicks = 100;
+						menu_action_select();
 					}
 				}
 
@@ -2473,20 +3104,18 @@ void main()
 
 			if (should_display_app_hud()) {
 				if (menu_up_key_pressed()) {
-					menu_active_index++;
-					if (menu_active_index > menu_max_index) {
-						menu_active_index = menu_max_index;
-					}
-					nextWaitTicks = 100;
+					menu_action_up();
 				} else if (menu_down_key_pressed()) {
-					menu_active_index--;
-					if (menu_active_index < 0) {
-						menu_active_index = 0;
-					}
-					nextWaitTicks = 100;
-				} else if (menu_select_key_pressed()) {
-					action_menu_active_selected();
-					nextWaitTicks = 100;
+					menu_action_down();
+				}
+				else if (menu_left_key_pressed()) {
+					menu_action_left();
+				}
+				else if (menu_right_key_pressed()) {
+					menu_action_right();
+				}
+				else if (menu_select_key_pressed()) {
+					menu_action_select();
 				}
 			}
 
@@ -2506,6 +3135,20 @@ void main()
 		if (should_display_app_hud()) {
 			draw_instructional_buttons();
 			draw_menu();
+		}
+
+		//draw spotlights
+		for (int i = 1; i < sizeof(actorHasSpotlight) / sizeof(bool); i++) {
+			if (actorHasSpotlight[i]) {
+				//log_to_file("Drawing spot light for actor with index " + std::to_string(i));
+				Vector3 actorPos = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
+				GRAPHICS::DRAW_SPOT_LIGHT(actorPos.x, actorPos.y, actorPos.z + 20.0, 0, 0, -20.0, 255, 255, 255, 100.0f, 1.0, 0.0f, 4.0f, 1.0f);
+			}
+		}
+
+
+		if (is_timlapse_active && GetTickCount() - timelapseLastTick > timelapseDeltaTicks) {
+			action_timelapse_tick();
 		}
 
 		//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
@@ -2532,6 +3175,7 @@ void ScriptMain()
 	init_read_keys_from_ini();
 
 	gtaScenarios = getAllGTAScenarios();
+	gtaWeathers = getAllGTAWeather();
 	
 
 	create_relationship_groups();

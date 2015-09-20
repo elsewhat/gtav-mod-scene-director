@@ -1,4 +1,9 @@
 #pragma once
 #include <vector>
+struct Scenario
+{
+	char* name;
+	bool hasEnterAnim;
+};
 
-std::vector<char *> getAllGTAScenarios();
+std::vector<Scenario> getAllGTAScenarios();

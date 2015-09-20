@@ -12,6 +12,7 @@
     <ClCompile Include="scenario.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="utils.cpp" />
+    <ClCompile Include="weather.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\main.h" />
@@ -22,6 +23,7 @@
     <ClInclude Include="scenario.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="weather.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8D82F34A-1D64-465B-84B1-37F89AD3D20B}</ProjectGuid>
