@@ -1,7 +1,7 @@
 #include "weather.h"
 #include <vector>
 
-std::vector<Weather> gtaWeather = {
+std::vector<Weather> gtaWeather= {
 	{"CLEAR" },
 	{"EXTRASUNNY" },
 	{"CLOUDS" },

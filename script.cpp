@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "scenario.h"
 #include "weather.h"
+#include "clipset_movement.h"
 
 #include <string>
 #include <ctime>
@@ -47,11 +48,13 @@ enum MENU_ITEM {
 	MENU_ITEM_WORLD = 20,
 	SUBMENU_ITEM_RECORD_PLAYER = 40,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 41,
-	SUBMENU_ITEM_BLACKOUT = 42,
-	SUBMENU_ITEM_TIMELAPSE = 43,
-	SUBMENU_ITEM_WEATHER = 44,
-	SUBMENU_ITEM_WIND = 45,
-	SUBMENU_ITEM_SPOT_LIGHT = 46,
+	SUBMENU_ITEM_SPOT_LIGHT = 42, 
+	SUBMENU_ITEM_DRUNK = 43,
+	SUBMENU_ITEM_BLACKOUT = 50,
+	SUBMENU_ITEM_TIMELAPSE = 51,
+	SUBMENU_ITEM_WEATHER = 52,
+	SUBMENU_ITEM_WIND = 53,
+
 
 };
 
@@ -70,6 +73,8 @@ Vector3 actorStartLocation[10] = {};
 float actorStartLocationHeading[10] = {};
 float actorDriverAgressiveness[] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f };
 bool actorHasSpotlight[10] = {};
+bool actorHasWalkingStyle[10] = {};
+ClipSet actorWalkingStyle[10] = {};
 
 int blipIdShortcuts[10] = {};
 
@@ -121,11 +126,13 @@ int timelapse_delta_minutes = 2;
 DWORD timelapseLastTick = 0;
 DWORD timelapseDeltaTicks = 1000;
 
-std::vector<Weather> gtaWeathers;
+std::vector<Weather> gtaWeatherTypes;
 int index_weather = -1;
 
 bool is_wind_active = false;
 
+std::vector<ClipSet> gtaWalkingStyles;
+int index_walking_style = -1;
 
 std::string statusText;
 DWORD statusTextDrawTicksMax;
@@ -541,7 +548,7 @@ void draw_submenu_world(int drawIndex) {
 
 	char* weatherText = "Weather";
 	if (index_weather!=-1) {
-		Weather weather = gtaWeathers[index_weather];
+		Weather weather = gtaWeatherTypes[index_weather];
 		std::string weatherTextString = "Weather: " + std::string(weather.id);
 		weatherText = strdup(weatherTextString.c_str());
 	}
@@ -573,6 +580,7 @@ void draw_submenu_world(int drawIndex) {
 
 void draw_submenu_player(int drawIndex) {
 	int submenu_index = 0;
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
 
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
@@ -613,7 +621,7 @@ void draw_submenu_player(int drawIndex) {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-	int actorIndex= get_index_for_actor(PLAYER::PLAYER_PED_ID());
+
 	if (actorIndex != -1 && actorHasSpotlight[actorIndex] == true) {
 		DRAW_TEXT("Spot light: Active", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
@@ -622,6 +630,24 @@ void draw_submenu_player(int drawIndex) {
 	}
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_DRUNK;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	if (actorIndex != -1 && actorHasWalkingStyle[actorIndex] == true) {
+		std::string walkingStyleString = "Walking: " + std::string(actorWalkingStyle[actorIndex].name);
+		DRAW_TEXT(strdup(walkingStyleString.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}
+	else {
+		DRAW_TEXT("Walking: Normal", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	submenu_max_index = submenu_index;
 }
@@ -1045,6 +1071,56 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 		}
 	}
 
+}
+
+void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
+	log_to_file("playback_recording_to_waypoint: Ped:" + std::to_string(ped) + " x:" + std::to_string(waypointCoord.x) + " y : " + std::to_string(waypointCoord.y) + " z : " + std::to_string(waypointCoord.z));
+
+	if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
+		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
+
+		//check if player is the driver
+		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
+		if (pedDriver != ped) {
+			log_to_file("move_to_waypoint: Ped (" + std::to_string(ped) + " is not driver (" + std::to_string(pedDriver));
+			//set_status_text("Ped is not driver. Ignore waypoint");
+		}
+		else {
+			int actorIndex = get_index_for_actor(pedDriver);
+			if (actorIndex != -1) {
+				actorHasWaypoint[actorIndex] = true;
+				actorWaypoint[actorIndex] = waypointCoord;
+			}
+
+			float vehicleMaxSpeed = VEHICLE::_GET_VEHICLE_MAX_SPEED(ENTITY::GET_ENTITY_MODEL(pedVehicle));
+
+			if (PED::IS_PED_IN_ANY_HELI(ped)) {
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+				log_to_file("move_to_waypoint: Flying in heli with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed) );
+			}
+			else if (PED::IS_PED_IN_ANY_PLANE(ped)) {
+				AI::TASK_PLANE_MISSION(pedDriver, pedVehicle, 0, 0, waypointCoord.x, waypointCoord.y, waypointCoord.z, 4, 30.0, 50.0, -1, vehicleMaxSpeed, 50);
+				log_to_file("move_to_waypoint: Flying in plane with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed) );
+
+			}
+			else if (PED::IS_PED_IN_ANY_BOAT(ped)) {
+				AI::TASK_BOAT_MISSION(pedDriver, pedVehicle, 0, 0, waypointCoord.x, waypointCoord.y, waypointCoord.z, 4, vehicleMaxSpeed, 786469, -1.0, 7);
+				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(pedDriver, 1);
+				//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, 0.0, 20.0, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469, 5.0, 1071);
+				log_to_file("move_to_waypoint: In boat : " + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
+			}
+			else {
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469, 5.0, -1);
+				log_to_file("move_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
+
+			}
+		}
+
+	}
+	else if (PED::IS_PED_ON_FOOT(ped)) {
+		AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, 1.0f, -1, 27.0f, 0.5f);
+		log_to_file("move_to_waypoint: Ped (" + std::to_string(ped) + " is walking to waypoint");
+	}
 }
 
 void teleport_entity_to_location(Entity entityToTeleport, Vector3 location, bool trustZValue) {
@@ -2007,14 +2083,14 @@ void action_toggle_blackout() {
 
 void action_next_weather() {
 	index_weather++;
-	if (index_weather > gtaWeathers.size() - 1) {
+	if (index_weather > gtaWeatherTypes.size() - 1) {
 		GAMEPLAY::CLEAR_WEATHER_TYPE_PERSIST();
 		GAMEPLAY::SET_RANDOM_WEATHER_TYPE();
 		index_weather = -1;
 		set_status_text("Weather is now back to normal");
 	}
 	else {
-		Weather weather = gtaWeathers[index_weather];
+		Weather weather = gtaWeatherTypes[index_weather];
 
 		GAMEPLAY::SET_WEATHER_TYPE_NOW_PERSIST(weather.id);
 		//set_status_text("Weather is now: " + std::string(weather.id));
@@ -2034,6 +2110,33 @@ void action_toggle_wind() {
 		GAMEPLAY::SET_WIND(0.0);
 		GAMEPLAY::SET_WIND_SPEED(0.0);
 		set_status_text("Winds back to normal");
+	}
+}
+
+void action_next_walking_style() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	index_walking_style++;
+	if (index_walking_style > gtaWalkingStyles.size() - 1) {
+		log_to_file(std::to_string(index_walking_style) + " 1against vector size" + std::to_string(gtaWalkingStyles.size()));
+		PED::RESET_PED_MOVEMENT_CLIPSET(PLAYER::PLAYER_PED_ID(), 0.0);
+		actorHasWalkingStyle[actorIndex] = false;
+		actorWalkingStyle[actorIndex] = ClipSet();
+		index_walking_style = -1;
+		set_status_text("Walking style is now back to normal");
+	}
+	else {
+		log_to_file(std::to_string(index_walking_style) + " 2against vector size" + std::to_string(gtaWalkingStyles.size()));
+		ClipSet walkingStyle = gtaWalkingStyles[index_walking_style];
+		if (STREAMING::HAS_CLIP_SET_LOADED(walkingStyle.id)) {
+			PED::SET_PED_MOVEMENT_CLIPSET(PLAYER::PLAYER_PED_ID(), walkingStyle.id, 1.0);
+			actorHasWalkingStyle[actorIndex] = true;
+			actorWalkingStyle[actorIndex] = walkingStyle;
+		}
+		else {
+			log_to_file("Clipset has not loaded yet");
+		}
+		
+		//set_status_text("Weather is now: " + std::string(weather.id));
 	}
 }
 
@@ -2147,6 +2250,7 @@ void action_record_scene_for_actor() {
 		DWORD tickLast = tickStart;
 		DWORD tickNow = tickStart;
 		CONST DWORD DELTA_TICKS = 1000;
+		//4000 works well for boats
 
 		//main loop
 		while (bRecording == true) {
@@ -2186,7 +2290,7 @@ void action_record_scene_for_actor() {
 		}
 
 		teleport_entity_to_location(entityToTeleport, actorStartLocation[actorIndex], true);
-
+		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actorStartLocationHeading[actorIndex]);
 
 		/* Attempt 1: AI::TASK_GO_STRAIGHT_TO_COORD  - Kind of works, but the actor pauses between each coord before moving to the next
 		TaskSequence actorSeq;
@@ -2208,30 +2312,21 @@ void action_record_scene_for_actor() {
 
 		//AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
 		//AI::CLEAR_PED_TASKS(actorPed);
-
-
-		double routeX;
-		double routeY;
-		double routeZ;
 		
+		/*
 		AI::TASK_FLUSH_ROUTE();
 
 		for (int i = 0; i < actorRecording.size(); i++) {
 			ActorRecordingItem recordingItem = actorRecording[i];
-		/*
-			double routeX = recordingItem.getLocation().x;
-			double routeY = recordingItem.getLocation().y;
-			double routeZ = recordingItem.getLocation().z;
-			AI::TASK_EXTEND_ROUTE(routeX, routeY, routeZ);
-			log_to_file("TASK_EXTEND_ROUTE " + std::to_string(recordingItem.getLocation().x) + "," + std::to_string(recordingItem.getLocation().y) + "," + std::to_string(recordingItem.getLocation().z));
-		*/
 			AI::TASK_EXTEND_ROUTE(recordingItem.getLocation().x, recordingItem.getLocation().y, recordingItem.getLocation().z);
 		
 			log_to_file("AI::TASK_EXTEND_ROUTE(" + std::to_string(recordingItem.getLocation().x) + "," + std::to_string(recordingItem.getLocation().y) + "," + std::to_string(recordingItem.getLocation().z) + ");");
 		}
-
-
 		AI::TASK_FOLLOW_POINT_ROUTE(actorPed, 2.0f, 0);
+		*/
+
+
+		
 
 		/*
 		TaskSequence actorSeq;
@@ -2241,14 +2336,50 @@ void action_record_scene_for_actor() {
 		AI::CLOSE_SEQUENCE_TASK(actorSeq);
 		AI::TASK_PERFORM_SEQUENCE(actorPed, actorSeq);
 		AI::CLEAR_SEQUENCE_TASK(&actorSeq);*/
+		
 
-		int i = 0;
-		while (i < 10) {
-			log_to_file("Distance " + std::to_string(SYSTEM::VDIST(ENTITY::GET_ENTITY_COORDS(actorPed, 1).x, ENTITY::GET_ENTITY_COORDS(actorPed, 1).y, ENTITY::GET_ENTITY_COORDS(actorPed, 1).z, actorRecording[0].getLocation().x, actorRecording[0].getLocation().y, actorRecording[0].getLocation().z)));
+		for (int i = 0; i < actorRecording.size(); i++) {
+			ActorRecordingItem recordingItem = actorRecording[i];
 
-			WAIT(300);
-			i++;
+			Vector3 targetLocation = recordingItem.getLocation();
+			playback_recording_to_waypoint(actorPed, targetLocation);
+			bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0);
+			bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(actorPed);
+			bool isPedInPlane= PED::IS_PED_IN_ANY_PLANE(actorPed);
+			bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(actorPed);
+
+			float minDistance = 4.0;
+
+			if (isPedInHeli) {
+				minDistance = 50.0;
+			}else if (isPedInPlane) {
+				minDistance = 100.0;
+			}
+			else if (isPedInBoat) {
+				minDistance = 60.0;
+			}
+			else if (isInVehicle) {
+				minDistance = 15.0;
+			}
+
+			int counter = 0;
+			while (counter<100) {
+				Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
+				float distanceToTarget = SYSTEM::VDIST(currentLocation.x, currentLocation.y, currentLocation.z, targetLocation.x, targetLocation.y, targetLocation.z);
+
+				log_to_file("Distance " + std::to_string(distanceToTarget));
+
+				if (distanceToTarget < minDistance) {
+					log_to_file("Next waypoint");
+					break;
+				}
+
+				WAIT(300);
+				counter++;
+			}
+
 		}
+
 
 
 
@@ -2285,6 +2416,10 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT) {
 		action_toggle_spot_light();
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_DRUNK) {
+		action_next_walking_style();
+	}
+		
 }
 
 void action_menu_active_selected() {
@@ -3175,7 +3310,12 @@ void ScriptMain()
 	init_read_keys_from_ini();
 
 	gtaScenarios = getAllGTAScenarios();
-	gtaWeathers = getAllGTAWeather();
+	gtaWeatherTypes = getAllGTAWeather();
+	gtaWalkingStyles = getAllDrunkClipSet();
+	for (auto & walkingStyle : gtaWalkingStyles) {
+		STREAMING::REQUEST_CLIP_SET(walkingStyle.id);
+	}
+	
 	
 
 	create_relationship_groups();

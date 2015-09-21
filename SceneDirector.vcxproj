@@ -7,6 +7,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="clipset_movement.cpp" />
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="scenario.cpp" />
@@ -19,6 +20,7 @@
     <ClInclude Include="..\..\inc\enums.h" />
     <ClInclude Include="..\..\inc\natives.h" />
     <ClInclude Include="..\..\inc\types.h" />
+    <ClInclude Include="clipset_movement.h" />
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="scenario.h" />
     <ClInclude Include="script.h" />
