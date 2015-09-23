@@ -11,6 +11,7 @@
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="Ligthing.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="relationship.cpp" />
     <ClCompile Include="scenario.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="utils.cpp" />
@@ -24,6 +25,7 @@
     <ClInclude Include="clipset_movement.h" />
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="Lighting.h" />
+    <ClInclude Include="relationship.h" />
     <ClInclude Include="scenario.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="utils.h" />

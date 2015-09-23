@@ -5,6 +5,7 @@
 #include "weather.h"
 #include "clipset_movement.h"
 #include "lighting.h"
+#include "relationship.h"
 
 #include <string>
 #include <ctime>
@@ -132,8 +133,11 @@ DWORD timelapseDeltaTicks = 1000;
 
 std::vector<Weather> gtaWeatherTypes;
 int index_weather = -1;
-
 bool is_wind_active = false;
+
+
+std::vector<RelationshipGroup> modRelationshipGroups;
+
 
 std::vector<ClipSet> gtaWalkingStyles;
 int index_walking_style = -1;
@@ -384,15 +388,42 @@ void ensure_max_driving_ability(Ped ped) {
 void create_relationship_groups() {
 	log_to_file("set_relationships_between_actors");
 
-	PED::ADD_RELATIONSHIP_GROUP("ACTOR1_GROUP", actorHashGroupP);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, GAMEPLAY::GET_HASH_KEY("player"));
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, actorHashGroup);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), actorHashGroup);
+	//Group A hates Group B, but like Group C
+	RelationshipGroup groupA = modRelationshipGroups[0];
+	//Group B hates Group A, but like Group C
+	RelationshipGroup groupB = modRelationshipGroups[1];
+	//Group C likes Group A and Group B
+	RelationshipGroup groupC = modRelationshipGroups[2];
 
-	PED::ADD_RELATIONSHIP_GROUP("ACTOR1_GROUP", actorHashGroupP);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, GAMEPLAY::GET_HASH_KEY("player"));
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, actorHashGroup);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), actorHashGroup);
+	PED::ADD_RELATIONSHIP_GROUP(groupA.id, &(groupA.actorHash));
+	PED::ADD_RELATIONSHIP_GROUP(groupB.id, &(groupB.actorHash));
+	PED::ADD_RELATIONSHIP_GROUP(groupC.id, &(groupC.actorHash));
+
+	/*Relationship types:
+		0 = Companion
+		1 = Respect
+		2 = Like
+		3 = Neutral
+		4 = Dislike
+		5 = Hate
+		*/
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupA.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupA.actorHash, groupA.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupA.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, groupA.actorHash, groupB.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, groupA.actorHash, groupC.actorHash);
+
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupB.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupB.actorHash, groupB.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupB.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, groupB.actorHash, groupA.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, groupB.actorHash, groupC.actorHash);
+
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupC.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupC.actorHash, groupC.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupC.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, groupC.actorHash, groupA.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, groupC.actorHash, groupB.actorHash);
 
 }
 
@@ -3394,6 +3425,7 @@ void ScriptMain()
 
 	gtaScenarios = getAllGTAScenarios();
 	gtaWeatherTypes = getAllGTAWeather();
+	modRelationshipGroups = getAllRelationshipGroups();
 	gtaWalkingStyles = getAllMovementClipSet();
 	for (auto & walkingStyle : gtaWalkingStyles) {
 		STREAMING::REQUEST_CLIP_SET(walkingStyle.id);
