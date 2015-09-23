@@ -4,6 +4,7 @@
 #include "scenario.h"
 #include "weather.h"
 #include "clipset_movement.h"
+#include "lighting.h"
 
 #include <string>
 #include <ctime>
@@ -48,8 +49,9 @@ enum MENU_ITEM {
 	MENU_ITEM_WORLD = 20,
 	SUBMENU_ITEM_RECORD_PLAYER = 40,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 41,
-	SUBMENU_ITEM_SPOT_LIGHT = 42, 
-	SUBMENU_ITEM_DRUNK = 43,
+	SUBMENU_ITEM_SPOT_LIGHT = 42,
+	SUBMENU_ITEM_SPOT_LIGHT_COLOR = 43,
+	SUBMENU_ITEM_DRUNK = 44,
 	SUBMENU_ITEM_BLACKOUT = 50,
 	SUBMENU_ITEM_TIMELAPSE = 51,
 	SUBMENU_ITEM_WEATHER = 52,
@@ -73,6 +75,8 @@ Vector3 actorStartLocation[10] = {};
 float actorStartLocationHeading[10] = {};
 float actorDriverAgressiveness[] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f };
 bool actorHasSpotlight[10] = {};
+SPOT_LIGHT_TYPE actorSpotlightType[10] = {};
+SpotLightColor actorSpotlightColor[10] = {};
 bool actorHasWalkingStyle[10] = {};
 ClipSet actorWalkingStyle[10] = {};
 
@@ -385,6 +389,11 @@ void create_relationship_groups() {
 	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, actorHashGroup);
 	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), actorHashGroup);
 
+	PED::ADD_RELATIONSHIP_GROUP("ACTOR1_GROUP", actorHashGroupP);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, GAMEPLAY::GET_HASH_KEY("player"));
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, actorHashGroup, actorHashGroup);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), actorHashGroup);
+
 }
 
 void assign_actor_to_relationship_group(Ped ped) {
@@ -623,12 +632,32 @@ void draw_submenu_player(int drawIndex) {
 
 
 	if (actorIndex != -1 && actorHasSpotlight[actorIndex] == true) {
-		DRAW_TEXT("Spot light: Active", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		std::string spotLightText ="Spot light: " + getNameForSpotLightType(actorSpotlightType[actorIndex]);
+		DRAW_TEXT(strdup(spotLightText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	else {
-		DRAW_TEXT("Spot light", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		DRAW_TEXT("Spot light: None", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	if (actorIndex != -1 && actorHasSpotlight[actorIndex] == true) {
+		drawIndex++;
+		submenu_index++;
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_SPOT_LIGHT_COLOR;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		std::string spotLightColorText = "Spot color: " + actorSpotlightColor[actorIndex].name;
+		DRAW_TEXT(strdup(spotLightColorText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	}
+
 
 	drawIndex++;
 	submenu_index++;
@@ -639,6 +668,9 @@ void draw_submenu_player(int drawIndex) {
 	else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
+
+
+
 
 	if (actorIndex != -1 && actorHasWalkingStyle[actorIndex] == true) {
 		std::string walkingStyleString = "Walk: " + std::string(actorWalkingStyle[actorIndex].name);
@@ -995,6 +1027,44 @@ void draw_menu() {
 		submenu_active_index = -1;
 	}
 
+}
+
+void draw_spot_lights() {
+	//draw spotlights
+	for (int i = 1; i < sizeof(actorHasSpotlight) / sizeof(bool); i++) {
+		if (actorHasSpotlight[i]) {
+			//log_to_file("Drawing spot light for actor with index " + std::to_string(i));
+			Vector3 actorPos = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
+			int colorR = actorSpotlightColor[i].r;
+			int colorG = actorSpotlightColor[i].g;
+			int colorB = actorSpotlightColor[i].b;
+
+			
+			switch (actorSpotlightType[i]) {
+			case SPOT_LIGHT_NONE:
+				break;
+			case SPOT_LIGHT_ACTOR_ABOVE:
+				GRAPHICS::DRAW_SPOT_LIGHT(actorPos.x, actorPos.y, actorPos.z + 20.0, 0, 0, -1.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 4.0f, 1.0f);
+				break;
+			case SPOT_LIGHT_ACTOR_LEFT:
+				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x+10.0, actorPos.y, actorPos.z, -1.0, 0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
+				break;
+			case SPOT_LIGHT_ACTOR_RIGHT:
+				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x-10.0, actorPos.y, actorPos.z, 1.0, 0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
+				break;
+			case SPOT_LIGHT_ACTOR_INFRONT:
+				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x, actorPos.y - 10.0, actorPos.z, 0.0, 1.0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
+				break;
+			case SPOT_LIGHT_ACTOR_BEHIND:
+				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x, actorPos.y+10.0, actorPos.z, 0.0, -1.0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
+				break;
+			default:
+				break;
+			}
+
+			
+		}
+	}
 }
 
 
@@ -2138,16 +2208,34 @@ void action_next_walking_style() {
 	}
 }
 
-void action_toggle_spot_light() {
+void action_next_spot_light() {
 	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
 	if(actorIndex != -1){
 		if (actorHasSpotlight[actorIndex] == false) {
 			log_to_file("Turning on spot light for index " + std::to_string(actorIndex));
 			actorHasSpotlight[actorIndex] = true;
+			actorSpotlightType[actorIndex] = SPOT_LIGHT_ACTOR_ABOVE;
+			actorSpotlightColor[actorIndex] = getDefaultSpotLightColor();
 		}
 		else {
-			log_to_file("Turning off spot light for index " + std::to_string(actorIndex));
-			actorHasSpotlight[actorIndex] = false;
+			if (actorSpotlightType[actorIndex] == last_spot_light_type) {
+				actorHasSpotlight[actorIndex] = false;
+				actorSpotlightType[actorIndex] = SPOT_LIGHT_NONE;
+				log_to_file("Turning off spot light for index " + std::to_string(actorIndex));
+			}
+			else {
+				int existing_spot_light_type = actorSpotlightType[actorIndex];
+				actorSpotlightType[actorIndex] = (SPOT_LIGHT_TYPE) (++existing_spot_light_type);
+			}	
+		}
+	}
+}
+
+void action_next_spot_light_color() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex != -1) {
+		if (actorHasSpotlight[actorIndex]) {
+			actorSpotlightColor[actorIndex] = getNextSpotLightColor(actorSpotlightColor[actorIndex]);
 		}
 	}
 }
@@ -2412,7 +2500,10 @@ void action_submenu_active_selected() {
 		action_toggle_wind();
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT) {
-		action_toggle_spot_light();
+		action_next_spot_light();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT_COLOR) {
+		action_next_spot_light_color();
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_DRUNK) {
 		action_next_walking_style();
@@ -3270,14 +3361,8 @@ void main()
 			draw_menu();
 		}
 
-		//draw spotlights
-		for (int i = 1; i < sizeof(actorHasSpotlight) / sizeof(bool); i++) {
-			if (actorHasSpotlight[i]) {
-				//log_to_file("Drawing spot light for actor with index " + std::to_string(i));
-				Vector3 actorPos = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
-				GRAPHICS::DRAW_SPOT_LIGHT(actorPos.x, actorPos.y, actorPos.z + 20.0, 0, 0, -20.0, 255, 255, 255, 100.0f, 1.0, 0.0f, 4.0f, 1.0f);
-			}
-		}
+		draw_spot_lights();
+
 
 
 		if (is_timlapse_active && GetTickCount() - timelapseLastTick > timelapseDeltaTicks) {

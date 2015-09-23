@@ -8,6 +8,7 @@
     <ClCompile Include="scenario.cpp" />
     <ClCompile Include="weather.cpp" />
     <ClCompile Include="clipset_movement.cpp" />
+    <ClCompile Include="Ligthing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\enums.h">
@@ -28,6 +29,7 @@
     <ClInclude Include="scenario.h" />
     <ClInclude Include="weather.h" />
     <ClInclude Include="clipset_movement.h" />
+    <ClInclude Include="Lighting.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
