@@ -641,11 +641,11 @@ void draw_submenu_player(int drawIndex) {
 	}
 
 	if (actorIndex != -1 && actorHasWalkingStyle[actorIndex] == true) {
-		std::string walkingStyleString = "Walking: " + std::string(actorWalkingStyle[actorIndex].name);
+		std::string walkingStyleString = "Walk: " + std::string(actorWalkingStyle[actorIndex].name);
 		DRAW_TEXT(strdup(walkingStyleString.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	else {
-		DRAW_TEXT("Walking: Normal", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		DRAW_TEXT("Walk: Normal", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
@@ -2117,7 +2117,6 @@ void action_next_walking_style() {
 	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
 	index_walking_style++;
 	if (index_walking_style > gtaWalkingStyles.size() - 1) {
-		log_to_file(std::to_string(index_walking_style) + " 1against vector size" + std::to_string(gtaWalkingStyles.size()));
 		PED::RESET_PED_MOVEMENT_CLIPSET(PLAYER::PLAYER_PED_ID(), 0.0);
 		actorHasWalkingStyle[actorIndex] = false;
 		actorWalkingStyle[actorIndex] = ClipSet();
@@ -2125,7 +2124,6 @@ void action_next_walking_style() {
 		set_status_text("Walking style is now back to normal");
 	}
 	else {
-		log_to_file(std::to_string(index_walking_style) + " 2against vector size" + std::to_string(gtaWalkingStyles.size()));
 		ClipSet walkingStyle = gtaWalkingStyles[index_walking_style];
 		if (STREAMING::HAS_CLIP_SET_LOADED(walkingStyle.id)) {
 			PED::SET_PED_MOVEMENT_CLIPSET(PLAYER::PLAYER_PED_ID(), walkingStyle.id, 1.0);
@@ -2791,7 +2789,7 @@ void menu_action_select() {
 	else {
 		action_menu_active_selected();
 	}
-	nextWaitTicks = 100;
+	nextWaitTicks = 200;
 }
 
 void action_copy_player_actions() {
@@ -3311,7 +3309,7 @@ void ScriptMain()
 
 	gtaScenarios = getAllGTAScenarios();
 	gtaWeatherTypes = getAllGTAWeather();
-	gtaWalkingStyles = getAllDrunkClipSet();
+	gtaWalkingStyles = getAllMovementClipSet();
 	for (auto & walkingStyle : gtaWalkingStyles) {
 		STREAMING::REQUEST_CLIP_SET(walkingStyle.id);
 	}

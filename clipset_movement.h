@@ -6,4 +6,4 @@ struct ClipSet
 	char* name;
 };
 
-std::vector<ClipSet> getAllDrunkClipSet();
+std::vector<ClipSet> getAllMovementClipSet();
