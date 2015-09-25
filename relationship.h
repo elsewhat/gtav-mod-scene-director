@@ -5,8 +5,10 @@
 struct RelationshipGroup
 {
 	char* id;
-	char* name;
+	std::string name;
 	DWORD actorHash;
 };
 
 std::vector<RelationshipGroup> getAllRelationshipGroups();
+RelationshipGroup getDefaultRelationshipGroup();
+RelationshipGroup getNextRelationshipGroup(RelationshipGroup current);

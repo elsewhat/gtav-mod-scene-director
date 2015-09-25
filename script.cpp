@@ -52,17 +52,24 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 41,
 	SUBMENU_ITEM_SPOT_LIGHT = 42,
 	SUBMENU_ITEM_SPOT_LIGHT_COLOR = 43,
-	SUBMENU_ITEM_DRUNK = 44,
+	SUBMENU_ITEM_WALK = 44,
+	SUBMENU_ITEM_RELATIONSHIP = 45,
+	SUBMENU_ITEM_HEALTH=46,
+	SUBMENU_ITEM_VEHICLE_COSMETIC = 47,
 	SUBMENU_ITEM_BLACKOUT = 50,
 	SUBMENU_ITEM_TIMELAPSE = 51,
 	SUBMENU_ITEM_WEATHER = 52,
 	SUBMENU_ITEM_WIND = 53,
 
 
+
 };
 
 bool should_display_hud = false;
 
+/*
+TODO: Refactor into Actor class
+*/
 //attributes to the actors in the slot 1-9 
 //index 0 is reserved for the last actor
 Ped actorShortcut[10] = {};
@@ -74,12 +81,14 @@ Vector3 actorWaypoint[10] = {};
 bool actorHasStartLocation[10] = {};
 Vector3 actorStartLocation[10] = {};
 float actorStartLocationHeading[10] = {};
-float actorDriverAgressiveness[] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f };
+float actorDriverAgressiveness[10] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f };
 bool actorHasSpotlight[10] = {};
 SPOT_LIGHT_TYPE actorSpotlightType[10] = {};
 SpotLightColor actorSpotlightColor[10] = {};
 bool actorHasWalkingStyle[10] = {};
 ClipSet actorWalkingStyle[10] = {};
+RelationshipGroup actorRelationshipGroup[10] = {};
+bool actorVehicleNoDamage[10] = {};
 
 int blipIdShortcuts[10] = {};
 
@@ -395,9 +404,17 @@ void create_relationship_groups() {
 	//Group C likes Group A and Group B
 	RelationshipGroup groupC = modRelationshipGroups[2];
 
-	PED::ADD_RELATIONSHIP_GROUP(groupA.id, &(groupA.actorHash));
-	PED::ADD_RELATIONSHIP_GROUP(groupB.id, &(groupB.actorHash));
-	PED::ADD_RELATIONSHIP_GROUP(groupC.id, &(groupC.actorHash));
+	Hash groupAHash = GAMEPLAY::GET_HASH_KEY(groupA.id);
+	Hash groupBHash = GAMEPLAY::GET_HASH_KEY(groupB.id);
+	Hash groupCHash = GAMEPLAY::GET_HASH_KEY(groupC.id);
+
+	PED::REMOVE_RELATIONSHIP_GROUP(groupAHash);
+	PED::REMOVE_RELATIONSHIP_GROUP(groupBHash);
+	PED::REMOVE_RELATIONSHIP_GROUP(groupCHash);
+
+	PED::ADD_RELATIONSHIP_GROUP(groupA.id, &(groupAHash));
+	PED::ADD_RELATIONSHIP_GROUP(groupB.id, &(groupBHash));
+	PED::ADD_RELATIONSHIP_GROUP(groupC.id, &(groupCHash));
 
 	/*Relationship types:
 		0 = Companion
@@ -407,36 +424,37 @@ void create_relationship_groups() {
 		4 = Dislike
 		5 = Hate
 		*/
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupA.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupA.actorHash, groupA.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupA.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, groupA.actorHash, groupB.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, groupA.actorHash, groupC.actorHash);
+	//PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupA.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupAHash, groupAHash);
+	//PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupA.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, groupAHash, groupBHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(3, groupAHash, groupCHash);
 
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupB.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupB.actorHash, groupB.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupB.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, groupB.actorHash, groupA.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, groupB.actorHash, groupC.actorHash);
+	//PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupB.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupBHash, groupBHash);
+	//PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupB.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(5, groupBHash, groupAHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(3, groupBHash, groupCHash);
 
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupC.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupC.actorHash, groupC.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupC.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, groupC.actorHash, groupA.actorHash);
-	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(1, groupC.actorHash, groupB.actorHash);
+	//PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupC.actorHash, GAMEPLAY::GET_HASH_KEY("player"));
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, groupCHash, groupCHash);
+	//PED::SET_RELATIONSHIP_BETWEEN_GROUPS(0, GAMEPLAY::GET_HASH_KEY("player"), groupC.actorHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(3, groupCHash, groupAHash);
+	PED::SET_RELATIONSHIP_BETWEEN_GROUPS(3, groupCHash, groupBHash);
 
 }
 
-void assign_actor_to_relationship_group(Ped ped) {
-	log_to_file("Adding actor to relationship group . Existing hash is " +std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped))+ " actorHashGroup is " + std::to_string(actorHashGroup));
+void assign_actor_to_relationship_group(Ped ped, RelationshipGroup relationshipGroup) {
+	log_to_file("Adding actor to relationship group . Existing hash is " +std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped))+ " new has should be is " + std::to_string(GAMEPLAY::GET_HASH_KEY(relationshipGroup.id)));
 	
 	 
-	if(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped) == actorHashGroup) {
+	if(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped) == relationshipGroup.actorHash) {
 		log_to_file("Ped already belongs to actor relationship group");
 	}else {
-		PED::SET_PED_RELATIONSHIP_GROUP_HASH(ped, actorHashGroup);
+		PED::SET_PED_RELATIONSHIP_GROUP_HASH(ped, GAMEPLAY::GET_HASH_KEY(relationshipGroup.id));
+		//PED::SET_PED_RELATIONSHIP_GROUP_DEFAULT_HASH(ped, relationshipGroup.actorHash);
 	}
-	log_to_file("Relationship group after add " + std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped)) + " actorHashGroup is " + std::to_string(actorHashGroup));
+	log_to_file("Relationship group after add " + std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped)));
 }
 
 void draw_instructional_buttons() {
@@ -625,6 +643,7 @@ void draw_submenu_player(int drawIndex) {
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	/* Comment out recording for now
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_RECORD_PLAYER;
@@ -637,9 +656,10 @@ void draw_submenu_player(int drawIndex) {
 	DRAW_TEXT("Start recording", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-
+	
 	drawIndex++;
 	submenu_index++;
+	*/
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_REMOVE_FROM_SLOT;
@@ -650,6 +670,59 @@ void draw_submenu_player(int drawIndex) {
 
 	DRAW_TEXT("Remove from slot", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_HEALTH;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	std::string healthText = "Health: " +std::to_string(ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[actorIndex]));
+	DRAW_TEXT(strdup(healthText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+
+	if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[actorIndex], 0)) {
+		drawIndex++;
+		submenu_index++;
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_VEHICLE_COSMETIC;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		std::string vehCosmeticText = "Vehicle: ";
+		if (actorVehicleNoDamage[actorIndex]) {
+			vehCosmeticText = vehCosmeticText + "No damage";
+		}
+		else {
+			vehCosmeticText = vehCosmeticText + "Normal damage";
+		}
+		DRAW_TEXT(strdup(vehCosmeticText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_RELATIONSHIP;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	std::string relationshipGroupText = "Group: " + actorRelationshipGroup[actorIndex].name;
+	DRAW_TEXT(strdup(relationshipGroupText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
 
 	drawIndex++;
 	submenu_index++;
@@ -694,7 +767,7 @@ void draw_submenu_player(int drawIndex) {
 	submenu_index++;
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		submenu_active_action = SUBMENU_ITEM_DRUNK;
+		submenu_active_action = SUBMENU_ITEM_WALK;
 	}
 	else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
@@ -803,7 +876,7 @@ void draw_menu() {
 
 	//4. World options
 	if (menu_active_index == drawIndex) {
-		menu_active_action = MENU_ITEM_SCENE_MODE;
+		menu_active_action = MENU_ITEM_WORLD;
 		draw_submenu_world(drawIndex);
 		submenu_is_displayed = true;
 		if (submenu_active_index == -1) {
@@ -815,7 +888,7 @@ void draw_menu() {
 		}
 
 	}
-	DRAW_TEXT("World options", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("World", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
@@ -1077,16 +1150,16 @@ void draw_spot_lights() {
 			case SPOT_LIGHT_ACTOR_ABOVE:
 				GRAPHICS::DRAW_SPOT_LIGHT(actorPos.x, actorPos.y, actorPos.z + 20.0, 0, 0, -1.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 4.0f, 1.0f);
 				break;
-			case SPOT_LIGHT_ACTOR_LEFT:
+			case SPOT_LIGHT_WEST:
 				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x+10.0, actorPos.y, actorPos.z, -1.0, 0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
 				break;
-			case SPOT_LIGHT_ACTOR_RIGHT:
+			case SPOT_LIGHT_EAST:
 				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x-10.0, actorPos.y, actorPos.z, 1.0, 0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
 				break;
-			case SPOT_LIGHT_ACTOR_INFRONT:
+			case SPOT_LIGHT_NORTH:
 				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x, actorPos.y - 10.0, actorPos.z, 0.0, 1.0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
 				break;
-			case SPOT_LIGHT_ACTOR_BEHIND:
+			case SPOT_LIGHT_SOUTH:
 				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x, actorPos.y+10.0, actorPos.z, 0.0, -1.0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
 				break;
 			default:
@@ -1425,7 +1498,7 @@ void action_clone_player() {
 	}
 
 	PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(clonedPed, true);
-	assign_actor_to_relationship_group(clonedPed);
+	assign_actor_to_relationship_group(clonedPed,getDefaultRelationshipGroup());
 
 	set_status_text("Cloned player");
 	menu_active_index = 0;
@@ -1674,7 +1747,7 @@ void add_ped_to_slot(int slotIndex, Ped ped) {
 
 	actorShortcut[slotIndex] = ped;
 
-	assign_actor_to_relationship_group(ped);
+	assign_actor_to_relationship_group(ped, getDefaultRelationshipGroup());
 
 	int blipId = UI::ADD_BLIP_FOR_ENTITY(ped);
 	blipIdShortcuts[slotIndex] = blipId;
@@ -1855,6 +1928,7 @@ void action_reset_scene_director() {
 			}
 			ENTITY::SET_ENTITY_AS_MISSION_ENTITY(actor, false, false);
 			ENTITY::SET_PED_AS_NO_LONGER_NEEDED(&actor);
+			actorShortcut[i] = 0;
 		}
 		actorHasWaypoint[i] = false;
 		actorWaypoint[i].x = 0;
@@ -2070,13 +2144,20 @@ void action_set_same_waypoint_for_all_actors() {
 void action_teleport_to_start_locations() {
 	set_status_text("Resetting the scene. Will take a few seconds");
 	log_to_file("action_teleport_to_start_locations");
+
+	bool haveDeadActors = false;
 	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 		if (actorShortcut[i]!= 0 && actorHasStartLocation[i]) {
 			Ped entityToTeleport = actorShortcut[i];
 
 			//ressurect any dead actors
 			if (ENTITY::IS_ENTITY_DEAD(actorShortcut[i])) {
+				log_to_file("First revive");
+				haveDeadActors = true;
+				ENTITY::SET_ENTITY_HEALTH(actorShortcut[i], ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[i]));
 				PED::RESURRECT_PED(actorShortcut[i]);
+				//PED::REVIVE_INJURED_PED(actorShortcut[i]);
+				actorStartLocation[i].z = actorStartLocation[i].z + 1.0;
 			}
 
 			//pause the actor. seems to be stuck some times
@@ -2101,12 +2182,38 @@ void action_teleport_to_start_locations() {
 			ENTITY::SET_ENTITY_HEADING(entityToTeleport, actorStartLocationHeading[i]);
 
 			WAIT(300);
-			//set back this block
+
+			//ressurect any dead actors
+			/*
+			if (ENTITY::IS_ENTITY_DEAD(actorShortcut[i])) {
+				log_to_file("Second revive");
+				PED::RESURRECT_PED(actorShortcut[i]);
+				//PED::REVIVE_INJURED_PED(actorShortcut[i]);
+				ENTITY::SET_ENTITY_HEALTH(actorShortcut[i], ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[i]));
+			}
+			*/
 
 
 		}
 
 	}
+	/*
+	if (haveDeadActors) {
+		WAIT(3000);
+		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
+			//ressurect any dead actors
+			if (actorShortcut[i] != 0 && ENTITY::IS_ENTITY_DEAD(actorShortcut[i])) {
+				log_to_file("Third revive");
+				ENTITY::SET_ENTITY_INVINCIBLE(actorShortcut[i], true);
+				PED::RESURRECT_PED(actorShortcut[i]);
+				ENTITY::SET_ENTITY_INVINCIBLE(actorShortcut[i], true);
+				ENTITY::SET_ENTITY_HEALTH(actorShortcut[i], ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[i]));
+			}
+		}
+	}*/
+
+
+
 	log_to_file("Setting vehicle to undrivable");
 	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
 		if (actorShortcut[i] != 0 && actorHasStartLocation[i]) {
@@ -2198,6 +2305,48 @@ void action_next_weather() {
 	}
 }
 
+
+void action_next_health() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex != -1) {
+		int currMaxHealth = ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[actorIndex]);
+		int newMaxHealth = currMaxHealth + 100;
+		if (newMaxHealth > 500) {
+			newMaxHealth = 100;
+		}
+
+		PED::SET_PED_MAX_HEALTH(actorShortcut[actorIndex], newMaxHealth);
+		ENTITY::SET_ENTITY_HEALTH(actorShortcut[actorIndex], newMaxHealth);
+	}
+}
+
+
+void action_toggle_vehicle_cosmetic() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex != -1 && PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[actorIndex], 0)) {
+
+		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[actorIndex]);
+		if (actorVehicleNoDamage[actorIndex]) {
+			actorVehicleNoDamage[actorIndex] = false;
+			ENTITY::SET_ENTITY_INVINCIBLE(pedVehicle, false);
+			ENTITY::SET_ENTITY_PROOFS(pedVehicle, 0, 0, 0, 0, 0, 0, 0, 0);
+			VEHICLE::SET_VEHICLE_TYRES_CAN_BURST(pedVehicle, 1);
+			VEHICLE::SET_VEHICLE_WHEELS_CAN_BREAK(pedVehicle, 1);
+			VEHICLE::SET_VEHICLE_CAN_BE_VISIBLY_DAMAGED(pedVehicle, 1);
+		}
+		else {
+			actorVehicleNoDamage[actorIndex] = true;
+			ENTITY::SET_ENTITY_INVINCIBLE(pedVehicle, false);
+			ENTITY::SET_ENTITY_PROOFS(pedVehicle, 1, 1, 1, 1, 1, 1, 1, 1);
+			VEHICLE::SET_VEHICLE_TYRES_CAN_BURST(pedVehicle, 0);
+			VEHICLE::SET_VEHICLE_WHEELS_CAN_BREAK(pedVehicle, 0);
+			VEHICLE::SET_VEHICLE_CAN_BE_VISIBLY_DAMAGED(pedVehicle, 0);	
+		}
+	}
+}
+	
+
+
 void action_toggle_wind() {
 	if (is_wind_active ==false) {
 		is_wind_active = true;
@@ -2271,6 +2420,16 @@ void action_next_spot_light_color() {
 	}
 }
 
+void action_next_relationshipgroup() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex != -1) {
+		actorRelationshipGroup[actorIndex] = getNextRelationshipGroup(actorRelationshipGroup[actorIndex]);
+		if (sceneMode == SCENE_MODE_ACTIVE) {
+			assign_actor_to_relationship_group(PLAYER::PLAYER_PED_ID(), actorRelationshipGroup[actorIndex]);
+		}
+	}
+}
+
 
 
 void action_toggle_scene_mode() {
@@ -2283,6 +2442,7 @@ void action_toggle_scene_mode() {
 		sceneMode = SCENE_MODE_ACTIVE;
 		set_status_text("Scene is now active!");
 		log_to_file("SCENE ACTIVE");
+		create_relationship_groups();
 	}
 
 
@@ -2301,7 +2461,9 @@ void action_toggle_scene_mode() {
 		ensure_ped_and_vehicle_is_not_deleted(actorShortcut[i]);
 
 		if (actorStatus[i] == SCENE_MODE_ACTIVE) {
-			//log_to_file("Actor " + std::to_string(i) + " Ped id:" + std::to_string(actorShortcut[i]) + " Has waypoint:"+ std::to_string(actorHasWaypoint[i])+  " Has start location:"+ std::to_string(actorHasStartLocation[i]));
+			//log_to_file("Actor " + std::to_string(i) + " Ped id:" + std::to_string(actorShortcut[i]) + " Has waypoint:"+ std::to_string(actorHasWaypoint[i])+  " Has start location:"+ std::to_string(actorHasStartLocation[i
+			log_to_file("Actor " + std::to_string(i) + " Has relationshipgroup " +actorRelationshipGroup[i].name);
+			assign_actor_to_relationship_group(actorShortcut[i], actorRelationshipGroup[i]);
 
 			//store the current location of all actors, so that we can reset it
 			actorStartLocation[i] = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
@@ -2318,6 +2480,7 @@ void action_toggle_scene_mode() {
 			}
 		}
 		else if (actorStatus[i] == SCENE_MODE_SETUP) {
+			assign_actor_to_relationship_group(actorShortcut[i], getDefaultRelationshipGroup());
 			PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorStatus[i], true);
 			//AI::TASK_STAND_STILL(actorShortcut[i], -1);
 			AI::CLEAR_PED_TASKS(actorShortcut[i]);
@@ -2536,8 +2699,17 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT_COLOR) {
 		action_next_spot_light_color();
 	}
-	else if (submenu_active_action == SUBMENU_ITEM_DRUNK) {
+	else if (submenu_active_action == SUBMENU_ITEM_WALK) {
 		action_next_walking_style();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_RELATIONSHIP) {
+		action_next_relationshipgroup();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_HEALTH) {
+		action_next_health();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_VEHICLE_COSMETIC) {
+		action_toggle_vehicle_cosmetic();
 	}
 		
 }
@@ -3419,7 +3591,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 1.2.2 by elsewhat");
+	set_status_text("Scene director 1.3.0 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 
@@ -3431,6 +3603,8 @@ void ScriptMain()
 		STREAMING::REQUEST_CLIP_SET(walkingStyle.id);
 	}
 	
+
+	std::fill_n(actorRelationshipGroup, 10, getDefaultRelationshipGroup());
 	
 
 	create_relationship_groups();

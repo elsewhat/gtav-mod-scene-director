@@ -36,7 +36,7 @@ SpotLightColor getNextSpotLightColor(SpotLightColor spotLightColor) {
 		return (color.r == spotLightColor.r && color.g == spotLightColor.g && color.b == spotLightColor.b);
 	}) - spotLightColors.begin();
 	if (foundIndex +1 >= spotLightColors.size()) {//color not found or in last element
-		return SpotLightColor{ "White",256,256,256 };
+		return spotLightColors[0];
 	}
 	else {
 		return spotLightColors[foundIndex +1];
@@ -52,17 +52,17 @@ std::string getNameForSpotLightType(SPOT_LIGHT_TYPE type) {
 	case SPOT_LIGHT_ACTOR_ABOVE:
 		return "Above";
 		break;
-	case SPOT_LIGHT_ACTOR_LEFT:
-		return "Left";
+	case SPOT_LIGHT_WEST:
+		return "West";
 		break;
-	case SPOT_LIGHT_ACTOR_RIGHT:
-		return "Right";
+	case SPOT_LIGHT_EAST:
+		return "East";
 		break;
-	case SPOT_LIGHT_ACTOR_INFRONT:
-		return "In front";
+	case SPOT_LIGHT_NORTH:
+		return "North";
 		break;
-	case SPOT_LIGHT_ACTOR_BEHIND:
-		return "Behind";
+	case SPOT_LIGHT_SOUTH:
+		return "South";
 		break;
 	default:
 		break;
