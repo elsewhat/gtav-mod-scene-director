@@ -6,6 +6,7 @@
 #include "clipset_movement.h"
 #include "lighting.h"
 #include "relationship.h"
+#include "driving_mode.h"
 
 #include <string>
 #include <ctime>
@@ -56,6 +57,8 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_RELATIONSHIP = 45,
 	SUBMENU_ITEM_HEALTH=46,
 	SUBMENU_ITEM_VEHICLE_COSMETIC = 47,
+	SUBMENU_ITEM_WALK_SPEED=48,
+	SUBMENU_ITEM_DRIVING_MODE = 49,
 	SUBMENU_ITEM_BLACKOUT = 50,
 	SUBMENU_ITEM_TIMELAPSE = 51,
 	SUBMENU_ITEM_WEATHER = 52,
@@ -89,6 +92,8 @@ bool actorHasWalkingStyle[10] = {};
 ClipSet actorWalkingStyle[10] = {};
 RelationshipGroup actorRelationshipGroup[10] = {};
 bool actorVehicleNoDamage[10] = {};
+float actorWalkingSpeed[10]= { 1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0 };
+DrivingMode actorDrivingMode[10] = {};
 
 int blipIdShortcuts[10] = {};
 
@@ -762,6 +767,24 @@ void draw_submenu_player(int drawIndex) {
 
 	}
 
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_WALK_SPEED;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	if (actorWalkingSpeed[actorIndex] == 2.0) {
+		DRAW_TEXT("Speed: Run", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}else {
+		DRAW_TEXT("Speed: Walk", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
 
 	drawIndex++;
 	submenu_index++;
@@ -774,14 +797,28 @@ void draw_submenu_player(int drawIndex) {
 	}
 
 
-
-
 	if (actorIndex != -1 && actorHasWalkingStyle[actorIndex] == true) {
 		std::string walkingStyleString = "Walk: " + std::string(actorWalkingStyle[actorIndex].name);
 		DRAW_TEXT(strdup(walkingStyleString.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	else {
 		DRAW_TEXT("Walk: Normal", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_DRIVING_MODE;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	if (actorIndex != -1) {
+		std::string walkingStyleString = "Driving: " + std::string(actorDrivingMode[actorIndex].name);
+		DRAW_TEXT(strdup(walkingStyleString.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
@@ -793,6 +830,7 @@ void draw_menu() {
 	int drawIndex = 0;
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 	int actorIndexPlayer = get_index_for_actor(playerPed);
+	submenu_is_displayed = false;
 
 
 	//colors for swapping from active to inactive... messy
@@ -1172,10 +1210,13 @@ void draw_spot_lights() {
 }
 
 
-void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
+bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 	log_to_file("move_to_waypoint: Ped:" + std::to_string(ped) + " x:" + std::to_string(waypointCoord.x) + " y : " + std::to_string(waypointCoord.y) + " z : " + std::to_string(waypointCoord.z));
+
+
 	//code inspired by LUA plugin https://www.gta5-mods.com/scripts/realistic-vehicle-controls
 	if (is_ped_actor_active(ped)) {
+		int actorIndex = get_index_for_actor(ped);
 
 
 		if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
@@ -1186,6 +1227,7 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 			if (pedDriver != ped) {
 				log_to_file("move_to_waypoint: Ped (" + std::to_string(ped)+ " is not driver (" + std::to_string(pedDriver));
 				//set_status_text("Ped is not driver. Ignore waypoint");
+				return false;
 			}
 			else {
 				int actorIndex = get_index_for_actor(pedDriver);
@@ -1217,8 +1259,12 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 					}
 				}else {
 					//AI::TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, VEHICLE::_GET_VEHICLE_MAX_SPEED(pedVehicle), 786469, 50.0);
-					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469,5.0, -1);
-					log_to_file("move_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
+					float speed = vehicleMaxSpeed; 
+					if (actorDrivingMode[actorIndex].useVehicleMaxSpeed == false) {
+						speed = actorDrivingMode[actorIndex].manualMaxSpeed;
+					}
+					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, speed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actorDrivingMode[actorIndex].value,5.0, -1);
+					log_to_file("move_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(speed));
 					if (suppress_msgs != true) {
 						set_status_text("Driving to waypoint");
 					}
@@ -1233,16 +1279,21 @@ void move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 				//AI::TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(pedDriver, playerVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, VEHICLE::_GET_VEHICLE_MAX_SPEED(playerVehicle), 786469, 50.0);
 
 			}
-
+			
+			return true;
 		}
 		else if (PED::IS_PED_ON_FOOT(ped)) {
-			AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, 1.0f, -1, 27.0f, 0.5f);
+			AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, actorWalkingSpeed[actorIndex], -1, 27.0f, 0.5f);
 			log_to_file("move_to_waypoint: Ped (" + std::to_string(ped) + " is walking to waypoint");
 			if (suppress_msgs != true) {
 				set_status_text("Walking to waypoint");
 			}
+			return true;
 
 		}
+	}
+	else {//scene is passive
+		return false;
 	}
 
 }
@@ -1284,7 +1335,7 @@ void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
 				log_to_file("move_to_waypoint: In boat : " + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
 			}
 			else {
-				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469, 5.0, -1);
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actorDrivingMode[actorIndex].value, 5.0, -1);
 				log_to_file("move_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
 
 			}
@@ -2051,7 +2102,7 @@ void action_vehicle_escort() {
 						//works
 						//AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 13.0, 786603, 8.0, 20, 5.0);
 						log_to_file("action_vehicle_escort:AI::TASK_VEHICLE_ESCORT Driver: " + std::to_string(pedDriver));
-						AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 45.0, 786469, 8.0, 20, 5.0);
+						AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 45.0, actorDrivingMode[i].value, 8.0, 20, 5.0);
 
 					}
 				}
@@ -2071,7 +2122,7 @@ void action_vehicle_escort() {
 	}
 }
 
-void action_autopilot_for_player() {
+void action_autopilot_for_player(bool suppressMessage) {
 	log_to_file("action_autopilot_for_player");
 	nextWaitTicks = 300;
 
@@ -2092,15 +2143,42 @@ void action_autopilot_for_player() {
 			Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
 			log_to_file("action_autopilot_for_player " + std::to_string(pedDriver) +" vs " + std::to_string(actorShortcut[actorIndex]) + " vehicle " + std::to_string(pedVehicle));
 			if (pedDriver == actorShortcut[actorIndex]) {
-				move_to_waypoint(actorShortcut[actorIndex], actorWaypoint[actorIndex],true);
-				log_to_file("Autopilot engaged for player " + std::to_string(actorIndex));
-				set_status_text("Autopilot engaged for player");
+				bool isActive = move_to_waypoint(actorShortcut[actorIndex], actorWaypoint[actorIndex],true);
+				
+				if (isActive) {
+					log_to_file("Autopilot engaged for player " + std::to_string(actorIndex));
+					if (suppressMessage == false) {
+						set_status_text("Autopilot engaged for player");
+					}
 
+
+					is_autopilot_engaged_for_player = true;
+				}
+				else {
+					if (suppressMessage == false) {
+						set_status_text("Set scene to active in order to enable autopilot");
+					}
+				}
+			}
+		}
+		else {//if not in a vehicle, walk to the waypoint
+			bool isActive = move_to_waypoint(actorShortcut[actorIndex], actorWaypoint[actorIndex], true);
+			if (isActive) {
+				if (suppressMessage == false) {
+					set_status_text("Autopilot engaged for player");
+				}
 				is_autopilot_engaged_for_player = true;
+			}
+			else {
+				if (suppressMessage == false) {
+					set_status_text("Set scene to active in order to enable autopilot");
+				}
 			}
 		}
 	} else {
-		set_status_text("Actor must be assigned a slot 1-9 before autopilot can be started");
+		if (suppressMessage == false) {
+			set_status_text("Actor must be assigned a slot 1-9 before autopilot can be started");
+		}
 	}
 }
 
@@ -2388,6 +2466,19 @@ void action_next_walking_style() {
 	}
 }
 
+void action_next_walking_speed() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex != -1) {
+		if (actorWalkingSpeed[actorIndex] == 2.0) {
+			actorWalkingSpeed[actorIndex] = 1.0;
+		}
+		else {
+			actorWalkingSpeed[actorIndex] = 2.0;
+		}
+		action_autopilot_for_player(true);
+	}
+}
+
 void action_next_spot_light() {
 	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
 	if(actorIndex != -1){
@@ -2410,6 +2501,16 @@ void action_next_spot_light() {
 		}
 	}
 }
+
+void action_next_driving_mode() {
+	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	if (actorIndex != -1) {
+		actorDrivingMode[actorIndex] = getNextDrivingMode(actorDrivingMode[actorIndex]);
+		action_autopilot_for_player(true);
+	}
+}
+
+
 
 void action_next_spot_light_color() {
 	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
@@ -2701,6 +2802,12 @@ void action_submenu_active_selected() {
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_WALK) {
 		action_next_walking_style();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_WALK_SPEED) {
+		action_next_walking_speed();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_DRIVING_MODE) {
+		action_next_driving_mode();
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_RELATIONSHIP) {
 		action_next_relationshipgroup();
@@ -3484,7 +3591,7 @@ void main()
 
 
 			if (autopilot_for_player_key_pressed()) {
-				action_autopilot_for_player();
+				action_autopilot_for_player(false);
 			}
 
 			if (vehicle_chase_key_pressed()) {
@@ -3591,7 +3698,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 1.3.0 by elsewhat");
+	set_status_text("Scene director 1.3.1 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 
@@ -3605,6 +3712,7 @@ void ScriptMain()
 	
 
 	std::fill_n(actorRelationshipGroup, 10, getDefaultRelationshipGroup());
+	std::fill_n(actorDrivingMode, 10, getDefaultDrivingMode());
 	
 
 	create_relationship_groups();

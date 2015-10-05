@@ -8,6 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clipset_movement.cpp" />
+    <ClCompile Include="driving_mode.cpp" />
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="Ligthing.cpp" />
     <ClCompile Include="main.cpp" />
@@ -23,6 +24,7 @@
     <ClInclude Include="..\..\inc\natives.h" />
     <ClInclude Include="..\..\inc\types.h" />
     <ClInclude Include="clipset_movement.h" />
+    <ClInclude Include="driving_mode.h" />
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="relationship.h" />

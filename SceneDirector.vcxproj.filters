@@ -10,6 +10,7 @@
     <ClCompile Include="clipset_movement.cpp" />
     <ClCompile Include="Ligthing.cpp" />
     <ClCompile Include="relationship.cpp" />
+    <ClCompile Include="driving_mode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\enums.h">
@@ -32,6 +33,7 @@
     <ClInclude Include="clipset_movement.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="relationship.h" />
+    <ClInclude Include="driving_mode.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
