@@ -23,10 +23,7 @@ DWORD key_menu_right = VK_NUMPAD6;
 DWORD key_menu_select = VK_NUMPAD5;
 char key_hud_str[256];
 
-enum SCENE_MODE {
-	SCENE_MODE_ACTIVE = 1,
-	SCENE_MODE_SETUP = 0
-};
+
 
 enum MENU_ITEM {
 	MENU_ITEM_ACTOR_1 = 1,
@@ -2334,7 +2331,7 @@ void action_teleport_to_start_locations() {
 }
 
 void action_timelapse_tick() {
-	TIME::ADD_TO_CLOCK_TIME(0, timelapse_delta_minutes, 0);
+	TIME::ADD_TO_CLOCK_TIME(0, timelapse_delta_minutes, timelapse_delta_seconds);
 	//log_to_file("Clock after timelapse: " + std::to_string(TIME::GET_CLOCK_HOURS()) + ":" + std::to_string(TIME::GET_CLOCK_MINUTES()) + ":" + std::to_string(TIME::GET_CLOCK_SECONDS()));
 }
 

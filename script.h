@@ -13,3 +13,8 @@
 #include "..\..\inc\main.h"
 
 void ScriptMain();
+
+enum SCENE_MODE {
+	SCENE_MODE_ACTIVE = 1,
+	SCENE_MODE_SETUP = 0
+};
