@@ -34,6 +34,13 @@ private:
 public:
 	Actor(Ped ped);
 
+	Ped getActorPed();
+
+	static Actor nullActor();
+
+	bool isNullActor();
+	bool isActorThisPed(Ped ped);
+
 	void setActiveInScene(SCENE_MODE mode);
 	SCENE_MODE isActiveInScene();
 

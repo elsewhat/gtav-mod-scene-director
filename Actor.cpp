@@ -5,6 +5,38 @@
 
 Actor::Actor(Ped ped) {
 	m_ped = ped;
+	setRelationshipGroup(getDefaultRelationshipGroup());
+	setDrivingMode(getDefaultDrivingMode());
+}
+
+Ped Actor::getActorPed()
+{
+	return m_ped;
+}
+
+Actor Actor::nullActor()
+{
+	return Actor(0);
+}
+
+bool Actor::isNullActor()
+{
+	if (m_ped == 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool Actor::isActorThisPed(Ped ped)
+{
+	if (m_ped == ped) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 void Actor::setActiveInScene(SCENE_MODE mode)

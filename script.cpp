@@ -7,6 +7,7 @@
 #include "lighting.h"
 #include "relationship.h"
 #include "driving_mode.h"
+#include "actor.h"
 
 #include <string>
 #include <ctime>
@@ -72,27 +73,9 @@ TODO: Refactor into Actor class
 */
 //attributes to the actors in the slot 1-9 
 //index 0 is reserved for the last actor
-Ped actorShortcut[10] = {};
+std::vector<Actor>  actors(9);
 bool actor0IsClone = false;
-//waypoint for the acto
-bool actorHasWaypoint[10] = {};
-Vector3 actorWaypoint[10] = {};
-//location when scene was set to active last time
-bool actorHasStartLocation[10] = {};
-Vector3 actorStartLocation[10] = {};
-float actorStartLocationHeading[10] = {};
-float actorDriverAgressiveness[10] = { 0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f,0.8f };
-bool actorHasSpotlight[10] = {};
-SPOT_LIGHT_TYPE actorSpotlightType[10] = {};
-SpotLightColor actorSpotlightColor[10] = {};
-bool actorHasWalkingStyle[10] = {};
-ClipSet actorWalkingStyle[10] = {};
-RelationshipGroup actorRelationshipGroup[10] = {};
-bool actorVehicleNoDamage[10] = {};
-float actorWalkingSpeed[10]= { 1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0 };
-DrivingMode actorDrivingMode[10] = {};
-
-int blipIdShortcuts[10] = {};
+Actor previousActor;
 
 bool is_autopilot_engaged_for_player = false;
 bool is_chase_player_engaged = false;
@@ -121,13 +104,6 @@ int submenu_max_index = 0;
 MENU_ITEM submenu_active_action = MENU_ITEM_SCENE_MODE;
 
 SCENE_MODE sceneMode = SCENE_MODE_SETUP;
-
-//Represents the scene status of each actor
-//1=Act on instructions immediately
-//0=No action (scene setup mode)
-//x=Not used (yet)
-SCENE_MODE actorStatus[10] = { SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP,SCENE_MODE_SETUP };
-
 
 std::vector<Scenario> gtaScenarios;
 
@@ -312,6 +288,15 @@ void DRAW_TEXT(char* Text, float X, float Y, float S_X, float S_Y, int Font, boo
 	UI::_DRAW_TEXT(X, Y);
 }
 
+Actor get_actor_from_ped(Ped ped) {
+	for (auto &actor : actors) {
+		if (actor.isActorThisPed(ped)) {
+			return actor;
+		}
+	}
+	return Actor::nullActor();
+}
+
 void store_current_waypoint_for_actor(Ped ped) {
 
 	if (UI::IS_WAYPOINT_ACTIVE()) {
@@ -319,32 +304,25 @@ void store_current_waypoint_for_actor(Ped ped) {
 		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
 		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 		//ignore the first index
-		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			//log_to_file("store_current_waypoint_for_actor: Ped id:" + std::to_string(actorShortcut[i]) );
-			if (actorShortcut[i] == ped) {
-				log_to_file("store_current_waypoint_for_actor:Found match");
-				actorWaypoint[i] = waypointCoord;
-				actorHasWaypoint[i] = true;
-				return;
-			}
+
+		Actor actor = get_actor_from_ped(ped);
+		if (actor.isNullActor == false) {
+			log_to_file("store_current_waypoint_for_actor:Found match");
+			actor.setHasWaypoint(true);
+			actor.setWaypoint(waypointCoord);
 		}
-		log_to_file("store_current_waypoint_for_actor: Found no match");
-	}
-
-}
-
-int get_index_for_actor(Ped ped) {
-	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorShortcut[i] == ped) {
-			return i;
+		else {
+			log_to_file("store_current_waypoint_for_actor: Found no match");
 		}
 	}
-	return -1;
 }
+
+
 
 int get_next_free_slot() {
-	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorShortcut[i] == 0) {
+	for (int i = 0; i < actors.size(); i++)
+	{
+		if (actors[i].isNullActor()) {
 			return i;
 		}
 	}
@@ -353,24 +331,19 @@ int get_next_free_slot() {
 
 
 bool is_ped_actor_active(Ped ped) {
-	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorShortcut[i] == ped) {
-			if (actorStatus[i] == SCENE_MODE_SETUP) {
-				return false;
-			}
-			else {
-				return true;
-			}
-		}
-	}
-	//if ped is not in a slot, return the status of the overall scene
-	if (sceneMode == SCENE_MODE_SETUP) {
-		return false;
+	Actor actor = get_actor_from_ped(ped);
+	if (actor.isNullActor() == false) {
+		return actor.isActiveInScene();
 	}
 	else {
-		return true;
+		//if ped is not in a slot, return the status of the overall scene
+		if (sceneMode == SCENE_MODE_SETUP) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
-
 }
 
 
@@ -640,7 +613,7 @@ void draw_submenu_world(int drawIndex) {
 
 void draw_submenu_player(int drawIndex) {
 	int submenu_index = 0;
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
@@ -683,13 +656,13 @@ void draw_submenu_player(int drawIndex) {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-	std::string healthText = "Health: " +std::to_string(ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[actorIndex]));
+	std::string healthText = "Health: " +std::to_string(ENTITY::GET_ENTITY_MAX_HEALTH(actor.getActorPed()));
 	DRAW_TEXT(strdup(healthText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 
 
-	if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[actorIndex], 0)) {
+	if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
 		drawIndex++;
 		submenu_index++;
 		if (submenu_is_active && submenu_active_index == submenu_index) {
@@ -701,7 +674,7 @@ void draw_submenu_player(int drawIndex) {
 		}
 
 		std::string vehCosmeticText = "Vehicle: ";
-		if (actorVehicleNoDamage[actorIndex]) {
+		if (actor.hasVehicleNoDamage()) {
 			vehCosmeticText = vehCosmeticText + "No damage";
 		}
 		else {
@@ -721,7 +694,7 @@ void draw_submenu_player(int drawIndex) {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-	std::string relationshipGroupText = "Group: " + actorRelationshipGroup[actorIndex].name;
+	std::string relationshipGroupText = "Group: " + actor.getRelationshipGroup().name;
 	DRAW_TEXT(strdup(relationshipGroupText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
@@ -737,8 +710,8 @@ void draw_submenu_player(int drawIndex) {
 	}
 
 
-	if (actorIndex != -1 && actorHasSpotlight[actorIndex] == true) {
-		std::string spotLightText ="Spot light: " + getNameForSpotLightType(actorSpotlightType[actorIndex]);
+	if (actor.hasSpotLight() == true) {
+		std::string spotLightText ="Spot light: " + getNameForSpotLightType(actor.getSpotLightType());
 		DRAW_TEXT(strdup(spotLightText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	else {
@@ -747,7 +720,7 @@ void draw_submenu_player(int drawIndex) {
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 
-	if (actorIndex != -1 && actorHasSpotlight[actorIndex] == true) {
+	if (actor.hasSpotLight() == true) {
 		drawIndex++;
 		submenu_index++;
 		if (submenu_is_active && submenu_active_index == submenu_index) {
@@ -758,7 +731,7 @@ void draw_submenu_player(int drawIndex) {
 			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 		}
 
-		std::string spotLightColorText = "Spot color: " + actorSpotlightColor[actorIndex].name;
+		std::string spotLightColorText = "Spot color: " + actor.getSpotLightColor().name;
 		DRAW_TEXT(strdup(spotLightColorText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
@@ -775,7 +748,7 @@ void draw_submenu_player(int drawIndex) {
 	}
 
 
-	if (actorWalkingSpeed[actorIndex] == 2.0) {
+	if (actor.getWalkingSpeed() == 2.0) {
 		DRAW_TEXT("Speed: Run", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}else {
 		DRAW_TEXT("Speed: Walk", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
@@ -794,8 +767,8 @@ void draw_submenu_player(int drawIndex) {
 	}
 
 
-	if (actorIndex != -1 && actorHasWalkingStyle[actorIndex] == true) {
-		std::string walkingStyleString = "Walk: " + std::string(actorWalkingStyle[actorIndex].name);
+	if (actor.hasWalkingStyle() == true) {
+		std::string walkingStyleString = "Walk: " + std::string(actor.getWalkingStyle().name);
 		DRAW_TEXT(strdup(walkingStyleString.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	else {
@@ -813,8 +786,8 @@ void draw_submenu_player(int drawIndex) {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-	if (actorIndex != -1) {
-		std::string walkingStyleString = "Driving: " + std::string(actorDrivingMode[actorIndex].name);
+	if (actor.isNullActor() ==false) {
+		std::string walkingStyleString = "Driving: " + std::string(actor.getDrivingMode().name);
 		DRAW_TEXT(strdup(walkingStyleString.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
@@ -826,7 +799,7 @@ void draw_submenu_player(int drawIndex) {
 void draw_menu() {
 	int drawIndex = 0;
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
-	int actorIndexPlayer = get_index_for_actor(playerPed);
+	Actor playerActor = get_actor_from_ped(playerPed);
 	submenu_is_displayed = false;
 
 
@@ -841,7 +814,7 @@ void draw_menu() {
 
 
 	//1. If actor is not assigned to any slot
-	if (actorIndexPlayer == -1) {
+	if (playerActor.isNullActor()) {
 		int available_slot = get_next_free_slot();
 		if (available_slot != -1) {
 			char* slotText = strdup(("Add actor to slot " + std::to_string(available_slot)).c_str());
@@ -1094,17 +1067,18 @@ void draw_menu() {
 	}
 
 	//11. Actors 1-9 if they exist
-	for (int i = (sizeof(actorShortcut) / sizeof(Ped))-1 ; i >0 ; i--) {
-		if (actorShortcut[i] != 0) {
+	for (int i = actors.size(); i >= 0; i--)
+	{
+		if (actors[i].isNullActor() ==false) {
 			//check if we should move the selected index to this actor ( menu_active_ped is set when switching to an actor)
-			if (menu_active_index == -1 && actorIndexPlayer == i) {
+			if (menu_active_index == -1 && actors[i].isActorThisPed(playerActor.getActorPed)) {
 				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 				menu_active_index = drawIndex;
 				menu_active_ped = 0;
 			}
 
 			//show submenu for active player
-			if (menu_active_index == drawIndex && actorIndexPlayer == i) {
+			if (menu_active_index == drawIndex && actors[i].isActorThisPed(playerActor.getActorPed)) {
 				submenu_is_displayed = true;
 				if (submenu_active_index == -1) {
 					submenu_active_index = 0;
@@ -1125,11 +1099,11 @@ void draw_menu() {
 				GRAPHICS::DRAW_SPRITE("CommonMenu", "MP_AlertTriangle", 0.95, 0.888 - (0.04)*drawIndex, 0.08, 0.08, 0, 255, 255, 255, 50);
 			}*/
 
-			if (actorHasWaypoint[i] != 0) {
+			if (actors[i].hasWaypoint()) {
 				DRAW_TEXT("Waypoint", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			}
 
-			if (actorIndexPlayer == i) {
+			if (actors[i].isActorThisPed(playerActor.getActorPed)) {
 				GRAPHICS::DRAW_RECT(0.93, 0.883 - (0.04)*drawIndex, 0.113, 0.002, 100, 255, 0, 100);				
 			}
 
@@ -3706,10 +3680,7 @@ void ScriptMain()
 	for (auto & walkingStyle : gtaWalkingStyles) {
 		STREAMING::REQUEST_CLIP_SET(walkingStyle.id);
 	}
-	
 
-	std::fill_n(actorRelationshipGroup, 10, getDefaultRelationshipGroup());
-	std::fill_n(actorDrivingMode, 10, getDefaultDrivingMode());
 	
 
 	create_relationship_groups();
