@@ -287,12 +287,41 @@ void DRAW_TEXT(char* Text, float X, float Y, float S_X, float S_Y, int Font, boo
 }
 
 Actor get_actor_from_ped(Ped ped) {
+	/*
+	for (int i = 0; i < actors.size(); i++) {
+		if (actors[i].isNullActor() == false && actors[i].isActorThisPed(ped)) {
+			log_to_file("get_actor_from_ped About to return a actor in vector" );
+			return actors[i];
+		}
+	}*/
+	
 	for (auto &actor : actors) {
 		if (actor.isActorThisPed(ped)) {
+			log_to_file("get_actor_from_ped About to return a actor in vector");
 			return actor;
 		}
 	}
-	return Actor::nullActor();
+	log_to_file("get_actor_from_ped About to a null actor");
+	return Actor::Actor();
+}
+
+Actor& get_actor_ref_from_ped(Ped ped) {
+	
+	for (int i = 0; i < actors.size(); i++) {
+		if (actors[i].isNullActor() == false && actors[i].isActorThisPed(ped)) {
+			log_to_file("get_actor_ref_from_ped About to return a actor in vector" );
+			return actors[i];
+		}
+	}
+	/* no difference
+	for (auto &actor : actors) {
+		if (actor.isActorThisPed(ped)) {
+			log_to_file("get_actor_ref_from_ped About to return a actor in vector");
+			return actor;
+		}
+	}*/
+	log_to_file("get_actor_ref_from_ped About to a null actor");
+	return Actor::Actor();
 }
 
 void store_current_waypoint_for_actor(Ped ped) {
@@ -321,7 +350,7 @@ int get_next_free_slot() {
 	for (int i = 0; i < actors.size(); i++)
 	{
 		if (actors[i].isNullActor()) {
-			return i;
+			return i+1;
 		}
 	}
 	return -1;
@@ -1088,7 +1117,7 @@ void draw_menu() {
 				}
 			}
 
-			char* actorText = strdup(("Actor "+ std::to_string(i)).c_str());
+			char* actorText = strdup(("Actor "+ std::to_string(i+1)).c_str());
 			DRAW_TEXT(actorText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
@@ -1108,7 +1137,7 @@ void draw_menu() {
 
 			if (menu_active_index == drawIndex) {
 				//i should match value of MENU_ITEM_ACTOR_X
-				menu_active_action = (MENU_ITEM)i;
+				menu_active_action = (MENU_ITEM)(i+1);
 			}
 
 
@@ -1255,6 +1284,7 @@ bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 			return true;
 
 		}
+		return true;
 	}
 	else {//scene is passive
 		return false;
@@ -2077,27 +2107,27 @@ void action_autopilot_for_player(bool suppressMessage) {
 	log_to_file("action_autopilot_for_player");
 	nextWaitTicks = 300;
 
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	//update the waypoint if one is set currently
-	if (actorIndex != -1 && UI::IS_WAYPOINT_ACTIVE()) {
+	if (actor.isNullActor()==false && UI::IS_WAYPOINT_ACTIVE()) {
 		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
 		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
-		actorHasWaypoint[actorIndex] = true;
-		actorWaypoint[actorIndex] = waypointCoord;
+		actor.setWaypoint(waypointCoord);
+		actor.setHasWaypoint(true);
 	}
 
-	if (actorIndex != -1 && actorHasWaypoint[actorIndex]) {
-		if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[actorIndex], 0)) {
-			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[actorIndex]);
+	if (actor.isNullActor() == false && actor.hasWaypoint()) {
+		if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
+			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actor.getActorPed());
 
 			//check if player is a passenger
 			Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
-			log_to_file("action_autopilot_for_player " + std::to_string(pedDriver) +" vs " + std::to_string(actorShortcut[actorIndex]) + " vehicle " + std::to_string(pedVehicle));
-			if (pedDriver == actorShortcut[actorIndex]) {
-				bool isActive = move_to_waypoint(actorShortcut[actorIndex], actorWaypoint[actorIndex],true);
+			log_to_file("action_autopilot_for_player " + std::to_string(pedDriver) +" vs " + std::to_string(actor.getActorPed()) + " vehicle " + std::to_string(pedVehicle));
+			if (pedDriver == actor.getActorPed()) {
+				bool isActive = move_to_waypoint(actor.getActorPed(), actor.getWaypoint(),true);
 				
 				if (isActive) {
-					log_to_file("Autopilot engaged for player " + std::to_string(actorIndex));
+					log_to_file("Autopilot engaged for player " + std::to_string(actor.getActorPed()));
 					if (suppressMessage == false) {
 						set_status_text("Autopilot engaged for player");
 					}
@@ -2113,7 +2143,7 @@ void action_autopilot_for_player(bool suppressMessage) {
 			}
 		}
 		else {//if not in a vehicle, walk to the waypoint
-			bool isActive = move_to_waypoint(actorShortcut[actorIndex], actorWaypoint[actorIndex], true);
+			bool isActive = move_to_waypoint(actor.getActorPed(), actor.getWaypoint(), true);
 			if (isActive) {
 				if (suppressMessage == false) {
 					set_status_text("Autopilot engaged for player");
@@ -2143,26 +2173,20 @@ void action_set_same_waypoint_for_all_actors() {
 		set_status_text("Waypoint set for all actors");
 
 		//add waypoint to all actors in slots
-		//But ignore ALT+0 as this a duplicate
-		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			actorStatus[i] = sceneMode;
+		for (auto &actor : actors) {
+			actor.setActiveInScene(sceneMode);
+			actor.setWaypoint(waypointCoord);
+			actor.setHasWaypoint(true);
 
-			//if not actor in slot, continue
-			if (actorShortcut[i] == 0) {
-				continue;
-			}
-			actorWaypoint[i] = waypointCoord;
-			actorHasWaypoint[i] = true;
-
-			//act on the waypoint (will not do anything if SCENE_MODE_SETUP
+			//act on the waypoint (will not do anything if SCENE_MODE_SETUP)
 
 			//first if he's a driver
-			move_to_waypoint(actorShortcut[i], actorWaypoint[i], true);
+			move_to_waypoint(actor.getActorPed(), actor.getWaypoint(), true);
 			//second if he's a passenger
-			check_if_ped_is_passenger_and_has_waypoint(actorShortcut[i]);
+			check_if_ped_is_passenger_and_has_waypoint(actor.getActorPed());
 			WAIT(200);
-
 		}
+
 
 	}
 	else {
@@ -2175,18 +2199,26 @@ void action_teleport_to_start_locations() {
 	log_to_file("action_teleport_to_start_locations");
 
 	bool haveDeadActors = false;
-	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorShortcut[i]!= 0 && actorHasStartLocation[i]) {
-			Ped entityToTeleport = actorShortcut[i];
+	
+	for (auto &actor : actors) {
+		if(actor.isNullActor()==false && actor.hasStartLocation()){
+			Ped entityToTeleport = actor.getActorPed();
+			Ped actorPed = actor.getActorPed();
 
 			//ressurect any dead actors
-			if (ENTITY::IS_ENTITY_DEAD(actorShortcut[i])) {
+			if (ENTITY::IS_ENTITY_DEAD(actorPed)) {
 				log_to_file("First revive");
 				haveDeadActors = true;
-				ENTITY::SET_ENTITY_HEALTH(actorShortcut[i], ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[i]));
-				PED::RESURRECT_PED(actorShortcut[i]);
+				ENTITY::SET_ENTITY_HEALTH(actor.getActorPed(), ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
+
+				//see http://gtaforums.com/topic/801452-death-recording-no-more-wastedbusted-screen-automatic-radio-off/
+				AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
+				//PED::RESURRECT_PED(actorPed);
 				//PED::REVIVE_INJURED_PED(actorShortcut[i]);
-				actorStartLocation[i].z = actorStartLocation[i].z + 1.0;
+				Vector3 location = actor.getStartLocation();
+				location.z = location.z + 1.0;
+				actor.setStartLocation(location);
+
 			}
 
 			//pause the actor. seems to be stuck some times
@@ -2203,12 +2235,12 @@ void action_teleport_to_start_locations() {
 			}
 
 			//try to prevent fleeing during teleport
-			AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorShortcut[i], true);
-			PED::SET_PED_FLEE_ATTRIBUTES(actorShortcut[i], 0, 0);
+			AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorPed, true);
+			PED::SET_PED_FLEE_ATTRIBUTES(actorPed, 0, 0);
 
 			//teleport and wait
-			teleport_entity_to_location(entityToTeleport, actorStartLocation[i], true);
-			ENTITY::SET_ENTITY_HEADING(entityToTeleport, actorStartLocationHeading[i]);
+			teleport_entity_to_location(entityToTeleport, actor.getStartLocation(), true);
+			ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
 
 			WAIT(300);
 
@@ -2244,11 +2276,12 @@ void action_teleport_to_start_locations() {
 
 
 	log_to_file("Setting vehicle to undrivable");
-	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorShortcut[i] != 0 && actorHasStartLocation[i]) {
 
-			if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
-				Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+	for (auto &actor : actors) {
+		if (actor.isNullActor() == false && actor.hasStartLocation()) {
+			Ped actorPed = actor.getActorPed();
+			if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+				Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 				VEHICLE::SET_VEHICLE_UNDRIVEABLE(teleportedVehicle, true);
 				VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, true);
 				VEHICLE::START_VEHICLE_ALARM(teleportedVehicle);
@@ -2261,13 +2294,14 @@ void action_teleport_to_start_locations() {
 	log_to_file("Setting vehicle to drivable");
 	Ped orgPed = PLAYER::PLAYER_PED_ID();
 
-	for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorShortcut[i] != 0 && actorHasStartLocation[i] && actorShortcut[i] != orgPed) {
-			possess_ped(actorShortcut[i]);
+	for (auto &actor : actors) {
+		if (actor.isNullActor() == false && actor.hasStartLocation() && actor.isActorThisPed(orgPed)==false) {
+			Ped actorPed = actor.getActorPed();
+			possess_ped(actorPed);
 			WAIT(250);
-			if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
+			if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 
-				Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+				Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 				VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(teleportedVehicle);
 				VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, false);
 				VEHICLE::SET_VEHICLE_UNDRIVEABLE(teleportedVehicle, false);
@@ -2336,27 +2370,29 @@ void action_next_weather() {
 
 
 void action_next_health() {
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex != -1) {
-		int currMaxHealth = ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[actorIndex]);
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor() == false) {
+		Ped actorPed = actor.getActorPed();
+		int currMaxHealth = ENTITY::GET_ENTITY_MAX_HEALTH(actorPed);
 		int newMaxHealth = currMaxHealth + 100;
 		if (newMaxHealth > 500) {
 			newMaxHealth = 100;
 		}
 
-		PED::SET_PED_MAX_HEALTH(actorShortcut[actorIndex], newMaxHealth);
-		ENTITY::SET_ENTITY_HEALTH(actorShortcut[actorIndex], newMaxHealth);
+		PED::SET_PED_MAX_HEALTH(actorPed, newMaxHealth);
+		ENTITY::SET_ENTITY_HEALTH(actorPed, newMaxHealth);
 	}
 }
 
 
 void action_toggle_vehicle_cosmetic() {
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex != -1 && PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[actorIndex], 0)) {
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Ped actorPed = actor.getActorPed();
+	if (actor.isNullActor() == false && PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 
-		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[actorIndex]);
-		if (actorVehicleNoDamage[actorIndex]) {
-			actorVehicleNoDamage[actorIndex] = false;
+		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+		if (actor.hasVehicleNoDamage()) {
+			actor.setVehicleNoDamage(false);
 			ENTITY::SET_ENTITY_INVINCIBLE(pedVehicle, false);
 			ENTITY::SET_ENTITY_PROOFS(pedVehicle, 0, 0, 0, 0, 0, 0, 0, 0);
 			VEHICLE::SET_VEHICLE_TYRES_CAN_BURST(pedVehicle, 1);
@@ -2364,7 +2400,7 @@ void action_toggle_vehicle_cosmetic() {
 			VEHICLE::SET_VEHICLE_CAN_BE_VISIBLY_DAMAGED(pedVehicle, 1);
 		}
 		else {
-			actorVehicleNoDamage[actorIndex] = true;
+			actor.setVehicleNoDamage(true);
 			ENTITY::SET_ENTITY_INVINCIBLE(pedVehicle, false);
 			ENTITY::SET_ENTITY_PROOFS(pedVehicle, 1, 1, 1, 1, 1, 1, 1, 1);
 			VEHICLE::SET_VEHICLE_TYRES_CAN_BURST(pedVehicle, 0);
@@ -2393,12 +2429,12 @@ void action_toggle_wind() {
 }
 
 void action_next_walking_style() {
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	index_walking_style++;
 	if (index_walking_style > gtaWalkingStyles.size() - 1) {
 		PED::RESET_PED_MOVEMENT_CLIPSET(PLAYER::PLAYER_PED_ID(), 0.0);
-		actorHasWalkingStyle[actorIndex] = false;
-		actorWalkingStyle[actorIndex] = ClipSet();
+		actor.setHasWalkingStyle(false);
+		actor.setWalkingStyle( ClipSet());
 		index_walking_style = -1;
 		set_status_text("Walking style is now back to normal");
 	}
@@ -2406,8 +2442,8 @@ void action_next_walking_style() {
 		ClipSet walkingStyle = gtaWalkingStyles[index_walking_style];
 		if (STREAMING::HAS_CLIP_SET_LOADED(walkingStyle.id)) {
 			PED::SET_PED_MOVEMENT_CLIPSET(PLAYER::PLAYER_PED_ID(), walkingStyle.id, 1.0);
-			actorHasWalkingStyle[actorIndex] = true;
-			actorWalkingStyle[actorIndex] = walkingStyle;
+			actor.setHasWalkingStyle(true);
+			actor.setWalkingStyle(walkingStyle);
 		}
 		else {
 			log_to_file("Clipset has not loaded yet");
@@ -2418,45 +2454,51 @@ void action_next_walking_style() {
 }
 
 void action_next_walking_speed() {
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex != -1) {
-		if (actorWalkingSpeed[actorIndex] == 2.0) {
-			actorWalkingSpeed[actorIndex] = 1.0;
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor() == false) {
+		if (actor.getWalkingSpeed() == 2.0) {
+			actor.setWalkingSpeed(1.0);
 		}
 		else {
-			actorWalkingSpeed[actorIndex] = 2.0;
+			actor.setWalkingSpeed(2.0);
 		}
 		action_autopilot_for_player(true);
 	}
 }
 
 void action_next_spot_light() {
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if(actorIndex != -1){
-		if (actorHasSpotlight[actorIndex] == false) {
-			log_to_file("Turning on spot light for index " + std::to_string(actorIndex));
-			actorHasSpotlight[actorIndex] = true;
-			actorSpotlightType[actorIndex] = SPOT_LIGHT_ACTOR_ABOVE;
-			actorSpotlightColor[actorIndex] = getDefaultSpotLightColor();
+	Actor actor = get_actor_ref_from_ped(PLAYER::PLAYER_PED_ID());
+	log_to_file("action_next_spot_light for actor " + std::to_string(actor.getActorPed()));
+	if (actor.isNullActor() == false) {
+		if (actor.hasSpotLight()==false) {
+			log_to_file("Turning on spot light for actor " + std::to_string(actor.getActorPed()));
+			actor.setHasSpotLight(true);
+			actor.setSpotLightType(SPOT_LIGHT_ACTOR_ABOVE);
+			actor.setSpotLightColor(getDefaultSpotLightColor());
+			log_to_file("actor.hasSpotLight() after " + std::to_string(actor.hasSpotLight()));
+			for (auto &actor : actors) {
+				log_to_file("vector actors.hasSpotLight() after " + std::to_string(actor.hasSpotLight()));
+			}
+			
 		}
 		else {
-			if (actorSpotlightType[actorIndex] == last_spot_light_type) {
-				actorHasSpotlight[actorIndex] = false;
-				actorSpotlightType[actorIndex] = SPOT_LIGHT_NONE;
-				log_to_file("Turning off spot light for index " + std::to_string(actorIndex));
+			if (actor.getSpotLightType() == last_spot_light_type) {
+				actor.setHasSpotLight(false);
+				actor.setSpotLightType(SPOT_LIGHT_NONE);
+				log_to_file("Turning off spot light for actor " + std::to_string(actor.getActorPed()));
 			}
 			else {
-				int existing_spot_light_type = actorSpotlightType[actorIndex];
-				actorSpotlightType[actorIndex] = (SPOT_LIGHT_TYPE) (++existing_spot_light_type);
+				int existing_spot_light_type = actor.getSpotLightType();
+				actor.setSpotLightType((SPOT_LIGHT_TYPE) (++existing_spot_light_type));
 			}	
 		}
 	}
 }
 
 void action_next_driving_mode() {
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex != -1) {
-		actorDrivingMode[actorIndex] = getNextDrivingMode(actorDrivingMode[actorIndex]);
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor() == false) {
+		actor.setDrivingMode(getNextDrivingMode(actor.getDrivingMode()));
 		action_autopilot_for_player(true);
 	}
 }
@@ -2464,20 +2506,20 @@ void action_next_driving_mode() {
 
 
 void action_next_spot_light_color() {
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex != -1) {
-		if (actorHasSpotlight[actorIndex]) {
-			actorSpotlightColor[actorIndex] = getNextSpotLightColor(actorSpotlightColor[actorIndex]);
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor() == false) {
+		if (actor.hasSpotLight()) {
+			actor.setSpotLightColor(getNextSpotLightColor(actor.getSpotLightColor()));
 		}
 	}
 }
 
 void action_next_relationshipgroup() {
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex != -1) {
-		actorRelationshipGroup[actorIndex] = getNextRelationshipGroup(actorRelationshipGroup[actorIndex]);
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor() == false) {
+		actor.setRelationshipGroup(getNextRelationshipGroup(actor.getRelationshipGroup()));
 		if (sceneMode == SCENE_MODE_ACTIVE) {
-			assign_actor_to_relationship_group(PLAYER::PLAYER_PED_ID(), actorRelationshipGroup[actorIndex]);
+			assign_actor_to_relationship_group(PLAYER::PLAYER_PED_ID(), actor.getRelationshipGroup());
 		}
 	}
 }
@@ -2500,42 +2542,42 @@ void action_toggle_scene_mode() {
 
 
 	//trigger the action for all actors in slots
-	//But ignore ALT+0 as this a duplicate
-	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		actorStatus[i] = sceneMode;
+	for (auto &actor: actors){
+		actor.setActiveInScene(sceneMode);
+		Ped actorPed = actor.getActorPed();
 
 
 		//if not actor in slot, continue
-		if (actorShortcut[i] == 0) {
+		if (actor.isNullActor()) {
 			continue;
 		}
 
-		ensure_ped_and_vehicle_is_not_deleted(actorShortcut[i]);
+		ensure_ped_and_vehicle_is_not_deleted(actorPed);
 
-		if (actorStatus[i] == SCENE_MODE_ACTIVE) {
+		if (actor.isActiveInScene() == SCENE_MODE_ACTIVE) {
 			//log_to_file("Actor " + std::to_string(i) + " Ped id:" + std::to_string(actorShortcut[i]) + " Has waypoint:"+ std::to_string(actorHasWaypoint[i])+  " Has start location:"+ std::to_string(actorHasStartLocation[i
-			log_to_file("Actor " + std::to_string(i) + " Has relationshipgroup " +actorRelationshipGroup[i].name);
-			assign_actor_to_relationship_group(actorShortcut[i], actorRelationshipGroup[i]);
+			log_to_file("Actor " + std::to_string(actorPed) + " Has relationshipgroup " +actor.getRelationshipGroup().name);
+			assign_actor_to_relationship_group(actorPed, actor.getRelationshipGroup());
 
 			//store the current location of all actors, so that we can reset it
-			actorStartLocation[i] = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
-			actorStartLocationHeading[i] = ENTITY::GET_ENTITY_HEADING(actorShortcut[i]);
-			actorHasStartLocation[i] = true;
+			actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
+			actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
+			actor.setHasStartLocation(true);
 
 			//move the actor if he has a waypoint and if he's not the player
-			if (actorHasWaypoint[i] && actorShortcut[i] != PLAYER::PLAYER_PED_ID()) {
+			if (actor.hasWaypoint() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID())==false) {
 				//first if he's a driver
-				move_to_waypoint(actorShortcut[i], actorWaypoint[i], true);
+				move_to_waypoint(actorPed,actor.getWaypoint(), true);
 				//second if he's a passenger
-				check_if_ped_is_passenger_and_has_waypoint(actorShortcut[i]);
+				check_if_ped_is_passenger_and_has_waypoint(actorPed);
 				WAIT(200);
 			}
 		}
-		else if (actorStatus[i] == SCENE_MODE_SETUP) {
-			assign_actor_to_relationship_group(actorShortcut[i], getDefaultRelationshipGroup());
-			PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorStatus[i], true);
+		else {
+			assign_actor_to_relationship_group(actorPed, getDefaultRelationshipGroup());
+			PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorPed, true);
 			//AI::TASK_STAND_STILL(actorShortcut[i], -1);
-			AI::CLEAR_PED_TASKS(actorShortcut[i]);
+			AI::CLEAR_PED_TASKS(actorPed);
 			//AI::TASK_PAUSE(actorShortcut[i], 500);
 		}
 	}
@@ -2557,23 +2599,22 @@ bool record_scene_for_actor_key_press() {
 
 void action_record_scene_for_actor() {
 
-
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex == -1) {
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor()) {
 		set_status_text("Actor must be assigned slot 1-9 before recording actions");
 	}
 	else {
 		set_status_text("Recording actions for current actions. Press ALT+R to stop recording");
-		Ped actorPed = actorShortcut[actorIndex];
+		Ped actorPed = actor.getActorPed();
 
 		//the actual recording
 		std::vector<ActorRecordingItem> actorRecording;
 		actorRecording.reserve(1000);
 
 		//1. Store start location
-		actorStartLocation[actorIndex] = ENTITY::GET_ENTITY_COORDS(actorPed, true);
-		actorStartLocationHeading[actorIndex] = ENTITY::GET_ENTITY_HEADING(actorPed);
-		actorHasStartLocation[actorIndex] = true;
+		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
+		actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
+		actor.setHasStartLocation(true);
 
 		WAIT(300);
 
@@ -2621,8 +2662,8 @@ void action_record_scene_for_actor() {
 			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
 		}
 
-		teleport_entity_to_location(entityToTeleport, actorStartLocation[actorIndex], true);
-		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actorStartLocationHeading[actorIndex]);
+		teleport_entity_to_location(entityToTeleport,actor.getStartLocation(), true);
+		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
 
 		/* Attempt 1: AI::TASK_GO_STRAIGHT_TO_COORD  - Kind of works, but the actor pauses between each coord before moving to the next
 		TaskSequence actorSeq;
@@ -2724,6 +2765,7 @@ void action_record_scene_for_actor() {
 }
 
 void action_submenu_active_selected() {
+	log_to_file("action_submenu_active_selected " + std::to_string(submenu_active_action));
 	//switch to actor
 	if (submenu_active_action == SUBMENU_ITEM_RECORD_PLAYER) {
 		action_record_scene_for_actor();
@@ -2782,10 +2824,7 @@ void action_menu_active_selected() {
 	}
 	else if (menu_active_action == MENU_ITEM_AUTOPILOT) {
 		//autpilot is cancelled by switching to current actor
-		int currentIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-		if (currentIndex != -1) {
-			swap_to_actor_with_index(currentIndex);
-		}
+		possess_ped(PLAYER::PLAYER_PED_ID());
 	}
 	else if (menu_active_action == MENU_ITEM_CHASE) {
 		action_vehicle_chase();
@@ -2803,10 +2842,10 @@ void action_menu_active_selected() {
 		menu_active_ped = PLAYER::PLAYER_PED_ID();
 	}
 	else if (menu_active_action == MENU_ITEM_ADD_CLONE_TO_SLOT && actor0IsClone) {
-		if (get_index_for_actor(actorShortcut[0] == -1)) {
+		if (get_actor_from_ped(previousActor.getActorPed()).isNullActor()==true) {
 			int slot = get_next_free_slot();
 			if (slot != -1) {
-				add_ped_to_slot(slot, actorShortcut[0]);
+				add_ped_to_slot(slot, previousActor.getActorPed());
 				actor0IsClone = false;
 				swap_to_actor_with_index(slot);
 				//force the active menu to be set to the new actor
@@ -3146,15 +3185,14 @@ void menu_action_select() {
 
 void action_copy_player_actions() {
 
-
-	int actorIndex = get_index_for_actor(PLAYER::PLAYER_PED_ID());
-	if (actorIndex == -1) {
+	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor()) {
 		set_status_text("Actor must be assigned slot 1-9 before recording actions");
 	}
 	else {
 		is_firing_squad_engaged = true;
 		set_status_text("Firing squad mode: Actors will now copy the actions of the player");
-		Ped playerPed = actorShortcut[actorIndex];
+		Ped playerPed = actor.getActorPed();
 
 		WAIT(500);
 
@@ -3175,9 +3213,9 @@ void action_copy_player_actions() {
 		bool isPedUsingScenario = false;
 		Scenario currentScenario;
 		//try to avoid them fleeing on gunshots
-		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorShortcut[i], true);
+		for (auto &actor : actors) {
+			if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
+				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
 			}
 		}
 
@@ -3256,13 +3294,13 @@ void action_copy_player_actions() {
 
 					if (applyCurrentScenarioToActors) {
 						log_to_file("Applying scenario to actors");
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+						for (auto &actor : actors) {
+							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
 								if (currentScenario.hasEnterAnim) {
-									AI::TASK_START_SCENARIO_IN_PLACE(actorShortcut[i], currentScenario.name, -1, 1);
+									AI::TASK_START_SCENARIO_IN_PLACE(actor.getActorPed(), currentScenario.name, -1, 1);
 								}
 								else {
-									AI::TASK_START_SCENARIO_IN_PLACE(actorShortcut[i], currentScenario.name, -1, 0);
+									AI::TASK_START_SCENARIO_IN_PLACE(actor.getActorPed(), currentScenario.name, -1, 0);
 								}
 								
 							}
@@ -3273,9 +3311,9 @@ void action_copy_player_actions() {
 					log_to_file("Removing scenario from actors");
 					isPedUsingScenario = false;
 
-					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-						if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-							AI::CLEAR_PED_TASKS(actorShortcut[i]);
+					for (auto &actor : actors) {
+						if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
+							AI::CLEAR_PED_TASKS(actor.getActorPed());
 						}
 					}
 				}
@@ -3288,11 +3326,11 @@ void action_copy_player_actions() {
 					if (currentWeapon != previousWeapon) {
 						previousWeapon = currentWeapon;
 						//give and equip weapon to all other actors
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+						for (auto &actor : actors) {
+							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
 								if (isSkydiving == false) {
-									log_to_file("Giving weapon " + std::to_string(currentWeapon) + " to actor " + std::to_string(actorShortcut[i]));
-									WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], currentWeapon, 1000, 1, 1);
+									log_to_file("Giving weapon " + std::to_string(currentWeapon) + " to actor " + std::to_string(actor.getActorPed()));
+									WEAPON::GIVE_WEAPON_TO_PED(actor.getActorPed(), currentWeapon, 1000, 1, 1);
 								}
 								else {
 									log_to_file("Not giving weapon to actor as we are skydiving");
@@ -3311,8 +3349,8 @@ void action_copy_player_actions() {
 					//if new target which exist, make all actors aim at it
 					if (ENTITY::DOES_ENTITY_EXIST(targetEntity) && targetEntity != currentTarget) {
 						currentTarget = targetEntity;
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+						for (auto &actor : actors) {
+							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
 
 								if (isSkydiving == false) {//TASK_AIM_GUN_AT_ENTITY while skydiving has a tiny sideeffect
 														   //log_to_file("Aim at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
@@ -3322,7 +3360,7 @@ void action_copy_player_actions() {
 
 									}
 									else {
-										AI::TASK_AIM_GUN_AT_ENTITY(actorShortcut[i], targetEntity, -1, 0);
+										AI::TASK_AIM_GUN_AT_ENTITY(actor.getActorPed(), targetEntity, -1, 0);
 									}
 
 								}
@@ -3332,8 +3370,8 @@ void action_copy_player_actions() {
 
 					if (PED::IS_PED_SHOOTING(playerPed)) {
 						isShooting = true;
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && actorShortcut[i] != currentTarget) {
+						for (auto &actor : actors) {
+							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false && actor.isActorThisPed(currentTarget)==false) {
 								//log_to_file("Shoot at " + std::to_string(targetEntity) + " for actor " + std::to_string(actorShortcut[i]));
 								if (isSkydiving == false) {//TASK_SHOOT_AT_ENTITY while skydiving has a tiny sideeffect
 									if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
@@ -3341,7 +3379,7 @@ void action_copy_player_actions() {
 										AI::TASK_VEHICLE_SHOOT_AT_PED(lastVehicle, targetEntity, 0x41a00000);
 									}
 									else {
-										AI::TASK_SHOOT_AT_ENTITY(actorShortcut[i], currentTarget, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+										AI::TASK_SHOOT_AT_ENTITY(actor.getActorPed(), currentTarget, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
 									}
 								}
 							}
@@ -3358,12 +3396,12 @@ void action_copy_player_actions() {
 
 				}
 				else if (isFreeAiming) {//make actors peds stop aiming
-					for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-						if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
+					for (auto &actor : actors) {
+						if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
 
 							if (isSkydiving == false) {//clear_ped_tasks while skydiving has a tiny sideeffect
-								log_to_file("Clearing tasks for actor " + std::to_string(actorShortcut[i]));
-								AI::CLEAR_PED_TASKS(actorShortcut[i]);
+								log_to_file("Clearing tasks for actor " + std::to_string(actor.getActorPed()));
+								AI::CLEAR_PED_TASKS(actor.getActorPed());
 							}
 
 						}
@@ -3387,15 +3425,15 @@ void action_copy_player_actions() {
 							log_to_file("In plane with seats " + std::to_string(VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(pedVehicle)));
 						}
 
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should enter vehicle " + std::to_string(pedVehicle) + " in seat " + std::to_string(seatIndex));
+						for (auto &actor : actors) {
+							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
+								log_to_file("Actor " + std::to_string(actor.getActorPed()) + " should enter vehicle " + std::to_string(pedVehicle) + " in seat " + std::to_string(seatIndex));
 
 								if (PED::IS_PED_IN_ANY_PLANE(playerPed)) {
-									PED::SET_PED_INTO_VEHICLE(actorShortcut[i], pedVehicle, -2);
+									PED::SET_PED_INTO_VEHICLE(actor.getActorPed(), pedVehicle, -2);
 								}
 								else {
-									AI::TASK_ENTER_VEHICLE(actorShortcut[i], pedVehicle, -1, seatIndex, 1.0, 1, 0);
+									AI::TASK_ENTER_VEHICLE(actor.getActorPed(), pedVehicle, -1, seatIndex, 1.0, 1, 0);
 								}
 								seatIndex++;
 							}
@@ -3412,11 +3450,11 @@ void action_copy_player_actions() {
 
 						log_to_file("Giving parachutes to all actors and task sky dive");
 						hasGivenParachute = true;
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
+						for (auto &actor : actors) {
+							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
+								WEAPON::GIVE_WEAPON_TO_PED(actor.getActorPed(), GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
 								//AI::TASK_SKY_DIVE(actorShortcut[i]);
-								AI::TASK_LEAVE_VEHICLE(actorShortcut[i], lastVehicle, 4160);
+								AI::TASK_LEAVE_VEHICLE(actor.getActorPed(), lastVehicle, 4160);
 							}
 						}
 					}
@@ -3435,20 +3473,20 @@ void action_copy_player_actions() {
 
 						//log_to_file("Ground level to parachute to is " +std::to_string(zGroundLevel));
 
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-								if (PED::GET_PED_PARACHUTE_STATE(actorShortcut[i]) == 0) {
+						for (auto &actor : actors) {
+							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
+								if (PED::GET_PED_PARACHUTE_STATE(actor.getActorPed()) == 0) {
 									//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should deploy parachute");
 
-									AI::TASK_PARACHUTE_TO_TARGET(actorShortcut[i], playerLocation.x, playerLocation.y, zGroundLevel);
+									AI::TASK_PARACHUTE_TO_TARGET(actor.getActorPed(), playerLocation.x, playerLocation.y, zGroundLevel);
 
 								}
-								else if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
+								else if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
 									//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " should sky dive");
 									//had some issues with them not exiting the vehicle so use TASK_LEAVE_VEHICLE with a teleport flag instead
 									//AI::TASK_SKY_DIVE(actorShortcut[i]);
-									AI::TASK_LEAVE_VEHICLE(actorShortcut[i], lastVehicle, 4160);
-									WEAPON::GIVE_WEAPON_TO_PED(actorShortcut[i], GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
+									AI::TASK_LEAVE_VEHICLE(actor.getActorPed(), lastVehicle, 4160);
+									WEAPON::GIVE_WEAPON_TO_PED(actor.getActorPed(), GAMEPLAY::GET_HASH_KEY("gadget_parachute"), 1, 1, 1);
 								}
 							}
 						}
@@ -3458,8 +3496,8 @@ void action_copy_player_actions() {
 				else if (isSkydiving) {//check if we have landed
 					if (PED::GET_PED_PARACHUTE_STATE(playerPed) == -1) {
 						bool allActorsOnGround = true;
-						for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-							if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed && PED::GET_PED_PARACHUTE_STATE(actorShortcut[i]) != -1) {
+						for (auto &actor : actors) {
+							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false && PED::GET_PED_PARACHUTE_STATE(actor.getActorPed()) != -1) {
 								//log_to_file("Actor " + std::to_string(actorShortcut[i]) + " has not yet landed");
 								allActorsOnGround = false;
 							}

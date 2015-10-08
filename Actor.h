@@ -29,9 +29,8 @@ private:
 	DrivingMode m_drivingMode;
 
 
-
-	Actor();
 public:
+	Actor();
 	Actor(Ped ped);
 
 	Ped getActorPed();
@@ -62,7 +61,7 @@ public:
 	void setStartLocationHeading(float heading);
 	float getStartLocationHeading();
 	
-	void setHasSpotLight(bool hasSpotlight);
+	void setHasSpotLight(bool hasSpot);
 	bool hasSpotLight();
 
 	void setSpotLightType(SPOT_LIGHT_TYPE type);

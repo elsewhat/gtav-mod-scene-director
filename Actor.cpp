@@ -3,6 +3,11 @@
 #include <algorithm>
 
 
+Actor::Actor()
+{
+	m_ped = 0;
+}
+
 Actor::Actor(Ped ped) {
 	m_ped = ped;
 	setRelationshipGroup(getDefaultRelationshipGroup());
@@ -109,9 +114,9 @@ float Actor::getStartLocationHeading()
 	return m_startLocationHeading;
 }
 
-void Actor::setHasSpotLight(bool hasSpotlight)
+void Actor::setHasSpotLight(bool hasSpot)
 {
-	m_hasSpotlight = hasSpotLight;
+	m_hasSpotlight = hasSpot;
 }
 
 bool Actor::hasSpotLight()

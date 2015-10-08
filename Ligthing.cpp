@@ -65,6 +65,7 @@ std::string getNameForSpotLightType(SPOT_LIGHT_TYPE type) {
 		return "South";
 		break;
 	default:
+		return "Error";
 		break;
 	}
 }
