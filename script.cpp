@@ -75,13 +75,11 @@ TODO: Refactor into Actor class
 //index 0 is reserved for the last actor
 std::vector<Actor>  actors(9);
 bool actor0IsClone = false;
-Actor previousActor;
+Actor previousActor = Actor::nullActor();
 
 bool is_autopilot_engaged_for_player = false;
 bool is_chase_player_engaged = false;
-int chase_player_index = -1;
 bool is_escort_player_engaged = false;
-int escort_player_index = -1;
 
 bool is_firing_squad_engaged = false;
 
@@ -306,7 +304,7 @@ void store_current_waypoint_for_actor(Ped ped) {
 		//ignore the first index
 
 		Actor actor = get_actor_from_ped(ped);
-		if (actor.isNullActor == false) {
+		if (actor.isNullActor() == false) {
 			log_to_file("store_current_waypoint_for_actor:Found match");
 			actor.setHasWaypoint(true);
 			actor.setWaypoint(waypointCoord);
@@ -1071,14 +1069,14 @@ void draw_menu() {
 	{
 		if (actors[i].isNullActor() ==false) {
 			//check if we should move the selected index to this actor ( menu_active_ped is set when switching to an actor)
-			if (menu_active_index == -1 && actors[i].isActorThisPed(playerActor.getActorPed)) {
+			if (menu_active_index == -1 && actors[i].isActorThisPed(playerActor.getActorPed())) {
 				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 				menu_active_index = drawIndex;
 				menu_active_ped = 0;
 			}
 
 			//show submenu for active player
-			if (menu_active_index == drawIndex && actors[i].isActorThisPed(playerActor.getActorPed)) {
+			if (menu_active_index == drawIndex && actors[i].isActorThisPed(playerActor.getActorPed())) {
 				submenu_is_displayed = true;
 				if (submenu_active_index == -1) {
 					submenu_active_index = 0;
@@ -1103,7 +1101,7 @@ void draw_menu() {
 				DRAW_TEXT("Waypoint", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			}
 
-			if (actors[i].isActorThisPed(playerActor.getActorPed)) {
+			if (actors[i].isActorThisPed(playerActor.getActorPed())) {
 				GRAPHICS::DRAW_RECT(0.93, 0.883 - (0.04)*drawIndex, 0.113, 0.002, 100, 255, 0, 100);				
 			}
 
@@ -1143,17 +1141,17 @@ void draw_menu() {
 }
 
 void draw_spot_lights() {
-	//draw spotlights
-	for (int i = 1; i < sizeof(actorHasSpotlight) / sizeof(bool); i++) {
-		if (actorHasSpotlight[i]) {
+	for (auto &actor : actors) {
+		if(actor.hasSpotLight()){
 			//log_to_file("Drawing spot light for actor with index " + std::to_string(i));
-			Vector3 actorPos = ENTITY::GET_ENTITY_COORDS(actorShortcut[i], true);
-			int colorR = actorSpotlightColor[i].r;
-			int colorG = actorSpotlightColor[i].g;
-			int colorB = actorSpotlightColor[i].b;
+			Vector3 actorPos = ENTITY::GET_ENTITY_COORDS(actor.getActorPed(), true);
+			SpotLightColor color = actor.getSpotLightColor();
+			int colorR = color.r;
+			int colorG = color.g;
+			int colorB = color.b;
 
 			
-			switch (actorSpotlightType[i]) {
+			switch (actor.getSpotLightType()) {
 			case SPOT_LIGHT_NONE:
 				break;
 			case SPOT_LIGHT_ACTOR_ABOVE:
@@ -1184,13 +1182,11 @@ void draw_spot_lights() {
 bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 	log_to_file("move_to_waypoint: Ped:" + std::to_string(ped) + " x:" + std::to_string(waypointCoord.x) + " y : " + std::to_string(waypointCoord.y) + " z : " + std::to_string(waypointCoord.z));
 
-
+	Actor actor = get_actor_from_ped(ped);
 	//code inspired by LUA plugin https://www.gta5-mods.com/scripts/realistic-vehicle-controls
-	if (is_ped_actor_active(ped)) {
-		int actorIndex = get_index_for_actor(ped);
+	if (actor.isNullActor()== false && actor.isActiveInScene()) {
 
-
-		if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
+		if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
 			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
 
 			//check if player is the driver
@@ -1201,11 +1197,8 @@ bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 				return false;
 			}
 			else {
-				int actorIndex = get_index_for_actor(pedDriver);
-				if (actorIndex != -1) {
-					actorHasWaypoint[actorIndex] = true;
-					actorWaypoint[actorIndex] = waypointCoord;
-				}
+				actor.setHasWaypoint(true);
+				actor.setWaypoint(waypointCoord);
 
 				float vehicleMaxSpeed = VEHICLE::_GET_VEHICLE_MAX_SPEED(ENTITY::GET_ENTITY_MODEL(pedVehicle));
 
@@ -1231,10 +1224,10 @@ bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 				}else {
 					//AI::TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, VEHICLE::_GET_VEHICLE_MAX_SPEED(pedVehicle), 786469, 50.0);
 					float speed = vehicleMaxSpeed; 
-					if (actorDrivingMode[actorIndex].useVehicleMaxSpeed == false) {
-						speed = actorDrivingMode[actorIndex].manualMaxSpeed;
+					if (actor.getDrivingMode().useVehicleMaxSpeed == false) {
+						speed = actor.getDrivingMode().manualMaxSpeed;
 					}
-					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, speed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actorDrivingMode[actorIndex].value,5.0, -1);
+					AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, speed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actor.getDrivingMode().value,5.0, -1);
 					log_to_file("move_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(speed));
 					if (suppress_msgs != true) {
 						set_status_text("Driving to waypoint");
@@ -1254,7 +1247,7 @@ bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 			return true;
 		}
 		else if (PED::IS_PED_ON_FOOT(ped)) {
-			AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, actorWalkingSpeed[actorIndex], -1, 27.0f, 0.5f);
+			AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, actor.getWalkingSpeed(), -1, 27.0f, 0.5f);
 			log_to_file("move_to_waypoint: Ped (" + std::to_string(ped) + " is walking to waypoint");
 			if (suppress_msgs != true) {
 				set_status_text("Walking to waypoint");
@@ -1271,6 +1264,7 @@ bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 
 void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
 	log_to_file("playback_recording_to_waypoint: Ped:" + std::to_string(ped) + " x:" + std::to_string(waypointCoord.x) + " y : " + std::to_string(waypointCoord.y) + " z : " + std::to_string(waypointCoord.z));
+	Actor actor = get_actor_from_ped(ped);
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
 		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
@@ -1282,11 +1276,8 @@ void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
 			//set_status_text("Ped is not driver. Ignore waypoint");
 		}
 		else {
-			int actorIndex = get_index_for_actor(pedDriver);
-			if (actorIndex != -1) {
-				actorHasWaypoint[actorIndex] = true;
-				actorWaypoint[actorIndex] = waypointCoord;
-			}
+			actor.setHasWaypoint(true);
+			actor.setWaypoint(waypointCoord);
 
 			float vehicleMaxSpeed = VEHICLE::_GET_VEHICLE_MAX_SPEED(ENTITY::GET_ENTITY_MODEL(pedVehicle));
 
@@ -1306,7 +1297,7 @@ void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
 				log_to_file("move_to_waypoint: In boat : " + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
 			}
 			else {
-				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actorDrivingMode[actorIndex].value, 5.0, -1);
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actor.getDrivingMode().value, 5.0, -1);
 				log_to_file("move_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
 
 			}
@@ -1410,9 +1401,9 @@ void possess_ped(Ped swapToPed) {
 		}
 
 		//check if the ped where swapping from should continue towards a waypoint
-		int actor_index = get_index_for_actor(swapFromPed);
-		if (actor_index != -1 && actorHasWaypoint[actor_index]) {
-			move_to_waypoint(swapFromPed, actorWaypoint[actor_index],true);
+		Actor actor = get_actor_from_ped(swapFromPed);
+		if (actor.isNullActor()==false && actor.hasWaypoint()) {
+			move_to_waypoint(swapFromPed, actor.getWaypoint(),true);
 		}
 		else if (UI::IS_WAYPOINT_ACTIVE()) {
 			int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
@@ -1427,7 +1418,7 @@ void possess_ped(Ped swapToPed) {
 		AI::CLEAR_PED_TASKS(swapToPed);
 		is_autopilot_engaged_for_player = false;
 
-		actorShortcut[0] = swapFromPed;
+		previousActor = actor;
 		actor0IsClone = false;
 	}
 	else {
@@ -1506,7 +1497,7 @@ void action_clone_player() {
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 
 	Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
-	actorShortcut[0] = clonedPed;
+	previousActor = clonedPed;
 	actor0IsClone = true;
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0))
@@ -1576,7 +1567,7 @@ void action_clone_player_with_vehicle() {
 		//clone the player and assign into car
 		Ped clonedPed = PED::CLONE_PED(playerPed, 0.0f, false, true);
 
-		actorShortcut[0] = clonedPed;
+		previousActor = clonedPed;
 		actor0IsClone = true;
 
 		//try to prevent fleeing during teleport
@@ -1635,11 +1626,12 @@ void check_if_ped_is_passenger_and_has_waypoint(Ped ped) {
 
 						nextWaitTicks = 200;
 
-						int actorIndex = get_index_for_actor(pedDriver);
-						if (actorIndex != -1) {
-							actorHasWaypoint[actorIndex] = true;
-							actorWaypoint[actorIndex] = waypointCoord;
+						Actor actor = get_actor_from_ped(pedDriver);
+						if (actor.isNullActor() == false) {
+							actor.setHasWaypoint(true);
+							actor.setWaypoint(waypointCoord);
 						}
+
 					}
 				}
 			}
@@ -1653,7 +1645,7 @@ void check_if_player_is_passenger_and_has_waypoint() {
 	check_if_ped_is_passenger_and_has_waypoint(playerPed);
 }
 
-
+/*
 void action_increase_aggressiveness(Ped ped, bool suppress_msgs) {
 	log_to_file("action_increase_aggressiveness");
 	int actorIndex = get_index_for_actor(ped);
@@ -1685,10 +1677,8 @@ void action_increase_aggressiveness(Ped ped, bool suppress_msgs) {
 		set_status_text("Actor must be stored in a slot to increase aggressiveness");
 	}
 	nextWaitTicks = 200;
-
-
-}
-
+}*/
+/*
 void action_decrease_aggressiveness(Ped ped, bool suppress_msgs) {
 	log_to_file("action_decrease_aggressiveness");
 	int actorIndex = get_index_for_actor(ped);
@@ -1723,7 +1713,9 @@ void action_decrease_aggressiveness(Ped ped, bool suppress_msgs) {
 	}
 	nextWaitTicks = 200;
 }
+*/
 
+/*
 void action_increase_aggressiveness_for_all_actors() {
 	log_to_file("action_increase_aggressiveness_for_all_actors");
 	set_status_text("Increasing aggressiveness for all actors");
@@ -1739,6 +1731,7 @@ void action_decrease_aggressiveness_for_all_actors() {
 		action_decrease_aggressiveness(actorShortcut[i], true);
 	}
 }
+*/
 
 
 bool swap_to_previous_possessed_key_pressed()
@@ -1749,7 +1742,7 @@ bool swap_to_previous_possessed_key_pressed()
 
 void add_ped_to_slot(int slotIndex, Ped ped) {
 	//check if there exist an actor for this index
-	if (actorShortcut[slotIndex] != 0) {
+	if (actors[slotIndex-1].isNullActor() ==false) {
 		if (forceSlotIndexOverWrite != slotIndex) {
 			log_to_file("action_if_ped_assign_shortcut_key_pressed: Slot already exists");
 			set_status_text("Actor already exist in slot. CTRL+" + std::to_string(slotIndex) + " once more to overwrite");
@@ -1759,20 +1752,20 @@ void add_ped_to_slot(int slotIndex, Ped ped) {
 		else {
 			log_to_file("action_if_ped_assign_shortcut_key_pressed: Slot will be overwritten");
 			forceSlotIndexOverWrite = -1;
+			
 			//Remove old blip
-			int blipIdsToRemove[1] = { blipIdShortcuts[slotIndex] };
+			int blipIdsToRemove[1] = { actors[slotIndex - 1].getBlipId() };
 			UI::REMOVE_BLIP(blipIdsToRemove);
 			//and continue storing the actor
 		}
 
 	}
-
-	actorShortcut[slotIndex] = ped;
+	actors.at(slotIndex - 1) = Actor(ped);
 
 	assign_actor_to_relationship_group(ped, getDefaultRelationshipGroup());
 
 	int blipId = UI::ADD_BLIP_FOR_ENTITY(ped);
-	blipIdShortcuts[slotIndex] = blipId;
+	actors[slotIndex - 1].setBlipId(blipId);
 	//BLIP Sprite for nr1=17, nr9=25
 	UI::SET_BLIP_SPRITE(blipId, 16 + slotIndex);
 
@@ -1780,8 +1773,8 @@ void add_ped_to_slot(int slotIndex, Ped ped) {
 	if (UI::IS_WAYPOINT_ACTIVE()) {
 		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
 		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
-		actorWaypoint[slotIndex] = waypointCoord;
-		actorHasWaypoint[slotIndex] = true;
+		actors[slotIndex-1].setWaypoint(waypointCoord);
+		actors[slotIndex - 1].setHasWaypoint(true);
 	}
 
 	ensure_ped_and_vehicle_is_not_deleted(ped);
@@ -1842,41 +1835,37 @@ void action_if_ped_assign_shortcut_key_pressed()
 }
 
 void action_remove_actor_from_index(int pedShortcutsIndex) {
-	if (actorShortcut[pedShortcutsIndex] == 0) {
+	if (actors[pedShortcutsIndex-1].isNullActor()) {
 		set_status_text("No stored actor in slot " + std::to_string(pedShortcutsIndex));
 	}
 	else {
-		actorShortcut[pedShortcutsIndex] = 0;
-		actorHasWaypoint[pedShortcutsIndex] = false;
-		actorWaypoint[pedShortcutsIndex] = Vector3();
-		actorHasStartLocation[pedShortcutsIndex] = false;
-		actorStartLocation[pedShortcutsIndex] = Vector3();
-		actorStartLocationHeading[pedShortcutsIndex] = 0.0;
 		//remove blip
-		int blipIdsToRemove[1] = { blipIdShortcuts[pedShortcutsIndex] };
+		int blipIdsToRemove[1] = { actors[pedShortcutsIndex - 1].getBlipId() };
 		UI::REMOVE_BLIP(blipIdsToRemove);
-		blipIdShortcuts[pedShortcutsIndex] = 0;
+
+		actors.at(pedShortcutsIndex - 1) = Actor::nullActor();
 	}
 }
 
 void swap_to_actor_with_index(int pedShortcutsIndex) {
-	if (actorShortcut[pedShortcutsIndex] == 0) {
+	if (actors[pedShortcutsIndex-1].isNullActor()) {
 		set_status_text("No stored actor. Store with CTRL+" + std::to_string(pedShortcutsIndex));
 	}
 	else {
 		log_to_file("action_if_ped_execute_shortcut_key_pressed: Retrieve ped in slot " + std::to_string(pedShortcutsIndex));
-		Ped pedInSlot = actorShortcut[pedShortcutsIndex];
+		Actor actor = actors[pedShortcutsIndex - 1];
+		Ped pedInSlot = actor.getActorPed();
 		if (ENTITY::IS_ENTITY_DEAD(pedInSlot)) {
 			log_to_file("action_if_ped_execute_shortcut_key_pressed: Dead ped in slot " + std::to_string(pedShortcutsIndex));
 			set_status_text("Thou shalt not swap to a dead actor");
 		}
 		else {
-			log_to_file("action_if_ped_execute_shortcut_key_pressed: Switching to ped:  " + std::to_string(actorShortcut[pedShortcutsIndex]));
+			log_to_file("action_if_ped_execute_shortcut_key_pressed: Switching to ped:  " + std::to_string(pedInSlot));
 
 			//first store the waypoint for the current actor
 			store_current_waypoint_for_actor(PLAYER::PLAYER_PED_ID());
 
-			possess_ped(actorShortcut[pedShortcutsIndex]);
+			possess_ped(pedInSlot);
 		}
 	}
 }
@@ -1936,37 +1925,27 @@ void action_if_ped_execute_shortcut_key_pressed()
 void action_reset_scene_director() {
 	set_status_text("Resetting scene director to initial status");
 
-	UI::REMOVE_BLIP(blipIdShortcuts);
-
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 
-	for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-		if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-			Ped actor = actorShortcut[i];
-			if (PED::IS_PED_IN_ANY_VEHICLE(actor, 0)) {
-				Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(actor);
+	for (auto &actor : actors) {
+		if (actor.isActorThisPed(playerPed) == false) {
+			Ped ped = actor.getActorPed();
+
+			if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
+				Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
 				ENTITY::SET_ENTITY_AS_MISSION_ENTITY(playerVehicle, false, false);
 				ENTITY::SET_VEHICLE_AS_NO_LONGER_NEEDED(&playerVehicle);
 			}
-			ENTITY::SET_ENTITY_AS_MISSION_ENTITY(actor, false, false);
-			ENTITY::SET_PED_AS_NO_LONGER_NEEDED(&actor);
-			actorShortcut[i] = 0;
-		}
-		actorHasWaypoint[i] = false;
-		actorWaypoint[i].x = 0;
-		actorWaypoint[i].y = 0;
-		actorWaypoint[i].z = 0;
-		actorStartLocation[i].x = 0;
-		actorStartLocation[i].y = 0;
-		actorStartLocation[i].z = 0;
-		actorHasStartLocation[i] = false;
-		if (blipIdShortcuts[i] != 0) {
-			int blipIdsToRemove[1] = { blipIdShortcuts[i] };
-			UI::REMOVE_BLIP(blipIdsToRemove);
-			blipIdShortcuts[i] = 0;
+			ENTITY::SET_ENTITY_AS_MISSION_ENTITY(ped, false, false);
+			ENTITY::SET_PED_AS_NO_LONGER_NEEDED(&ped);
 		}
 
+		int blipIdsToRemove[1] = { actor.getBlipId() };
+		UI::REMOVE_BLIP(blipIdsToRemove);
+
+		actor = Actor::nullActor();
 	}
+
 }
 
 void action_vehicle_chase() {
@@ -1974,11 +1953,12 @@ void action_vehicle_chase() {
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 
 	if (is_chase_player_engaged) {
-		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-				AI::TASK_PAUSE(actorShortcut[i], 500);
+		for (auto &actor : actors) {
+			if (actor.isActorThisPed(playerPed) == false) {
+				AI::TASK_PAUSE(actor.getActorPed(), 500);
 			}
 		}
+
 		is_chase_player_engaged = false;
 		nextWaitTicks = 500;
 		set_status_text("Vehicle chase stopped");
@@ -1991,43 +1971,43 @@ void action_vehicle_chase() {
 
 		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
 
-		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-				ensure_ped_and_vehicle_is_not_deleted(actorShortcut[i]);
+		for (auto &actor : actors) {
+			if (actor.isActorThisPed(playerPed) == false) {
+				Ped actorPed = actor.getActorPed();
+				ensure_ped_and_vehicle_is_not_deleted(actorPed);
 
-				Vehicle actorVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+				Vehicle actorVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 
 				//chase is based on type of vehicles for both player and actor
-				if (PED::IS_PED_IN_ANY_HELI(playerPed) && PED::IS_PED_IN_ANY_HELI(actorShortcut[i])) {
+				if (PED::IS_PED_IN_ANY_HELI(playerPed) && PED::IS_PED_IN_ANY_HELI(actorPed)) {
 					//both are in heli
-					log_to_file("TASK_HELI_CHASE1 - Actor " + std::to_string(actorShortcut[i]));
+					log_to_file("TASK_HELI_CHASE1 - Actor " + std::to_string(actorPed));
 					//last three params are distance to playerVehicle
-					AI::TASK_HELI_CHASE(actorShortcut[i], playerVehicle, 0.0, 0.0, -5.0);
+					AI::TASK_HELI_CHASE(actorPed, playerVehicle, 0.0, 0.0, -5.0);
 				}
-				else if (PED::IS_PED_IN_ANY_HELI(actorShortcut[i])) {
+				else if (PED::IS_PED_IN_ANY_HELI(actorPed)) {
 					//if only actor (not player) is in heli
-					log_to_file("TASK_HELI_CHASE2 - Actor " + std::to_string(actorShortcut[i]));
-					AI::TASK_HELI_CHASE(actorShortcut[i], playerVehicle, 0.0, 0.0, -5.0);
+					log_to_file("TASK_HELI_CHASE2 - Actor " + std::to_string(actorPed));
+					AI::TASK_HELI_CHASE(actorPed, playerVehicle, 0.0, 0.0, -5.0);
 				}
-				else if (PED::IS_PED_IN_ANY_PLANE(playerPed) && PED::IS_PED_IN_ANY_PLANE(actorShortcut[i])) {
+				else if (PED::IS_PED_IN_ANY_PLANE(playerPed) && PED::IS_PED_IN_ANY_PLANE(actorPed)) {
 					//both are in a plane
-					log_to_file("TASK_PLANE_CHASE1 - Actor " + std::to_string(actorShortcut[i]));
-					AI::TASK_PLANE_CHASE(actorShortcut[i], playerVehicle, 0.0, -5.0, -5.0);
+					log_to_file("TASK_PLANE_CHASE1 - Actor " + std::to_string(actorPed));
+					AI::TASK_PLANE_CHASE(actorPed, playerVehicle, 0.0, -5.0, -5.0);
 				}
-				else if (PED::IS_PED_IN_ANY_PLANE(actorShortcut[i])) {
+				else if (PED::IS_PED_IN_ANY_PLANE(actorPed)) {
 					//if only actor (not player) is in plane
-					log_to_file("TASK_PLANE_CHASE2 - Actor " + std::to_string(actorShortcut[i]));
-					AI::TASK_PLANE_CHASE(actorShortcut[i], playerVehicle, 0.0, 0.0, 5.0);
+					log_to_file("TASK_PLANE_CHASE2 - Actor " + std::to_string(actorPed));
+					AI::TASK_PLANE_CHASE(actorPed, playerVehicle, 0.0, 0.0, 5.0);
 				}
 				else {//standard vehicle chase
-					log_to_file("TASK_VEHICLE_CHASE - Actor " + std::to_string(actorShortcut[i]));
-					AI::TASK_VEHICLE_CHASE(actorShortcut[i], playerPed);
+					log_to_file("TASK_VEHICLE_CHASE - Actor " + std::to_string(actorPed));
+					AI::TASK_VEHICLE_CHASE(actorPed, playerPed);
 				}
 			}
 		}
 		set_status_text("Vehicle chase has started");
 		is_chase_player_engaged = true;
-		chase_player_index = get_index_for_actor(playerPed);
 
 		nextWaitTicks = 500;
 	}
@@ -2042,9 +2022,9 @@ void action_vehicle_escort() {
 	log_to_file("action_vehicle_escort");
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
 	if (is_escort_player_engaged) {
-		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-				AI::TASK_PAUSE(actorShortcut[i], 500);
+		for (auto &actor : actors) {
+			if (actor.isActorThisPed(playerPed) == false) {
+				AI::TASK_PAUSE(actor.getActorPed(), 500);
 			}
 		}
 		is_escort_player_engaged = false;
@@ -2056,13 +2036,14 @@ void action_vehicle_escort() {
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
 		Vehicle playerVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
-		for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			if (actorShortcut[i] != 0 && actorShortcut[i] != playerPed) {
-				ensure_ped_and_vehicle_is_not_deleted(actorShortcut[i]);
+		for (auto &actor : actors) {
+			if (actor.isActorThisPed(playerPed) == false) {
+				Ped actorPed = actor.getActorPed();
+				ensure_ped_and_vehicle_is_not_deleted(actorPed);
 
-				if (PED::IS_PED_IN_ANY_VEHICLE(actorShortcut[i], 0)) {
+				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 
-					Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorShortcut[i]);
+					Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 
 					//check if player is a passenger
 					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
@@ -2073,7 +2054,7 @@ void action_vehicle_escort() {
 						//works
 						//AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 13.0, 786603, 8.0, 20, 5.0);
 						log_to_file("action_vehicle_escort:AI::TASK_VEHICLE_ESCORT Driver: " + std::to_string(pedDriver));
-						AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 45.0, actorDrivingMode[i].value, 8.0, 20, 5.0);
+						AI::TASK_VEHICLE_ESCORT(pedDriver, pedVehicle, playerVehicle, -1, 45.0, actor.getDrivingMode().value, 8.0, 20, 5.0);
 
 					}
 				}
@@ -2082,7 +2063,6 @@ void action_vehicle_escort() {
 		}
 
 		is_escort_player_engaged = true;
-		escort_player_index = get_index_for_actor(playerPed);
 
 		set_status_text("Vehicle escort has started");
 		nextWaitTicks = 300;
