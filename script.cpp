@@ -286,43 +286,16 @@ void DRAW_TEXT(char* Text, float X, float Y, float S_X, float S_Y, int Font, boo
 	UI::_DRAW_TEXT(X, Y);
 }
 
-Actor get_actor_from_ped(Ped ped) {
-	/*
-	for (int i = 0; i < actors.size(); i++) {
-		if (actors[i].isNullActor() == false && actors[i].isActorThisPed(ped)) {
-			log_to_file("get_actor_from_ped About to return a actor in vector" );
-			return actors[i];
-		}
-	}*/
-	
+Actor& get_actor_from_ped(Ped ped) {
 	for (auto &actor : actors) {
 		if (actor.isActorThisPed(ped)) {
-			log_to_file("get_actor_from_ped About to return a actor in vector");
 			return actor;
 		}
 	}
-	log_to_file("get_actor_from_ped About to a null actor");
-	return Actor::Actor();
+	static Actor nullActor = Actor::nullActor();
+	return nullActor;
 }
 
-Actor& get_actor_ref_from_ped(Ped ped) {
-	
-	for (int i = 0; i < actors.size(); i++) {
-		if (actors[i].isNullActor() == false && actors[i].isActorThisPed(ped)) {
-			log_to_file("get_actor_ref_from_ped About to return a actor in vector" );
-			return actors[i];
-		}
-	}
-	/* no difference
-	for (auto &actor : actors) {
-		if (actor.isActorThisPed(ped)) {
-			log_to_file("get_actor_ref_from_ped About to return a actor in vector");
-			return actor;
-		}
-	}*/
-	log_to_file("get_actor_ref_from_ped About to a null actor");
-	return Actor::Actor();
-}
 
 void store_current_waypoint_for_actor(Ped ped) {
 
@@ -332,7 +305,7 @@ void store_current_waypoint_for_actor(Ped ped) {
 		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 		//ignore the first index
 
-		Actor actor = get_actor_from_ped(ped);
+		Actor & actor = get_actor_from_ped(ped);
 		if (actor.isNullActor() == false) {
 			log_to_file("store_current_waypoint_for_actor:Found match");
 			actor.setHasWaypoint(true);
@@ -358,7 +331,7 @@ int get_next_free_slot() {
 
 
 bool is_ped_actor_active(Ped ped) {
-	Actor actor = get_actor_from_ped(ped);
+	Actor & actor = get_actor_from_ped(ped);
 	if (actor.isNullActor() == false) {
 		return actor.isActiveInScene();
 	}
@@ -640,12 +613,12 @@ void draw_submenu_world(int drawIndex) {
 
 void draw_submenu_player(int drawIndex) {
 	int submenu_index = 0;
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
-	/* Comment out recording for now
+
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_RECORD_PLAYER;
@@ -661,7 +634,7 @@ void draw_submenu_player(int drawIndex) {
 	
 	drawIndex++;
 	submenu_index++;
-	*/
+
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_REMOVE_FROM_SLOT;
@@ -794,7 +767,7 @@ void draw_submenu_player(int drawIndex) {
 	}
 
 
-	if (actor.hasWalkingStyle() == true) {
+	if (actor.hasWalkingStyle()) {
 		std::string walkingStyleString = "Walk: " + std::string(actor.getWalkingStyle().name);
 		DRAW_TEXT(strdup(walkingStyleString.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
@@ -826,7 +799,7 @@ void draw_submenu_player(int drawIndex) {
 void draw_menu() {
 	int drawIndex = 0;
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
-	Actor playerActor = get_actor_from_ped(playerPed);
+	Actor & playerActor = get_actor_from_ped(playerPed);
 	submenu_is_displayed = false;
 
 
@@ -1094,7 +1067,7 @@ void draw_menu() {
 	}
 
 	//11. Actors 1-9 if they exist
-	for (int i = actors.size(); i >= 0; i--)
+	for (int i = actors.size()-1; i >= 0; i--)
 	{
 		if (actors[i].isNullActor() ==false) {
 			//check if we should move the selected index to this actor ( menu_active_ped is set when switching to an actor)
@@ -1211,7 +1184,7 @@ void draw_spot_lights() {
 bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 	log_to_file("move_to_waypoint: Ped:" + std::to_string(ped) + " x:" + std::to_string(waypointCoord.x) + " y : " + std::to_string(waypointCoord.y) + " z : " + std::to_string(waypointCoord.z));
 
-	Actor actor = get_actor_from_ped(ped);
+	Actor & actor = get_actor_from_ped(ped);
 	//code inspired by LUA plugin https://www.gta5-mods.com/scripts/realistic-vehicle-controls
 	if (actor.isNullActor()== false && actor.isActiveInScene()) {
 
@@ -1294,7 +1267,7 @@ bool move_to_waypoint(Ped ped, Vector3 waypointCoord, bool suppress_msgs) {
 
 void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
 	log_to_file("playback_recording_to_waypoint: Ped:" + std::to_string(ped) + " x:" + std::to_string(waypointCoord.x) + " y : " + std::to_string(waypointCoord.y) + " z : " + std::to_string(waypointCoord.z));
-	Actor actor = get_actor_from_ped(ped);
+	Actor & actor = get_actor_from_ped(ped);
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(ped, 0)) {
 		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(ped);
@@ -1431,7 +1404,7 @@ void possess_ped(Ped swapToPed) {
 		}
 
 		//check if the ped where swapping from should continue towards a waypoint
-		Actor actor = get_actor_from_ped(swapFromPed);
+		Actor & actor = get_actor_from_ped(swapFromPed);
 		if (actor.isNullActor()==false && actor.hasWaypoint()) {
 			move_to_waypoint(swapFromPed, actor.getWaypoint(),true);
 		}
@@ -1656,7 +1629,7 @@ void check_if_ped_is_passenger_and_has_waypoint(Ped ped) {
 
 						nextWaitTicks = 200;
 
-						Actor actor = get_actor_from_ped(pedDriver);
+						Actor & actor = get_actor_from_ped(pedDriver);
 						if (actor.isNullActor() == false) {
 							actor.setHasWaypoint(true);
 							actor.setWaypoint(waypointCoord);
@@ -2107,7 +2080,7 @@ void action_autopilot_for_player(bool suppressMessage) {
 	log_to_file("action_autopilot_for_player");
 	nextWaitTicks = 300;
 
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	//update the waypoint if one is set currently
 	if (actor.isNullActor()==false && UI::IS_WAYPOINT_ACTIVE()) {
 		int waypointID = UI::GET_FIRST_BLIP_INFO_ID(UI::_GET_BLIP_INFO_ID_ITERATOR());
@@ -2370,7 +2343,7 @@ void action_next_weather() {
 
 
 void action_next_health() {
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor() == false) {
 		Ped actorPed = actor.getActorPed();
 		int currMaxHealth = ENTITY::GET_ENTITY_MAX_HEALTH(actorPed);
@@ -2386,7 +2359,7 @@ void action_next_health() {
 
 
 void action_toggle_vehicle_cosmetic() {
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	Ped actorPed = actor.getActorPed();
 	if (actor.isNullActor() == false && PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 
@@ -2429,7 +2402,7 @@ void action_toggle_wind() {
 }
 
 void action_next_walking_style() {
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	index_walking_style++;
 	if (index_walking_style > gtaWalkingStyles.size() - 1) {
 		PED::RESET_PED_MOVEMENT_CLIPSET(PLAYER::PLAYER_PED_ID(), 0.0);
@@ -2454,7 +2427,7 @@ void action_next_walking_style() {
 }
 
 void action_next_walking_speed() {
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor() == false) {
 		if (actor.getWalkingSpeed() == 2.0) {
 			actor.setWalkingSpeed(1.0);
@@ -2467,7 +2440,7 @@ void action_next_walking_speed() {
 }
 
 void action_next_spot_light() {
-	Actor actor = get_actor_ref_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	log_to_file("action_next_spot_light for actor " + std::to_string(actor.getActorPed()));
 	if (actor.isNullActor() == false) {
 		if (actor.hasSpotLight()==false) {
@@ -2496,7 +2469,7 @@ void action_next_spot_light() {
 }
 
 void action_next_driving_mode() {
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor() == false) {
 		actor.setDrivingMode(getNextDrivingMode(actor.getDrivingMode()));
 		action_autopilot_for_player(true);
@@ -2506,7 +2479,7 @@ void action_next_driving_mode() {
 
 
 void action_next_spot_light_color() {
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor() == false) {
 		if (actor.hasSpotLight()) {
 			actor.setSpotLightColor(getNextSpotLightColor(actor.getSpotLightColor()));
@@ -2515,7 +2488,7 @@ void action_next_spot_light_color() {
 }
 
 void action_next_relationshipgroup() {
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor() == false) {
 		actor.setRelationshipGroup(getNextRelationshipGroup(actor.getRelationshipGroup()));
 		if (sceneMode == SCENE_MODE_ACTIVE) {
@@ -2599,7 +2572,7 @@ bool record_scene_for_actor_key_press() {
 
 void action_record_scene_for_actor() {
 
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor()) {
 		set_status_text("Actor must be assigned slot 1-9 before recording actions");
 	}
@@ -3185,7 +3158,7 @@ void menu_action_select() {
 
 void action_copy_player_actions() {
 
-	Actor actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor()) {
 		set_status_text("Actor must be assigned slot 1-9 before recording actions");
 	}

@@ -12,6 +12,9 @@ Actor::Actor(Ped ped) {
 	m_ped = ped;
 	setRelationshipGroup(getDefaultRelationshipGroup());
 	setDrivingMode(getDefaultDrivingMode());
+	m_hasWalkingStyle = false;
+	m_hasSpotlight = false;
+	m_hasWaypoint = false;
 }
 
 Ped Actor::getActorPed()
