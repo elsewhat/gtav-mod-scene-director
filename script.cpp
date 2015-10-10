@@ -7,7 +7,8 @@
 #include "lighting.h"
 #include "relationship.h"
 #include "driving_mode.h"
-#include "actor.h"
+#include "Actor.h"
+#include "ActorRecording.h"
 
 #include <string>
 #include <ctime>
@@ -138,34 +139,6 @@ DWORD nextWaitTicks = 0;
 int forceSlotIndexOverWrite = -1;
 
 
-enum RECORDING_TYPE {
-	RECORDING_TYPE_LOCATION,
-	RECORDING_TYPE_EQUIP_WEAPON,
-	RECORDING_TYPE_ENTER_VEHICLE,
-};
-
-
-class ActorRecordingItem {
-	Vector3 location;
-	float heading;
-public:
-	ActorRecordingItem(Vector3 aLocation, float aHeading) {
-		location = aLocation;
-		heading = aHeading;
-	}
-	Vector3 getLocation() {
-		return location;
-	}
-	float getHeading() {
-		return heading;
-	}
-	void addToTaskSequence(Ped ped) {
-		AI::TASK_GO_STRAIGHT_TO_COORD(ped, location.x, location.y, location.z, 1.0f, -1, 27.0f, 0.5f);
-	}
-	std::string to_string() {
-		return "ActorRecordingItem x:" + std::to_string(location.x) + " y : " + std::to_string(location.y) + " z : " + std::to_string(location.z) + " heading:" + std::to_string(heading);
-	}
-};
 
 void set_status_text(std::string text)
 {
@@ -2602,18 +2575,28 @@ void action_record_scene_for_actor() {
 		while (bRecording == true) {
 			tickNow = GetTickCount();
 
+
 			//record only once pr DELTA_TICKS
 			if (tickNow - tickLast >= DELTA_TICKS) {
+				DWORD ticksSinceStart = tickNow - tickStart;
 
-
+				//1. Record movement
 				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
-				float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed,0)) {
+					Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 
-				ActorRecordingItem recordingItem(actorLocation, actorHeading);
-				actorRecording.push_back(recordingItem);
+					ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorVeh, actorLocation);
+					actorRecording.push_back(recordingItem);
 
-				log_to_file(recordingItem.to_string());
+					log_to_file(recordingItem.to_string());
+				}
+				else {
+					float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+					ActorMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorHeading);
+					actorRecording.push_back(recordingItem);
 
+					log_to_file(recordingItem.to_string());
+				}
 
 				tickLast = tickNow;
 			}
@@ -2625,114 +2608,77 @@ void action_record_scene_for_actor() {
 			}
 			WAIT(0);
 		}
+
+		actor.setRecording(actorRecording);
+		actor.setHasRecording(true);
+
 		log_to_file("Recorded " + std::to_string(actorRecording.size()) + " instructions");
-
-		//action_possess_ped();
-
-
-		Entity entityToTeleport = actorPed;
-		if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
-			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
-		}
-
-		teleport_entity_to_location(entityToTeleport,actor.getStartLocation(), true);
-		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
-
-		/* Attempt 1: AI::TASK_GO_STRAIGHT_TO_COORD  - Kind of works, but the actor pauses between each coord before moving to the next
-		TaskSequence actorSeq;
-		AI::OPEN_SEQUENCE_TASK(&actorSeq);
-		//0xec17e58, 0xbac0f10b, 0x3f67c6af, 0x422d7a25, 0xbd8817db, 0x916e828c -> "motionstate_idle", "motionstate_walk", "motionstate_run", "motionstate_actionmode_idle", and "motionstate_actionmode_walk"
-		//not really necessary
-		AI::TASK_FORCE_MOTION_STATE(0, 0xbac0f10b, 0);
-		for (int i =0; i < actorRecording.size(); i++) {
-		ActorRecordingItem recordingItem = actorRecording[i];
-		AI::TASK_GO_STRAIGHT_TO_COORD(0, recordingItem.getLocation().x, recordingItem.getLocation().y, recordingItem.getLocation().z, 2.0f, -1, recordingItem.getHeading(), 0);
-		}
-		AI::CLOSE_SEQUENCE_TASK(actorSeq);
-		AI::TASK_PERFORM_SEQUENCE(actorPed, actorSeq);
-		AI::CLEAR_SEQUENCE_TASK(&actorSeq);
-		*/
-
-		//TaskSequence actorSeq;
-		//AI::OPEN_SEQUENCE_TASK(&actorSeq);
-
-		//AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
-		//AI::CLEAR_PED_TASKS(actorPed);
-		
-		/*
-		AI::TASK_FLUSH_ROUTE();
-
-		for (int i = 0; i < actorRecording.size(); i++) {
-			ActorRecordingItem recordingItem = actorRecording[i];
-			AI::TASK_EXTEND_ROUTE(recordingItem.getLocation().x, recordingItem.getLocation().y, recordingItem.getLocation().z);
-		
-			log_to_file("AI::TASK_EXTEND_ROUTE(" + std::to_string(recordingItem.getLocation().x) + "," + std::to_string(recordingItem.getLocation().y) + "," + std::to_string(recordingItem.getLocation().z) + ");");
-		}
-		AI::TASK_FOLLOW_POINT_ROUTE(actorPed, 2.0f, 0);
-		*/
-
-
-		
-
-		/*
-		TaskSequence actorSeq;
-		AI::OPEN_SEQUENCE_TASK(&actorSeq);
-		
-		AI::TASK_FOLLOW_POINT_ROUTE(0, 2.0f, 0);
-		AI::CLOSE_SEQUENCE_TASK(actorSeq);
-		AI::TASK_PERFORM_SEQUENCE(actorPed, actorSeq);
-		AI::CLEAR_SEQUENCE_TASK(&actorSeq);*/
-		
-
-		for (int i = 0; i < actorRecording.size(); i++) {
-			ActorRecordingItem recordingItem = actorRecording[i];
-
-			Vector3 targetLocation = recordingItem.getLocation();
-			playback_recording_to_waypoint(actorPed, targetLocation);
-			bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0);
-			bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(actorPed);
-			bool isPedInPlane= PED::IS_PED_IN_ANY_PLANE(actorPed);
-			bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(actorPed);
-
-			float minDistance = 4.0;
-
-			if (isPedInHeli) {
-				minDistance = 50.0;
-			}else if (isPedInPlane) {
-				minDistance = 100.0;
-			}
-			else if (isPedInBoat) {
-				minDistance = 60.0;
-			}
-			else if (isInVehicle) {
-				minDistance = 15.0;
-			}
-
-			int counter = 0;
-			while (counter<100) {
-				Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
-				float distanceToTarget = SYSTEM::VDIST(currentLocation.x, currentLocation.y, currentLocation.z, targetLocation.x, targetLocation.y, targetLocation.z);
-
-				log_to_file("Distance " + std::to_string(distanceToTarget));
-
-				if (distanceToTarget < minDistance) {
-					log_to_file("Next waypoint");
-					break;
-				}
-
-				WAIT(300);
-				counter++;
-			}
-
-		}
-
-
-
+		set_status_text("Recorded " + std::to_string(actorRecording.size()) + " instructions");
 
 		set_status_text("Recording stopped");
 		nextWaitTicks = 400;
 
 	}
+}
+
+void action_start_replay_recording_for_actor(Actor actor) {
+	Ped actorPed = actor.getActorPed();
+	Entity entityToTeleport = actorPed;
+	if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
+		entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
+	}
+
+	teleport_entity_to_location(entityToTeleport, actor.getStartLocation(), true);
+	ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
+
+	actor.startReplayRecording(GetTickCount());
+
+}
+
+void update_tick_recording_replay(Actor actor) {
+	ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
+
+	ActorRecordingItem recordingItem = actor.getRecordingAt(recordingPlayback.getRecordingItemIndex());
+
+	/*
+	Vector3 targetLocation = recordingItem.getLocation();
+	playback_recording_to_waypoint(actorPed, targetLocation);
+	bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0);
+	bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(actorPed);
+	bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(actorPed);
+	bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(actorPed);
+
+	float minDistance = 4.0;
+
+	if (isPedInHeli) {
+		minDistance = 50.0;
+	}
+	else if (isPedInPlane) {
+		minDistance = 100.0;
+	}
+	else if (isPedInBoat) {
+		minDistance = 60.0;
+	}
+	else if (isInVehicle) {
+		minDistance = 15.0;
+	}
+
+	int counter = 0;
+	while (counter<100) {
+		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
+		float distanceToTarget = SYSTEM::VDIST(currentLocation.x, currentLocation.y, currentLocation.z, targetLocation.x, targetLocation.y, targetLocation.z);
+
+		log_to_file("Distance " + std::to_string(distanceToTarget));
+
+		if (distanceToTarget < minDistance) {
+			log_to_file("Next waypoint");
+			break;
+		}
+
+		¨//WAIT(300);
+		counter++;
+	}*/
+
 
 
 }
@@ -3643,6 +3589,9 @@ void main()
 
 		//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
 		check_player_model();
+
+		//check if any recordings should be played
+
 
 		//Wait for next tick
 		WAIT(0);

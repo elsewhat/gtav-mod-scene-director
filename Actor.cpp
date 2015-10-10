@@ -207,3 +207,49 @@ DrivingMode Actor::getDrivingMode()
 	return m_drivingMode;
 }
 
+void Actor::setHasRecording(bool hasRecording)
+{
+	m_hasRecording = hasRecording;
+}
+
+void Actor::startReplayRecording(DWORD tickStart)
+{
+	m_replayRecordingInProgress = true;
+	m_actorRecordingPlayback = ActorRecordingPlayback(tickStart);
+}
+
+void Actor::stopReplayRecording()
+{
+	m_replayRecordingInProgress = false;
+}
+
+void Actor::resumeReplayRecording()
+{
+	m_replayRecordingInProgress = true;
+}
+
+ActorRecordingPlayback & Actor::getRecordingPlayback()
+{
+	return m_actorRecordingPlayback;
+}
+
+bool Actor::hasRecording()
+{
+	return m_hasRecording;
+}
+
+void Actor::setRecording(std::vector<ActorRecordingItem> actorRecordingItems)
+{
+	m_actorRecordingItems = actorRecordingItems;
+}
+
+std::vector<ActorRecordingItem> Actor::getRecording()
+{
+	return m_actorRecordingItems;
+}
+
+ActorRecordingItem Actor::getRecordingAt(int index)
+{
+	return m_actorRecordingItems[index];
+}
+

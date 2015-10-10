@@ -12,6 +12,7 @@
     <ClCompile Include="relationship.cpp" />
     <ClCompile Include="driving_mode.cpp" />
     <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="ActorRecording.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\enums.h">
@@ -36,6 +37,7 @@
     <ClInclude Include="relationship.h" />
     <ClInclude Include="driving_mode.h" />
     <ClInclude Include="Actor.h" />
+    <ClInclude Include="ActorRecording.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

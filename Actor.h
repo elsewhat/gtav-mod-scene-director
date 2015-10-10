@@ -6,27 +6,42 @@
 #include "relationship.h"
 #include "driving_mode.h"
 #include "script.h"
+#include "ActorRecording.h"
 
 class Actor
 {
 private:
 	Ped m_ped;
 	int m_blipId;
+	
 	SCENE_MODE m_sceneStatus;
+	
 	bool m_hasWaypoint;
 	Vector3 m_waypoint;
+
 	bool m_hasStartLocation;
 	Vector3 m_startLocation;
 	float m_startLocationHeading;
+	
 	bool m_hasSpotlight;
 	SPOT_LIGHT_TYPE m_spotlightType;
 	SpotLightColor m_spotlightColor;
+	
 	bool m_hasWalkingStyle;
 	ClipSet m_walkingStyle;
+
 	RelationshipGroup m_relationshipGroup;
+	
 	bool m_vehicleNoDamage;
+	
 	float m_walkingSpeed;
+	
 	DrivingMode m_drivingMode;
+
+	bool m_hasRecording;
+	std::vector<ActorRecordingItem> m_actorRecordingItems;
+	bool m_replayRecordingInProgress;
+	ActorRecordingPlayback m_actorRecordingPlayback;
 
 
 public:
@@ -87,4 +102,17 @@ public:
 
 	void setDrivingMode(DrivingMode drivingMode);
 	DrivingMode getDrivingMode();
+
+	void setHasRecording(bool hasRecording);
+	bool hasRecording();
+
+	void setRecording(std::vector<ActorRecordingItem> actorRecordingItems);
+	std::vector<ActorRecordingItem> getRecording();
+	ActorRecordingItem getRecordingAt(int index);
+
+	void startReplayRecording(DWORD tickStart);
+	void stopReplayRecording();
+	void resumeReplayRecording();
+
+	ActorRecordingPlayback & getRecordingPlayback();
 };
