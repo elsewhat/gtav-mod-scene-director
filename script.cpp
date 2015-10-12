@@ -817,7 +817,6 @@ void draw_menu() {
 	Actor & playerActor = get_actor_from_ped(playerPed);
 	submenu_is_displayed = false;
 
-
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB=255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
@@ -826,6 +825,9 @@ void draw_menu() {
 	} else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
+
+	DRAW_TEXT("BETA RELEASE OF SCENE DIRECTOR BY ELSEWHAT - NOT FOR DISTRIBUTION", 0.0, 0.0, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 155);
+
 
 
 	//1. If actor is not assigned to any slot
@@ -1114,7 +1116,10 @@ void draw_menu() {
 				GRAPHICS::DRAW_SPRITE("CommonMenu", "MP_AlertTriangle", 0.95, 0.888 - (0.04)*drawIndex, 0.08, 0.08, 0, 255, 255, 255, 50);
 			}*/
 
-			if (actors[i].hasWaypoint()) {
+
+			if (actors[i].hasRecording()) {
+				DRAW_TEXT("Recording", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}else if (actors[i].hasWaypoint()) {
 				DRAW_TEXT("Waypoint", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			}
 
@@ -1301,22 +1306,22 @@ void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
 
 			if (PED::IS_PED_IN_ANY_HELI(ped)) {
 				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
-				log_to_file("move_to_waypoint: Flying in heli with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed) );
+				log_to_file("playback_recording_to_waypoint: Flying in heli with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed) );
 			}
 			else if (PED::IS_PED_IN_ANY_PLANE(ped)) {
 				AI::TASK_PLANE_MISSION(pedDriver, pedVehicle, 0, 0, waypointCoord.x, waypointCoord.y, waypointCoord.z, 4, 30.0, 50.0, -1, vehicleMaxSpeed, 50);
-				log_to_file("move_to_waypoint: Flying in plane with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed) );
+				log_to_file("playback_recording_to_waypoint: Flying in plane with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed) );
 
 			}
 			else if (PED::IS_PED_IN_ANY_BOAT(ped)) {
 				AI::TASK_BOAT_MISSION(pedDriver, pedVehicle, 0, 0, waypointCoord.x, waypointCoord.y, waypointCoord.z, 4, vehicleMaxSpeed, 786469, -1.0, 7);
 				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(pedDriver, 1);
 				//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, 0.0, 20.0, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469, 5.0, 1071);
-				log_to_file("move_to_waypoint: In boat : " + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
+				log_to_file("playback_recording_to_waypoint: In boat : " + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
 			}
 			else {
 				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, waypointCoord.z, vehicleMaxSpeed, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actor.getDrivingMode().value, 5.0, -1);
-				log_to_file("move_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
+				log_to_file("playback_recording_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(vehicleMaxSpeed));
 
 			}
 		}
@@ -1324,7 +1329,7 @@ void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
 	}
 	else if (PED::IS_PED_ON_FOOT(ped)) {
 		AI::TASK_GO_STRAIGHT_TO_COORD(ped, waypointCoord.x, waypointCoord.y, waypointCoord.z, 1.0f, -1, 27.0f, 0.5f);
-		log_to_file("move_to_waypoint: Ped (" + std::to_string(ped) + " is walking to waypoint");
+		log_to_file("playback_recording_to_waypoint: Ped (" + std::to_string(ped) + " is walking to waypoint");
 	}
 }
 
@@ -2547,13 +2552,17 @@ void action_toggle_scene_mode() {
 			log_to_file("Actor " + std::to_string(actorPed) + " Has relationshipgroup " +actor.getRelationshipGroup().name);
 			assign_actor_to_relationship_group(actorPed, actor.getRelationshipGroup());
 
-			//store the current location of all actors, so that we can reset it
-			actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
-			actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
-			actor.setHasStartLocation(true);
 
-			//move the actor if he has a waypoint and if he's not the player
-			if (actor.hasWaypoint() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID())==false) {
+			//store the current location of all actors without a recording, so that we can reset it
+			if (!actor.hasRecording()) {
+				actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
+				actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
+				actor.setHasStartLocation(true);
+			}
+
+			if (actor.hasRecording()) {
+				actor.startReplayRecording(GetTickCount());
+			}else if (actor.hasWaypoint() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID())==false) { //move the actor if he has a waypoint and if he's not the player
 				//first if he's a driver
 				move_to_waypoint(actorPed,actor.getWaypoint(), true);
 				//second if he's a passenger
@@ -2562,7 +2571,10 @@ void action_toggle_scene_mode() {
 			}
 		}
 		else {
+			actor.stopReplayRecording();
+
 			assign_actor_to_relationship_group(actorPed, getDefaultRelationshipGroup());
+				//move the actor if he has a waypoint and if he's not the player
 			PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorPed, true);
 			//AI::TASK_STAND_STILL(actorShortcut[i], -1);
 			AI::CLEAR_PED_TASKS(actorPed);
