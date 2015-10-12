@@ -8,6 +8,10 @@
 #include "script.h"
 #include "ActorRecording.h"
 
+//forward declaration
+class ActorRecordingPlayback;
+class ActorRecordingItem;
+
 class Actor
 {
 private:
@@ -113,6 +117,8 @@ public:
 	void startReplayRecording(DWORD tickStart);
 	void stopReplayRecording();
 	void resumeReplayRecording();
+
+	bool isCurrentlyPlayingRecording();
 
 	ActorRecordingPlayback & getRecordingPlayback();
 };

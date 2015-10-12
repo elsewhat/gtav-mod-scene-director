@@ -58,10 +58,11 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_VEHICLE_COSMETIC = 47,
 	SUBMENU_ITEM_WALK_SPEED=48,
 	SUBMENU_ITEM_DRIVING_MODE = 49,
-	SUBMENU_ITEM_BLACKOUT = 50,
-	SUBMENU_ITEM_TIMELAPSE = 51,
-	SUBMENU_ITEM_WEATHER = 52,
-	SUBMENU_ITEM_WIND = 53,
+	SUBMENU_ITEM_TEST_RECORDING = 50,
+	SUBMENU_ITEM_BLACKOUT = 60,
+	SUBMENU_ITEM_TIMELAPSE = 61,
+	SUBMENU_ITEM_WEATHER = 62,
+	SUBMENU_ITEM_WIND = 63,
 
 
 
@@ -164,7 +165,7 @@ const std::string currentDateTime() {
 	return buf;
 }
 
-void log_to_file(std::string message, bool bAppend = true) {
+void log_to_file(std::string message, bool bAppend) {
 	if (1) {
 		std::ofstream logfile;
 		char* filename = "scene_director.log";
@@ -600,11 +601,32 @@ void draw_submenu_player(int drawIndex) {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-
-	DRAW_TEXT("Start recording", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	if (actor.hasRecording()) {
+		DRAW_TEXT("Re-record actor", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}
+	else {
+		DRAW_TEXT("Record actor", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	}
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-	
+
+	if (actor.hasRecording()) {
+		drawIndex++;
+		submenu_index++;
+
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_TEST_RECORDING;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT("Test recording", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+
+
 	drawIndex++;
 	submenu_index++;
 
@@ -2585,17 +2607,17 @@ void action_record_scene_for_actor() {
 				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed,0)) {
 					Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 
-					ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorVeh, actorLocation);
+					ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh );
 					actorRecording.push_back(recordingItem);
 
-					log_to_file(recordingItem.to_string());
+					log_to_file(recordingItem.toString());
 				}
 				else {
 					float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
 					ActorMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorHeading);
 					actorRecording.push_back(recordingItem);
 
-					log_to_file(recordingItem.to_string());
+					log_to_file(recordingItem.toString());
 				}
 
 				tickLast = tickNow;
@@ -2636,58 +2658,62 @@ void action_start_replay_recording_for_actor(Actor actor) {
 }
 
 void update_tick_recording_replay(Actor actor) {
+	Ped actorPed = actor.getActorPed();
+	DWORD ticksNow = GetTickCount();
+
 	ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
 
 	ActorRecordingItem recordingItem = actor.getRecordingAt(recordingPlayback.getRecordingItemIndex());
 
-	/*
-	Vector3 targetLocation = recordingItem.getLocation();
-	playback_recording_to_waypoint(actorPed, targetLocation);
-	bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0);
-	bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(actorPed);
-	bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(actorPed);
-	bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(actorPed);
-
-	float minDistance = 4.0;
-
-	if (isPedInHeli) {
-		minDistance = 50.0;
-	}
-	else if (isPedInPlane) {
-		minDistance = 100.0;
-	}
-	else if (isPedInBoat) {
-		minDistance = 60.0;
-	}
-	else if (isInVehicle) {
-		minDistance = 15.0;
-	}
-
-	int counter = 0;
-	while (counter<100) {
-		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
-		float distanceToTarget = SYSTEM::VDIST(currentLocation.x, currentLocation.y, currentLocation.z, targetLocation.x, targetLocation.y, targetLocation.z);
-
-		log_to_file("Distance " + std::to_string(distanceToTarget));
-
-		if (distanceToTarget < minDistance) {
-			log_to_file("Next waypoint");
-			break;
+	//special handling for the first item. Wait untill we start it
+	if (recordingPlayback.getHasFirstItemPlayback() == false) {
+		
+		DWORD ticksPlaybackStart  = recordingPlayback.getTicksPlaybackStarted();
+		DWORD ticksDeltaStartFirst = recordingItem.getTicksAfterRecordStart();
+		if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst) {
+			return;
 		}
+		else {
+			recordingPlayback.setHasFirstItemPlayback(true);
+			log_to_file("Starting first recording item");
 
-		¨//WAIT(300);
-		counter++;
-	}*/
+			recordingItem.executeNativesForRecording(actor);
+		}
+	}
 
+	//check every recordingItem.getTicksDeltaCheckCompletion() ticks
+	if (ticksNow >= recordingPlayback.getTickLastCheckOfCurrentItem() + recordingItem.getTicksDeltaCheckCompletion()) {
+		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
+		log_to_file(std::to_string(ticksNow) + " checking for completion of item "+ recordingItem.toString() );
 
+		if (recordingItem.isRecordingItemCompleted(actor, currentLocation)) {
+			//skip to next or end if this is the last 
+			if (recordingPlayback.isCurrentRecordingItemLast()) {
+				recordingPlayback.setPlaybackCompleted();
+				actor.stopReplayRecording();
+			}
+			else {
+				recordingPlayback.nextRecordingItemIndex(GetTickCount());
+				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordingItemIndex());
+				log_to_file("Starting next recording item");
+				recordingItem.executeNativesForRecording(actor);
+			}
+		}
+		else {
+			recordingPlayback.setTickLastCheckOfCurrentItem(ticksNow);
+		}
+	}
 
 }
 
 void action_submenu_active_selected() {
 	log_to_file("action_submenu_active_selected " + std::to_string(submenu_active_action));
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	//switch to actor
 	if (submenu_active_action == SUBMENU_ITEM_RECORD_PLAYER) {
 		action_record_scene_for_actor();
+	} else	if (submenu_active_action == SUBMENU_ITEM_TEST_RECORDING) {
+		actor.startReplayRecording(GetTickCount());
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_REMOVE_FROM_SLOT) {
 		//menu_active_action is the index of the actor from the main menu
@@ -3591,7 +3617,12 @@ void main()
 		check_player_model();
 
 		//check if any recordings should be played
-
+		/*
+		for (auto & actor  : actors) {
+			if (actor.isNullActor() != false && actor.isCurrentlyPlayingRecording()) {
+				update_tick_recording_replay(actor);
+			}
+		}*/
 
 		//Wait for next tick
 		WAIT(0);
@@ -3624,7 +3655,7 @@ void ScriptMain()
 	
 
 	create_relationship_groups();
-	//log_to_file("Screen Director initialized");
-	//log_to_file("Value of test property from config file: " + std::to_string(test_property));
+	log_to_file("Screen Director initialized");
+
 	main();
 }

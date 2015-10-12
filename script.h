@@ -9,8 +9,8 @@
 #include "..\..\inc\natives.h"
 #include "..\..\inc\types.h"
 #include "..\..\inc\enums.h"
-
 #include "..\..\inc\main.h"
+#include <string>
 
 void ScriptMain();
 
@@ -27,3 +27,7 @@ enum VEHICLE_TYPE {
 	VEHICLE_TYPE_SUB,
 	VEHICLE_TYPE_BIKE
 };
+
+void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord);
+void log_to_file(std::string message, bool bAppend = true);
+void set_status_text(std::string text);

@@ -215,7 +215,7 @@ void Actor::setHasRecording(bool hasRecording)
 void Actor::startReplayRecording(DWORD tickStart)
 {
 	m_replayRecordingInProgress = true;
-	m_actorRecordingPlayback = ActorRecordingPlayback(tickStart);
+	m_actorRecordingPlayback = ActorRecordingPlayback(tickStart, m_actorRecordingItems.size());
 }
 
 void Actor::stopReplayRecording()
@@ -226,6 +226,11 @@ void Actor::stopReplayRecording()
 void Actor::resumeReplayRecording()
 {
 	m_replayRecordingInProgress = true;
+}
+
+bool Actor::isCurrentlyPlayingRecording()
+{
+	return m_replayRecordingInProgress;
 }
 
 ActorRecordingPlayback & Actor::getRecordingPlayback()
