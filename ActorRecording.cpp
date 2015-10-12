@@ -146,7 +146,6 @@ ActorRecordingPlayback::ActorRecordingPlayback(DWORD tickStart, int maxRecording
 	m_recordingItemIndex = 0;
 	m_ticksStartCurrentItem = tickStart;
 	m_ticksPlaybackStarted = tickStart;
-	m_playbackCompleted = false;
 	m_maxRecordingItemIndex = maxRecordingItemIndex;
 }
 
@@ -167,11 +166,11 @@ void ActorRecordingPlayback::setRecordingItemIndex(int index)
 
 void ActorRecordingPlayback::nextRecordingItemIndex(DWORD ticksNow)
 {
-	m_recordingItemIndex++;
+	m_recordingItemIndex = m_recordingItemIndex+1;
 	m_ticksLastCheckOfCurrentItem = ticksNow;
 }
 
-bool ActorRecordingPlayback::isCurrentRecordingItemLast()
+bool ActorRecordingPlayback::isCurrentRecordedItemLast()
 {
 	if (m_recordingItemIndex + 1 >= m_maxRecordingItemIndex) {
 		return true;
@@ -182,9 +181,14 @@ bool ActorRecordingPlayback::isCurrentRecordingItemLast()
 
 }
 
-int ActorRecordingPlayback::getRecordingItemIndex()
+int ActorRecordingPlayback::getRecordedItemIndex()
 {
 	return m_recordingItemIndex;
+}
+
+int ActorRecordingPlayback::getNumberOfRecordedItems()
+{
+	return m_maxRecordingItemIndex;
 }
 
 void ActorRecordingPlayback::setPlaybackCompleted()
@@ -195,6 +199,23 @@ void ActorRecordingPlayback::setPlaybackCompleted()
 bool ActorRecordingPlayback::hasPlaybackCompleted()
 {
 	return m_playbackCompleted;
+}
+
+void ActorRecordingPlayback::setHasTeleportedToStartLocation(DWORD ticksNow)
+{
+	m_hasTeleportedToStartLocation = true;
+	m_ticksTeleportStartLocation = ticksNow;
+}
+
+
+bool ActorRecordingPlayback::hasTeleportedToStartLocation()
+{
+	return m_hasTeleportedToStartLocation;
+}
+
+DWORD ActorRecordingPlayback::getTicksTeleportedToStartLocation()
+{
+	return m_ticksTeleportStartLocation;
 }
 
 void ActorRecordingPlayback::setTickLastCheckOfCurrentItem(DWORD ticks)
@@ -215,4 +236,9 @@ void ActorRecordingPlayback::setHasFirstItemPlayback(bool hasPlaybacked)
 bool ActorRecordingPlayback::getHasFirstItemPlayback()
 {
 	return m_hasFirstItemPlayback;
+}
+
+std::string ActorRecordingPlayback::toString()
+{
+	return "ActorRecordingPlayback getHasFirstItemPlayback()=" + std::to_string(getHasFirstItemPlayback()) + " getRecordedItemIndex()" + std::to_string(getRecordedItemIndex());
 }

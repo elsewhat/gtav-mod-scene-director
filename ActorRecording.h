@@ -50,13 +50,15 @@ public:
 
 class ActorRecordingPlayback {
 protected:
-	bool m_hasFirstItemPlayback;
-	bool m_playbackCompleted;
+	bool m_hasFirstItemPlayback = false;;
+	bool m_playbackCompleted = false;
+	bool m_hasTeleportedToStartLocation = false;
 	int m_recordingItemIndex;
 	int m_maxRecordingItemIndex;
 	DWORD m_ticksStartCurrentItem;
 	DWORD m_ticksLastCheckOfCurrentItem;
 	DWORD m_ticksPlaybackStarted;
+	DWORD m_ticksTeleportStartLocation;
 public:
 	ActorRecordingPlayback();
 	ActorRecordingPlayback(DWORD tickStart, int nrOfRecordedItems);
@@ -66,15 +68,22 @@ public:
 
 	void setRecordingItemIndex(int index);
 	void nextRecordingItemIndex(DWORD ticksNow);
-	bool isCurrentRecordingItemLast();
-	int getRecordingItemIndex();
+	bool isCurrentRecordedItemLast();
+	int getRecordedItemIndex();
+	int getNumberOfRecordedItems();
 
 	void setPlaybackCompleted();
 	bool hasPlaybackCompleted();
+
+	void setHasTeleportedToStartLocation(DWORD ticksNow);
+	bool hasTeleportedToStartLocation();
+	DWORD getTicksTeleportedToStartLocation();
 
 	void setTickLastCheckOfCurrentItem(DWORD ticks);
 	DWORD getTickLastCheckOfCurrentItem();
 
 	void setHasFirstItemPlayback(bool hasPlaybacked);
 	bool getHasFirstItemPlayback();
+
+	std::string toString();
 };

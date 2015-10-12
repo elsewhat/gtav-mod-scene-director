@@ -20,31 +20,31 @@ private:
 	
 	SCENE_MODE m_sceneStatus;
 	
-	bool m_hasWaypoint;
+	bool m_hasWaypoint=false;
 	Vector3 m_waypoint;
 
-	bool m_hasStartLocation;
+	bool m_hasStartLocation=false;
 	Vector3 m_startLocation;
 	float m_startLocationHeading;
 	
-	bool m_hasSpotlight;
+	bool m_hasSpotlight = false;
 	SPOT_LIGHT_TYPE m_spotlightType;
 	SpotLightColor m_spotlightColor;
 	
-	bool m_hasWalkingStyle;
+	bool m_hasWalkingStyle = false;
 	ClipSet m_walkingStyle;
 
 	RelationshipGroup m_relationshipGroup;
 	
-	bool m_vehicleNoDamage;
+	bool m_vehicleNoDamage = false;
 	
 	float m_walkingSpeed;
 	
 	DrivingMode m_drivingMode;
 
-	bool m_hasRecording;
+	bool m_hasRecording = false;
 	std::vector<ActorRecordingItem> m_actorRecordingItems;
-	bool m_replayRecordingInProgress;
+	bool m_replayRecordingInProgress = false;
 	ActorRecordingPlayback m_actorRecordingPlayback;
 
 
@@ -120,5 +120,6 @@ public:
 
 	bool isCurrentlyPlayingRecording();
 
-	ActorRecordingPlayback & getRecordingPlayback();
+	ActorRecordingPlayback& getRecordingPlayback();
+	void setRecordingPlayback(ActorRecordingPlayback recordingPlayback);
 };

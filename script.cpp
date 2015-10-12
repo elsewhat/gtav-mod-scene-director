@@ -54,11 +54,12 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_SPOT_LIGHT_COLOR = 43,
 	SUBMENU_ITEM_WALK = 44,
 	SUBMENU_ITEM_RELATIONSHIP = 45,
-	SUBMENU_ITEM_HEALTH=46,
+	SUBMENU_ITEM_HEALTH = 46,
 	SUBMENU_ITEM_VEHICLE_COSMETIC = 47,
-	SUBMENU_ITEM_WALK_SPEED=48,
+	SUBMENU_ITEM_WALK_SPEED = 48,
 	SUBMENU_ITEM_DRIVING_MODE = 49,
 	SUBMENU_ITEM_TEST_RECORDING = 50,
+	SUBMENU_ITEM_IS_PLAYING_RECORDING = 51,
 	SUBMENU_ITEM_BLACKOUT = 60,
 	SUBMENU_ITEM_TIMELAPSE = 61,
 	SUBMENU_ITEM_WEATHER = 62,
@@ -610,7 +611,7 @@ void draw_submenu_player(int drawIndex) {
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 
-	if (actor.hasRecording()) {
+	if (actor.hasRecording() && !actor.isCurrentlyPlayingRecording()) {
 		drawIndex++;
 		submenu_index++;
 
@@ -623,6 +624,25 @@ void draw_submenu_player(int drawIndex) {
 		}
 
 		DRAW_TEXT("Test recording", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+
+	if (actor.isCurrentlyPlayingRecording()) {
+		drawIndex++;
+		submenu_index++;
+
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_IS_PLAYING_RECORDING;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		int currentIndex = actor.getRecordingPlayback().getRecordedItemIndex()+1;
+		int maxIndex = actor.getRecordingPlayback().getNumberOfRecordedItems();
+		std::string playbackStatus = "Playback: " + std::to_string(currentIndex) + " / " + std::to_string(maxIndex);
+		DRAW_TEXT(strdup(playbackStatus.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 	}
 
@@ -2657,27 +2677,47 @@ void action_start_replay_recording_for_actor(Actor actor) {
 
 }
 
-void update_tick_recording_replay(Actor actor) {
+void update_tick_recording_replay(Actor & actor) {
 	Ped actorPed = actor.getActorPed();
 	DWORD ticksNow = GetTickCount();
 
+	//get the recording playback controller. Remember that this is by value and must be updated back to the actor
 	ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
 
-	ActorRecordingItem recordingItem = actor.getRecordingAt(recordingPlayback.getRecordingItemIndex());
+	ActorRecordingItem recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+
+	if (!recordingPlayback.hasTeleportedToStartLocation()) {
+		Entity entityToTeleport = actorPed;
+		if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
+			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
+		}
+
+		teleport_entity_to_location(entityToTeleport, actor.getStartLocation(), true);
+		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
+		recordingPlayback.setHasTeleportedToStartLocation(ticksNow);
+		return;
+	}
 
 	//special handling for the first item. Wait untill we start it
-	if (recordingPlayback.getHasFirstItemPlayback() == false) {
+	if (!recordingPlayback.getHasFirstItemPlayback()) {
 		
-		DWORD ticksPlaybackStart  = recordingPlayback.getTicksPlaybackStarted();
-		DWORD ticksDeltaStartFirst = recordingItem.getTicksAfterRecordStart();
-		if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst) {
-			return;
+		if (ticksNow >= recordingPlayback.getTicksTeleportedToStartLocation() + 3000) {
+			DWORD ticksPlaybackStart = recordingPlayback.getTicksPlaybackStarted();
+			DWORD ticksDeltaStartFirst = recordingItem.getTicksAfterRecordStart();
+			if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst) {
+				return;
+			}
+			else {
+				recordingPlayback.setHasFirstItemPlayback(true);
+				recordingPlayback.setTickLastCheckOfCurrentItem(ticksNow);
+				log_to_file("Starting first recording item");
+
+				recordingItem.executeNativesForRecording(actor);
+			}
 		}
 		else {
-			recordingPlayback.setHasFirstItemPlayback(true);
-			log_to_file("Starting first recording item");
-
-			recordingItem.executeNativesForRecording(actor);
+			log_to_file("Waiting a bit after teleport to start location");
+			return;
 		}
 	}
 
@@ -2688,14 +2728,14 @@ void update_tick_recording_replay(Actor actor) {
 
 		if (recordingItem.isRecordingItemCompleted(actor, currentLocation)) {
 			//skip to next or end if this is the last 
-			if (recordingPlayback.isCurrentRecordingItemLast()) {
+			if (recordingPlayback.isCurrentRecordedItemLast()) {
 				recordingPlayback.setPlaybackCompleted();
 				actor.stopReplayRecording();
 			}
 			else {
 				recordingPlayback.nextRecordingItemIndex(GetTickCount());
-				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordingItemIndex());
-				log_to_file("Starting next recording item");
+				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem.toString());
 				recordingItem.executeNativesForRecording(actor);
 			}
 		}
@@ -2703,7 +2743,6 @@ void update_tick_recording_replay(Actor actor) {
 			recordingPlayback.setTickLastCheckOfCurrentItem(ticksNow);
 		}
 	}
-
 }
 
 void action_submenu_active_selected() {
@@ -2713,6 +2752,7 @@ void action_submenu_active_selected() {
 	if (submenu_active_action == SUBMENU_ITEM_RECORD_PLAYER) {
 		action_record_scene_for_actor();
 	} else	if (submenu_active_action == SUBMENU_ITEM_TEST_RECORDING) {
+		log_to_file("Will test recording for " + std::to_string(actor.getActorPed()));
 		actor.startReplayRecording(GetTickCount());
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_REMOVE_FROM_SLOT) {
@@ -3617,12 +3657,11 @@ void main()
 		check_player_model();
 
 		//check if any recordings should be played
-		/*
 		for (auto & actor  : actors) {
-			if (actor.isNullActor() != false && actor.isCurrentlyPlayingRecording()) {
+			if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
 				update_tick_recording_replay(actor);
 			}
-		}*/
+		}
 
 		//Wait for next tick
 		WAIT(0);

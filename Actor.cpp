@@ -12,9 +12,6 @@ Actor::Actor(Ped ped) {
 	m_ped = ped;
 	setRelationshipGroup(getDefaultRelationshipGroup());
 	setDrivingMode(getDefaultDrivingMode());
-	m_hasWalkingStyle = false;
-	m_hasSpotlight = false;
-	m_hasWaypoint = false;
 }
 
 Ped Actor::getActorPed()
@@ -233,9 +230,14 @@ bool Actor::isCurrentlyPlayingRecording()
 	return m_replayRecordingInProgress;
 }
 
-ActorRecordingPlayback & Actor::getRecordingPlayback()
+ActorRecordingPlayback& Actor::getRecordingPlayback()
 {
 	return m_actorRecordingPlayback;
+}
+
+void Actor::setRecordingPlayback(ActorRecordingPlayback recordingPlayback)
+{
+	m_actorRecordingPlayback = recordingPlayback;
 }
 
 bool Actor::hasRecording()
