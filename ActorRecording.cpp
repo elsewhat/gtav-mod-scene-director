@@ -7,7 +7,7 @@
 ActorRecordingItem::ActorRecordingItem(DWORD ticksStart, Ped actor, Vector3 location)
 {
 	m_ticksAfterRecordStart = ticksStart;
-	m_actor = actor;
+	m_actorPed = actor;
 	m_location = location;
 	m_ticksDeltaCheckCompletion = 300;
 }
@@ -71,7 +71,7 @@ DWORD ActorRecordingItem::getTicksDeltaCheckCompletion()
 
 std::string ActorRecordingItem::toString()
 {
-	return "Recording start for actor " + std::to_string(m_actor) + " at " + std::to_string(m_ticksAfterRecordStart);
+	return "Recording start for actor " + std::to_string(m_actorPed) + " at " + std::to_string(m_ticksAfterRecordStart);
 }
 
 ActorMovementRecordingItem::ActorMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float heading):ActorRecordingItem(ticksStart, actor, location)
@@ -115,19 +115,19 @@ std::string ActorVehicleRecordingItem::toString()
 VEHICLE_TYPE ActorVehicleRecordingItem::_getVehicleTypeFromNatives()
 {
 	//natives for VEHICLE all require the Hash of the model, so checking actor instead
-	if (PED::IS_PED_IN_ANY_HELI(m_actor)) {
+	if (PED::IS_PED_IN_ANY_HELI(m_actorPed)) {
 		return VEHICLE_TYPE_HELI;
 	}
-	else if (PED::IS_PED_IN_ANY_PLANE(m_actor)) {
+	else if (PED::IS_PED_IN_ANY_PLANE(m_actorPed)) {
 		return VEHICLE_TYPE_PLANE;
 	}
-	else if (PED::IS_PED_IN_ANY_BOAT(m_actor)) {
+	else if (PED::IS_PED_IN_ANY_BOAT(m_actorPed)) {
 		return VEHICLE_TYPE_BOAT;
 	}
-	else if (PED::IS_PED_IN_ANY_SUB(m_actor)) {
+	else if (PED::IS_PED_IN_ANY_SUB(m_actorPed)) {
 		return VEHICLE_TYPE_SUB;
 	}
-	else if (PED::IS_PED_ON_ANY_BIKE(m_actor)){
+	else if (PED::IS_PED_ON_ANY_BIKE(m_actorPed)){
 		return VEHICLE_TYPE_BIKE;
 	}
 	else {
@@ -241,4 +241,30 @@ bool ActorRecordingPlayback::getHasFirstItemPlayback()
 std::string ActorRecordingPlayback::toString()
 {
 	return "ActorRecordingPlayback getHasFirstItemPlayback()=" + std::to_string(getHasFirstItemPlayback()) + " getRecordedItemIndex()" + std::to_string(getRecordedItemIndex());
+}
+
+ActorVehicleEnterRecordingItem::ActorVehicleEnterRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh, int vehicleSeat, float enterVehicleSpeed) : ActorVehicleRecordingItem(ticksStart, actor, location, veh)
+{
+	m_vehicleSeat = vehicleSeat;
+	m_enterVehicleSpeed = enterVehicleSpeed;
+}
+
+std::string ActorVehicleEnterRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorVehicleEnterRecordingItem Vehicle " + std::to_string(m_vehicle) + " Seat : " + std::to_string(m_vehicleSeat) + " Speed:" + std::to_string(m_enterVehicleSpeed);
+}
+
+void ActorVehicleEnterRecordingItem::executeNativesForRecording(Actor actor)
+{
+	AI::TASK_ENTER_VEHICLE(m_actorPed, m_vehicle, -1, m_vehicleSeat, m_enterVehicleSpeed, 1, 0);
+}
+
+bool ActorVehicleEnterRecordingItem::isRecordingItemCompleted(Actor actor, Vector3 location)
+{
+	if (PED::IS_PED_SITTING_IN_VEHICLE(m_actorPed,m_vehicle)) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }

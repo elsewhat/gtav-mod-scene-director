@@ -2562,9 +2562,10 @@ void action_toggle_scene_mode() {
 
 			if (actor.hasRecording()) {
 				actor.startReplayRecording(GetTickCount());
-			}else if (actor.hasWaypoint() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID())==false) { //move the actor if he has a waypoint and if he's not the player
-				//first if he's a driver
-				move_to_waypoint(actorPed,actor.getWaypoint(), true);
+			}
+			else if (actor.hasWaypoint() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID()) == false) { //move the actor if he has a waypoint and if he's not the player
+			   //first if he's a driver
+				move_to_waypoint(actorPed, actor.getWaypoint(), true);
 				//second if he's a passenger
 				check_if_ped_is_passenger_and_has_waypoint(actorPed);
 				WAIT(200);
@@ -2574,7 +2575,7 @@ void action_toggle_scene_mode() {
 			actor.stopReplayRecording();
 
 			assign_actor_to_relationship_group(actorPed, getDefaultRelationshipGroup());
-				//move the actor if he has a waypoint and if he's not the player
+			//move the actor if he has a waypoint and if he's not the player
 			PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorPed, true);
 			//AI::TASK_STAND_STILL(actorShortcut[i], -1);
 			AI::CLEAR_PED_TASKS(actorPed);
@@ -2608,8 +2609,13 @@ void action_record_scene_for_actor() {
 		Ped actorPed = actor.getActorPed();
 
 		//the actual recording
-		std::vector<ActorRecordingItem> actorRecording;
+		std::vector<std::reference_wrapper<ActorRecordingItem>> actorRecording;
 		actorRecording.reserve(1000);
+
+		Vehicle previousVehicle = 0;
+		if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+			previousVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+		}
 
 		//1. Store start location
 		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
@@ -2636,17 +2642,39 @@ void action_record_scene_for_actor() {
 
 				//1. Record movement
 				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
-				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed,0)) {
+				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 					Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 
-					ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh );
-					actorRecording.push_back(recordingItem);
+					//check if it's a new vehicle
+					if (previousVehicle != actorVeh) {
+						float enterSpeed = 1.0;
+						int seat = -1;
+						//find seat
+						for (int i = -1; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(actorVeh); i++) {
+							if (VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, i) == actorPed) {
+								seat = i; 
+								break;
+							}
+						}
 
-					log_to_file(recordingItem.toString());
+						static ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh, seat, enterSpeed );
+						actorRecording.push_back(recordingItem);
+						log_to_file(recordingItem.toString()); 
+						previousVehicle = actorVeh;
+
+					}
+					else {
+						static ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh);
+						actorRecording.push_back(recordingItem);
+						log_to_file(recordingItem.toString());
+					}
+
+
+					
 				}
 				else {
 					float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
-					ActorMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorHeading);
+					static ActorMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorHeading);
 					actorRecording.push_back(recordingItem);
 
 					log_to_file(recordingItem.toString());
@@ -2696,7 +2724,7 @@ void update_tick_recording_replay(Actor & actor) {
 	//get the recording playback controller. Remember that this is by value and must be updated back to the actor
 	ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
 
-	ActorRecordingItem recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+	std::reference_wrapper<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
 
 	if (!recordingPlayback.hasTeleportedToStartLocation()) {
 		Entity entityToTeleport = actorPed;
@@ -2715,7 +2743,7 @@ void update_tick_recording_replay(Actor & actor) {
 		
 		if (ticksNow >= recordingPlayback.getTicksTeleportedToStartLocation() + 3000) {
 			DWORD ticksPlaybackStart = recordingPlayback.getTicksPlaybackStarted();
-			DWORD ticksDeltaStartFirst = recordingItem.getTicksAfterRecordStart();
+			DWORD ticksDeltaStartFirst = recordingItem.get().getTicksAfterRecordStart();
 			if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst) {
 				return;
 			}
@@ -2724,7 +2752,7 @@ void update_tick_recording_replay(Actor & actor) {
 				recordingPlayback.setTickLastCheckOfCurrentItem(ticksNow);
 				log_to_file("Starting first recording item");
 
-				recordingItem.executeNativesForRecording(actor);
+				recordingItem.get().executeNativesForRecording(actor);
 			}
 		}
 		else {
@@ -2734,11 +2762,11 @@ void update_tick_recording_replay(Actor & actor) {
 	}
 
 	//check every recordingItem.getTicksDeltaCheckCompletion() ticks
-	if (ticksNow >= recordingPlayback.getTickLastCheckOfCurrentItem() + recordingItem.getTicksDeltaCheckCompletion()) {
+	if (ticksNow >= recordingPlayback.getTickLastCheckOfCurrentItem() + recordingItem.get().getTicksDeltaCheckCompletion()) {
 		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
-		log_to_file(std::to_string(ticksNow) + " checking for completion of item "+ recordingItem.toString() );
+		log_to_file(std::to_string(ticksNow) + " checking for completion of item "+ recordingItem.get().toString() );
 
-		if (recordingItem.isRecordingItemCompleted(actor, currentLocation)) {
+		if (recordingItem.get().isRecordingItemCompleted(actor, currentLocation)) {
 			//skip to next or end if this is the last 
 			if (recordingPlayback.isCurrentRecordedItemLast()) {
 				recordingPlayback.setPlaybackCompleted();
@@ -2747,8 +2775,8 @@ void update_tick_recording_replay(Actor & actor) {
 			else {
 				recordingPlayback.nextRecordingItemIndex(GetTickCount());
 				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
-				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem.toString());
-				recordingItem.executeNativesForRecording(actor);
+				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem.get().toString());
+				recordingItem.get().executeNativesForRecording(actor);
 			}
 		}
 		else {

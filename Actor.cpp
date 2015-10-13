@@ -245,17 +245,17 @@ bool Actor::hasRecording()
 	return m_hasRecording;
 }
 
-void Actor::setRecording(std::vector<ActorRecordingItem> actorRecordingItems)
+void Actor::setRecording(std::vector<std::reference_wrapper<ActorRecordingItem>> actorRecordingItems)
 {
 	m_actorRecordingItems = actorRecordingItems;
 }
 
-std::vector<ActorRecordingItem> Actor::getRecording()
+std::vector<std::reference_wrapper<ActorRecordingItem>> Actor::getRecording()
 {
 	return m_actorRecordingItems;
 }
 
-ActorRecordingItem Actor::getRecordingAt(int index)
+std::reference_wrapper<ActorRecordingItem> Actor::getRecordingAt(int index)
 {
 	return m_actorRecordingItems[index];
 }
