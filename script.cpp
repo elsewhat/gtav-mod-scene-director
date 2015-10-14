@@ -1119,9 +1119,9 @@ void draw_menu() {
 
 
 			if (actors[i].hasRecording()) {
-				DRAW_TEXT("Recording", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+				DRAW_TEXT("Recording", 0.954, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			}else if (actors[i].hasWaypoint()) {
-				DRAW_TEXT("Waypoint", 0.959, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+				DRAW_TEXT("Waypoint", 0.954, 0.885 - (0.04)*drawIndex, 0.18, 0.18, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			}
 
 			if (actors[i].isActorThisPed(playerActor.getActorPed())) {
@@ -2641,14 +2641,19 @@ void action_record_scene_for_actor() {
 			if (tickNow - tickLast >= DELTA_TICKS) {
 				DWORD ticksSinceStart = tickNow - tickStart;
 
-				//1. Record movement
 				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+
+				//Section if the actor is currently in a vehicle
 				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 					Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 
 					//check if it's a new vehicle
 					if (previousVehicle != actorVeh) {
+						
 						float enterSpeed = 1.0;
+						if (AI::IS_PED_RUNNING(actorPed)) {
+							enterSpeed = 2.0;
+						}
 						int seat = -1;
 						//find seat
 						for (int i = -1; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(actorVeh); i++) {
@@ -2658,27 +2663,42 @@ void action_record_scene_for_actor() {
 							}
 						}
 
-						static ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh, seat, enterSpeed );
+						ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh, seat, enterSpeed );
 						actorRecording.push_back(std::make_shared<ActorVehicleEnterRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString()); 
 						previousVehicle = actorVeh;
 
 					}
-					else {
+					else {//Existing vehicle movement
 						ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh);
 						actorRecording.push_back(std::make_shared<ActorVehicleRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
-					}
-
-
-					
+					}	
 				}
 				else {
-					float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
-					static ActorMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorHeading);
-					actorRecording.push_back(std::make_shared<ActorMovementRecordingItem>(recordingItem));
+					//Section if the actors is currently on foot
+					//ActorVehicleExitRecordingItem
+					//If actor was previously in a vehicle, the have exited. Record this
+					if (previousVehicle != 0) {
+						ActorVehicleExitRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, previousVehicle);
+						actorRecording.push_back(std::make_shared<ActorVehicleExitRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+						previousVehicle = 0;
+					}
+					else {//record movement on foot
+						float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
 
-					log_to_file(recordingItem.toString());
+						float walkSpeed = 1.0;
+						if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
+							walkSpeed = 2.0;
+						}
+
+						ActorMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, walkSpeed);
+						actorRecording.push_back(std::make_shared<ActorMovementRecordingItem>(recordingItem));
+
+						log_to_file(recordingItem.toString());
+					}
+
 				}
 
 				tickLast = tickNow;

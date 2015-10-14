@@ -30,11 +30,25 @@ public:
 
 class ActorMovementRecordingItem : public ActorRecordingItem {
 protected:
+	float m_walkSpeed;
+public:
+	ActorMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float walkSpeed);
+	float getWalkSpeed();
+	virtual void executeNativesForRecording(Actor actor);
+	virtual bool isRecordingItemCompleted(Actor actor, Vector3 location);
+	std::string toString() override;
+
+};
+
+class ActorStandingStillRecordingItem : public ActorRecordingItem {
+protected:
 	float m_heading;
 public:
-	ActorMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float heading);
+	ActorStandingStillRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float heading);
 	float getHeading();
 	std::string toString() override;
+	void executeNativesForRecording(Actor actor) override;
+	bool isRecordingItemCompleted(Actor actor, Vector3 location) override;
 
 };
 
@@ -56,6 +70,17 @@ protected:
 	float m_enterVehicleSpeed;
 public:
 	ActorVehicleEnterRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh, int vehicleSeat,float enterVehicleSpeed);
+	std::string toString() override;
+	void executeNativesForRecording(Actor actor) override;
+	bool isRecordingItemCompleted(Actor actor, Vector3 location) override;
+};
+
+class ActorVehicleExitRecordingItem : public ActorVehicleRecordingItem {
+protected:
+	int m_vehicleSeat;
+	float m_enterVehicleSpeed;
+public:
+	ActorVehicleExitRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh);
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
 	bool isRecordingItemCompleted(Actor actor, Vector3 location) override;
