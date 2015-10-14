@@ -3,6 +3,7 @@
 #include "ActorRecording.h"
 #include "script.h"
 #include "Actor.h"
+#include "scenario.h"
 
 ActorRecordingItem::ActorRecordingItem(DWORD ticksStart, Ped actor, Vector3 location)
 {
@@ -28,7 +29,7 @@ void ActorRecordingItem::executeNativesForRecording(Actor actor)
 	playback_recording_to_waypoint(actor.getActorPed(), m_location);
 }
 
-bool ActorRecordingItem::isRecordingItemCompleted(Actor actor, Vector3 location)
+bool ActorRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
 {
 	Ped actorPed = actor.getActorPed();
 	bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0);
@@ -68,27 +69,41 @@ DWORD ActorRecordingItem::getTicksDeltaCheckCompletion()
 	return m_ticksDeltaCheckCompletion;
 }
 
+void ActorRecordingItem::setTicksLength(DWORD ticks)
+{
+	m_ticksLength = ticks;
+}
+
+DWORD ActorRecordingItem::getTicksLength()
+{
+	return m_ticksLength;
+}
+
 std::string ActorRecordingItem::toString()
 {
 	return "Recording start for actor " + std::to_string(m_actorPed) + " at " + std::to_string(m_ticksAfterRecordStart);
 }
 
-ActorMovementRecordingItem::ActorMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float walkSpeed):ActorRecordingItem(ticksStart, actor, location)
+void ActorRecordingItem::executeNativesAfterRecording(Actor actor)
+{
+}
+
+ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float walkSpeed):ActorRecordingItem(ticksStart, actor, location)
 {
 	m_walkSpeed = walkSpeed;
 }
 
-float ActorMovementRecordingItem::getWalkSpeed()
+float ActorOnFootMovementRecordingItem::getWalkSpeed()
 {
 	return m_walkSpeed;
 }
 
-void ActorMovementRecordingItem::executeNativesForRecording(Actor actor)
+void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor)
 {
 	AI::TASK_GO_STRAIGHT_TO_COORD(m_actorPed, m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, 27.0f, 0.5f);
 }
 
-bool ActorMovementRecordingItem::isRecordingItemCompleted(Actor actor, Vector3 location)
+bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
 {
 	float minDistance = 4.0;
 	if (m_walkSpeed > 1.0) {
@@ -107,7 +122,7 @@ bool ActorMovementRecordingItem::isRecordingItemCompleted(Actor actor, Vector3 l
 }
 
 
-std::string ActorMovementRecordingItem::toString()
+std::string ActorOnFootMovementRecordingItem::toString()
 {
 	return ActorRecordingItem::toString() + " ActorMovementRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Speed " + std::to_string(m_walkSpeed);
 }
@@ -129,6 +144,7 @@ VEHICLE_TYPE ActorVehicleRecordingItem::getVehicleType()
 {
 	return m_vehicleType;
 }
+
 
 std::string ActorVehicleRecordingItem::toString()
 {
@@ -172,10 +188,6 @@ ActorRecordingPlayback::ActorRecordingPlayback(DWORD tickStart, int maxRecording
 	m_maxRecordingItemIndex = maxRecordingItemIndex;
 }
 
-DWORD ActorRecordingPlayback::getTicksAfterCurrentItemStarted()
-{
-	return m_ticksStartCurrentItem;
-}
 
 DWORD ActorRecordingPlayback::getTicksPlaybackStarted()
 {
@@ -191,6 +203,7 @@ void ActorRecordingPlayback::nextRecordingItemIndex(DWORD ticksNow)
 {
 	m_recordingItemIndex = m_recordingItemIndex+1;
 	m_ticksLastCheckOfCurrentItem = ticksNow;
+	m_ticksStartCurrentItem = ticksNow;
 }
 
 bool ActorRecordingPlayback::isCurrentRecordedItemLast()
@@ -241,14 +254,19 @@ DWORD ActorRecordingPlayback::getTicksTeleportedToStartLocation()
 	return m_ticksTeleportStartLocation;
 }
 
-void ActorRecordingPlayback::setTickLastCheckOfCurrentItem(DWORD ticks)
+void ActorRecordingPlayback::setTicksLastCheckOfCurrentItem(DWORD ticks)
 {
 	m_ticksLastCheckOfCurrentItem = ticks;
 }
 
-DWORD ActorRecordingPlayback::getTickLastCheckOfCurrentItem()
+DWORD ActorRecordingPlayback::getTicksLastCheckOfCurrentItem()
 {
 	return m_ticksLastCheckOfCurrentItem;
+}
+
+DWORD ActorRecordingPlayback::getTicksStartCurrentItem()
+{
+	return m_ticksStartCurrentItem;
 }
 
 void ActorRecordingPlayback::setHasFirstItemPlayback(bool hasPlaybacked)
@@ -282,7 +300,7 @@ void ActorVehicleEnterRecordingItem::executeNativesForRecording(Actor actor)
 	AI::TASK_ENTER_VEHICLE(m_actorPed, m_vehicle, -1, m_vehicleSeat, m_enterVehicleSpeed, 1, 0);
 }
 
-bool ActorVehicleEnterRecordingItem::isRecordingItemCompleted(Actor actor, Vector3 location)
+bool ActorVehicleEnterRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
 {
 	if (PED::IS_PED_SITTING_IN_VEHICLE(m_actorPed,m_vehicle)) {
 		return true;
@@ -306,7 +324,7 @@ void ActorVehicleExitRecordingItem::executeNativesForRecording(Actor actor)
 	AI::TASK_LEAVE_VEHICLE(m_actorPed, m_vehicle, 0);
 }
 
-bool ActorVehicleExitRecordingItem::isRecordingItemCompleted(Actor actor, Vector3 location)
+bool ActorVehicleExitRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
 {
 	if (PED::IS_PED_SITTING_IN_VEHICLE(m_actorPed, m_vehicle)) {
 		return false;
@@ -342,8 +360,151 @@ void ActorStandingStillRecordingItem::executeNativesForRecording(Actor actor)
 	AI::CLEAR_PED_TASKS(m_actorPed);
 }
 
-bool ActorStandingStillRecordingItem::isRecordingItemCompleted(Actor actor, Vector3 location)
+bool ActorStandingStillRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
 {
 	//will first be checked after m_ticksDeltaCheckCompletion
 	return true;
+}
+
+ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh, float speedInVehicle) : ActorVehicleRecordingItem(ticksStart, actor, location, veh)
+{
+	m_speedInVehicle = speedInVehicle;
+}
+
+std::string ActorVehicleMovementRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorVehicleMovementRecordingItem Vehicle " + std::to_string(m_vehicle) + " speed : " + std::to_string(m_speedInVehicle);
+}
+
+float ActorVehicleMovementRecordingItem::getSpeedInVehicle()
+{
+	return m_speedInVehicle;
+}
+
+void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor)
+{
+	if (PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0)) {
+		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(m_actorPed);
+
+		//we assume pedVehicle is the right vehicle
+
+		//check if player is the driver
+		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
+		if (pedDriver != m_actorPed) {
+			log_to_file("ActorVehicleMovementRecordingItem: Actor (" + std::to_string(m_actorPed) + " is not driver (" + std::to_string(pedDriver) + ") Will do no action");
+			//set_status_text("Ped is not driver. Ignore waypoint");
+		}
+		else {
+
+			if (PED::IS_PED_IN_ANY_HELI(m_actorPed)) {
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, m_speedInVehicle, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+				log_to_file("playback_recording_to_waypoint: Flying in heli with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
+			}
+			else if (PED::IS_PED_IN_ANY_PLANE(m_actorPed)) {
+				AI::TASK_PLANE_MISSION(pedDriver, pedVehicle, 0, 0, m_location.x, m_location.y, m_location.z, 4, 30.0, 50.0, -1, m_speedInVehicle, 50);
+				log_to_file("playback_recording_to_waypoint: Flying in plane with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
+
+			}
+			else if (PED::IS_PED_IN_ANY_BOAT(m_actorPed)) {
+				AI::TASK_BOAT_MISSION(pedDriver, pedVehicle, 0, 0, m_location.x, m_location.y, m_location.z, 4, m_speedInVehicle, 786469, -1.0, 7);
+				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(pedDriver, 1);
+				//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, 0.0, 20.0, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469, 5.0, 1071);
+				log_to_file("playback_recording_to_waypoint: In boat : " + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
+			}
+			else {
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, m_speedInVehicle, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actor.getDrivingMode().value, 5.0, -1);
+				log_to_file("playback_recording_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
+
+			}
+		}
+
+	}
+
+}
+
+bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+{
+	if (PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0)) {
+		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(m_actorPed);
+
+		bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0);
+		bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(m_actorPed);
+		bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(m_actorPed);
+		bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(m_actorPed);
+
+		float minDistance = 4.0;
+
+		if (isPedInHeli) {
+			minDistance = 50.0;
+		}
+		else if (isPedInPlane) {
+			minDistance = 100.0;
+		}
+		else if (isPedInBoat) {
+			minDistance = 60.0;
+		}
+		else if (isInVehicle) {
+			minDistance = 15.0;
+		}
+
+		float distanceToTarget = SYSTEM::VDIST(m_location.x, m_location.y, m_location.z, location.x, location.y, location.z);
+		log_to_file("ActorVehicleMovementRecordingItem: Distance to target: " + std::to_string(distanceToTarget));
+
+		if (distanceToTarget < minDistance) {
+			log_to_file("ActorVehicleMovementRecordingItem: Close enough to target for ActorRecordingItem");
+			return true;
+		}
+		else {
+			return false;
+		}
+
+	}
+	else {
+		//not in any vehicle so return true
+		log_to_file("ActorVehicleMovementRecordingItem: Not in any vehicle so returning true isRecordingItemCompleted");
+		return true;
+	}
+}
+
+ActorScenarioRecordingItem::ActorScenarioRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Scenario scenario): ActorRecordingItem(ticksStart, actor, location)
+{
+	m_scenario = scenario;
+}
+
+Scenario ActorScenarioRecordingItem::getScenario()
+{
+	return m_scenario;
+}
+
+std::string ActorScenarioRecordingItem::toString()
+{
+	log_to_file("ActorScenarioRecordingItem: Enter toString");
+	return ActorRecordingItem::toString() + " ActorScenarioRecordingItem Scenario: " +m_scenario.name + " Length: " + std::to_string(m_ticksLength);
+}
+
+void ActorScenarioRecordingItem::executeNativesForRecording(Actor actor)
+{
+	if (m_scenario.hasEnterAnim) {
+		AI::TASK_START_SCENARIO_IN_PLACE(m_actorPed, m_scenario.name, -1, 1);
+	}
+	else {
+		AI::TASK_START_SCENARIO_IN_PLACE(m_actorPed, m_scenario.name, -1, 0);
+	}
+}
+
+bool ActorScenarioRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+{
+	if (ticksNow - ticksStart >= m_ticksLength) {
+		return true;
+	}
+	else {
+		return false;
+	}
+
+}
+
+void ActorScenarioRecordingItem::executeNativesAfterRecording(Actor actor)
+{
+	log_to_file("ActorScenarioRecordingItem: executeNativesAfterRecording calling AI::CLEAR_PED_TASKS");
+	AI::CLEAR_PED_TASKS(m_actorPed);
 }

@@ -2,11 +2,13 @@
 #include <vector>
 #include "..\..\inc\types.h"
 #include "script.h"
+#include "scenario.h"
 #include <string>
 #include <memory>
 
 //forward declaration
 class Actor;
+class Scenario;
 
 class ActorRecordingItem {
 protected:
@@ -14,6 +16,7 @@ protected:
 	Ped m_actorPed;
 	Vector3 m_location;
 	DWORD m_ticksDeltaCheckCompletion;
+	DWORD m_ticksLength;
 public:
 	ActorRecordingItem(DWORD ticksStart, Ped actorPed, Vector3 location);
 
@@ -23,19 +26,23 @@ public:
 
 	DWORD getTicksDeltaCheckCompletion();
 
+	void setTicksLength(DWORD ticks);
+	DWORD getTicksLength();
+
 	virtual void executeNativesForRecording(Actor actor);
-	virtual bool isRecordingItemCompleted(Actor actor, Vector3 location);
+	virtual bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow,Actor actor, Vector3 location);
 	virtual std::string toString();
+	virtual void executeNativesAfterRecording(Actor actor);
 };
 
-class ActorMovementRecordingItem : public ActorRecordingItem {
+class ActorOnFootMovementRecordingItem : public ActorRecordingItem {
 protected:
 	float m_walkSpeed;
 public:
-	ActorMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float walkSpeed);
+	ActorOnFootMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float walkSpeed);
 	float getWalkSpeed();
 	virtual void executeNativesForRecording(Actor actor);
-	virtual bool isRecordingItemCompleted(Actor actor, Vector3 location);
+	virtual bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location);
 	std::string toString() override;
 
 };
@@ -48,7 +55,21 @@ public:
 	float getHeading();
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+
+};
+
+class ActorScenarioRecordingItem : public ActorRecordingItem {
+protected:
+	Scenario m_scenario;
+
+public:
+	ActorScenarioRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Scenario scenario);
+	Scenario getScenario();
+	std::string toString() override;
+	void executeNativesForRecording(Actor actor) override;
+	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	void executeNativesAfterRecording(Actor actor) override;
 
 };
 
@@ -72,7 +93,7 @@ public:
 	ActorVehicleEnterRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh, int vehicleSeat,float enterVehicleSpeed);
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
 };
 
 class ActorVehicleExitRecordingItem : public ActorVehicleRecordingItem {
@@ -83,7 +104,18 @@ public:
 	ActorVehicleExitRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh);
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+};
+
+class ActorVehicleMovementRecordingItem : public ActorVehicleRecordingItem {
+protected:
+	float m_speedInVehicle;
+public:
+	ActorVehicleMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh,  float speedInVehicle);
+	std::string toString() override;
+	float getSpeedInVehicle();
+	void executeNativesForRecording(Actor actor) override;
+	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
 };
 
 class ActorRecordingPlayback {
@@ -101,7 +133,6 @@ public:
 	ActorRecordingPlayback();
 	ActorRecordingPlayback(DWORD tickStart, int nrOfRecordedItems);
 
-	DWORD getTicksAfterCurrentItemStarted();
 	DWORD getTicksPlaybackStarted();
 
 	void setRecordingItemIndex(int index);
@@ -117,8 +148,10 @@ public:
 	bool hasTeleportedToStartLocation();
 	DWORD getTicksTeleportedToStartLocation();
 
-	void setTickLastCheckOfCurrentItem(DWORD ticks);
-	DWORD getTickLastCheckOfCurrentItem();
+	void setTicksLastCheckOfCurrentItem(DWORD ticks);
+	DWORD getTicksLastCheckOfCurrentItem();
+
+	DWORD getTicksStartCurrentItem();
 
 	void setHasFirstItemPlayback(bool hasPlaybacked);
 	bool getHasFirstItemPlayback();

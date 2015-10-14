@@ -1300,9 +1300,6 @@ void playback_recording_to_waypoint(Ped ped, Vector3 waypointCoord) {
 			//set_status_text("Ped is not driver. Ignore waypoint");
 		}
 		else {
-			actor.setHasWaypoint(true);
-			actor.setWaypoint(waypointCoord);
-
 			float vehicleMaxSpeed = VEHICLE::_GET_VEHICLE_MAX_SPEED(ENTITY::GET_ENTITY_MODEL(pedVehicle));
 
 			if (PED::IS_PED_IN_ANY_HELI(ped)) {
@@ -2618,6 +2615,13 @@ void action_record_scene_for_actor() {
 			previousVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 		}
 
+		float lastEntitySpeed = 0.0;
+		Scenario currentScenario;
+		DWORD ticksCurrentScenarioStart;
+		bool isActorUsingScenario = false;
+		std::shared_ptr<ActorScenarioRecordingItem> ongoingActorScenarioRecordingItem;
+
+
 		//1. Store start location
 		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
 		actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
@@ -2626,20 +2630,20 @@ void action_record_scene_for_actor() {
 		WAIT(300);
 
 		bool bRecording = true;
-		DWORD tickStart = GetTickCount();
-		DWORD tickLast = tickStart;
-		DWORD tickNow = tickStart;
+		DWORD ticksStart = GetTickCount();
+		DWORD ticksLast = ticksStart;
+		DWORD ticksNow = ticksStart;
 		CONST DWORD DELTA_TICKS = 1000;
 		//4000 works well for boats
 
 		//main loop
 		while (bRecording == true) {
-			tickNow = GetTickCount();
+			ticksNow = GetTickCount();
 
 
 			//record only once pr DELTA_TICKS
-			if (tickNow - tickLast >= DELTA_TICKS) {
-				DWORD ticksSinceStart = tickNow - tickStart;
+			if (ticksNow - ticksLast >= DELTA_TICKS) {
+				DWORD ticksSinceStart = ticksNow - ticksStart;
 
 				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
 
@@ -2670,9 +2674,21 @@ void action_record_scene_for_actor() {
 
 					}
 					else {//Existing vehicle movement
-						ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh);
-						actorRecording.push_back(std::make_shared<ActorVehicleRecordingItem>(recordingItem));
+						float entitySpeed = ENTITY::GET_ENTITY_SPEED(actorVeh);
+						float vehicleMaxSpeed = VEHICLE::_GET_VEHICLE_MAX_SPEED(ENTITY::GET_ENTITY_MODEL(actorVeh));
+						float recordedSpeed = vehicleMaxSpeed;
+						//if both previous and last speed is less than half max speed, we assume it's on purpose
+						if (entitySpeed < (vehicleMaxSpeed / 2.0) && lastEntitySpeed < (vehicleMaxSpeed / 2.0)) {
+							//make the speed the average of the last two
+							recordedSpeed = (entitySpeed + lastEntitySpeed) / 2.0;
+						}
+
+
+						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh, recordedSpeed);
+						actorRecording.push_back(std::make_shared<ActorVehicleMovementRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
+
+						lastEntitySpeed = entitySpeed;
 					}	
 				}
 				else {
@@ -2685,23 +2701,55 @@ void action_record_scene_for_actor() {
 						log_to_file(recordingItem.toString());
 						previousVehicle = 0;
 					}
-					else {//record movement on foot
-						float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+					else {
+						//check for a scenario. Only apply if it's the first scenario or a new one
+						if (PED::IS_PED_USING_ANY_SCENARIO(actorPed) && (isActorUsingScenario ==false || PED::IS_PED_USING_SCENARIO(actorPed, currentScenario.name) == false)) {
+							isActorUsingScenario = true;
+							//find scenario in use
+							for (const auto scenario : gtaScenarios) {
+								if (PED::IS_PED_USING_SCENARIO(actorPed, scenario.name)) {
+									log_to_file("action_record_scene_for_actor: Found scenario player is using");
+									log_to_file(scenario.name);
+									currentScenario = scenario;
+								}
+							}
+							log_to_file("action_record_scene_for_actor: Will add scenario");
+							ticksCurrentScenarioStart = ticksNow;
+							ActorScenarioRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, currentScenario);
+							recordingItem.setTicksLength((DWORD)1000);
+							ongoingActorScenarioRecordingItem = std::make_shared<ActorScenarioRecordingItem>(recordingItem);
+							actorRecording.push_back(ongoingActorScenarioRecordingItem);
+							log_to_file(recordingItem.toString());
 
-						float walkSpeed = 1.0;
-						if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
-							walkSpeed = 2.0;
+
 						}
+						else if (PED::IS_PED_USING_ANY_SCENARIO(actorPed)) {
+							log_to_file("action_record_scene_for_actor: Ped is still using the same scenario");
+						}else {
+							if (isActorUsingScenario) {//actor just stopped using scearion
+								isActorUsingScenario = false;
+								ongoingActorScenarioRecordingItem->setTicksLength(ticksNow - ticksCurrentScenarioStart);
+							}
+							
+							currentScenario = Scenario();
+							//record movement on foot
+							float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
 
-						ActorMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, walkSpeed);
-						actorRecording.push_back(std::make_shared<ActorMovementRecordingItem>(recordingItem));
+							float walkSpeed = 1.0;
+							if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
+								walkSpeed = 2.0;
+							}
 
-						log_to_file(recordingItem.toString());
+							ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, walkSpeed);
+							actorRecording.push_back(std::make_shared<ActorOnFootMovementRecordingItem>(recordingItem));
+
+							log_to_file(recordingItem.toString());
+						}
 					}
 
 				}
 
-				tickLast = tickNow;
+				ticksLast = ticksNow;
 			}
 
 
@@ -2762,7 +2810,7 @@ void update_tick_recording_replay(Actor & actor) {
 	//special handling for the first item. Wait untill we start it
 	if (!recordingPlayback.getHasFirstItemPlayback()) {
 		
-		if (ticksNow >= recordingPlayback.getTicksTeleportedToStartLocation() + 3000) {
+		if (ticksNow >= recordingPlayback.getTicksTeleportedToStartLocation() + 2000) {
 			DWORD ticksPlaybackStart = recordingPlayback.getTicksPlaybackStarted();
 			DWORD ticksDeltaStartFirst = recordingItem->getTicksAfterRecordStart();
 			if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst) {
@@ -2770,24 +2818,26 @@ void update_tick_recording_replay(Actor & actor) {
 			}
 			else {
 				recordingPlayback.setHasFirstItemPlayback(true);
-				recordingPlayback.setTickLastCheckOfCurrentItem(ticksNow);
+				recordingPlayback.setTicksLastCheckOfCurrentItem(ticksNow);
 				log_to_file("Starting first recording item");
 
 				recordingItem->executeNativesForRecording(actor);
 			}
 		}
 		else {
-			log_to_file("Waiting a bit after teleport to start location");
 			return;
 		}
 	}
 
-	//check every recordingItem.getTicksDeltaCheckCompletion() ticks
-	if (ticksNow >= recordingPlayback.getTickLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion()) {
+	//check for completion every recordingItem.getTicksDeltaCheckCompletion() ticks
+	if (ticksNow >= recordingPlayback.getTicksLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion()) {
 		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
 		log_to_file(std::to_string(ticksNow) + " checking for completion of item "+ recordingItem->toString() );
 
-		if (recordingItem->isRecordingItemCompleted(actor, currentLocation)) {
+		if (recordingItem->isRecordingItemCompleted(recordingPlayback.getTicksStartCurrentItem(), ticksNow,  actor, currentLocation)) {
+			//execute any post actions (normally empty)
+			recordingItem->executeNativesAfterRecording(actor);
+
 			//skip to next or end if this is the last 
 			if (recordingPlayback.isCurrentRecordedItemLast()) {
 				recordingPlayback.setPlaybackCompleted();
@@ -2801,7 +2851,7 @@ void update_tick_recording_replay(Actor & actor) {
 			}
 		}
 		else {
-			recordingPlayback.setTickLastCheckOfCurrentItem(ticksNow);
+			recordingPlayback.setTicksLastCheckOfCurrentItem(ticksNow);
 		}
 	}
 }
@@ -3740,7 +3790,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 1.3.1 by elsewhat");
+	set_status_text("Scene director 2.0 Beta2 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 
