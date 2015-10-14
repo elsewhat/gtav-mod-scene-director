@@ -7,7 +7,9 @@
 #include "driving_mode.h"
 #include "script.h"
 #include "ActorRecording.h"
+
 #include <functional>
+#include <memory>
 
 //forward declaration
 class ActorRecordingPlayback;
@@ -44,7 +46,7 @@ private:
 	DrivingMode m_drivingMode;
 
 	bool m_hasRecording = false;
-	std::vector<std::reference_wrapper<ActorRecordingItem>> m_actorRecordingItems;
+	std::vector<std::shared_ptr<ActorRecordingItem>> m_actorRecordingItems;
 	bool m_replayRecordingInProgress = false;
 	ActorRecordingPlayback m_actorRecordingPlayback;
 
@@ -111,9 +113,9 @@ public:
 	void setHasRecording(bool hasRecording);
 	bool hasRecording();
 
-	void setRecording(std::vector<std::reference_wrapper<ActorRecordingItem>> actorRecordingItems);
-	std::vector<std::reference_wrapper<ActorRecordingItem>> getRecording();
-	std::reference_wrapper<ActorRecordingItem> getRecordingAt(int index);
+	void setRecording(std::vector<std::shared_ptr<ActorRecordingItem>> actorRecordingItems);
+	std::vector<std::shared_ptr<ActorRecordingItem>> getRecording();
+	std::shared_ptr<ActorRecordingItem> getRecordingAt(int index);
 
 	void startReplayRecording(DWORD tickStart);
 	void stopReplayRecording();

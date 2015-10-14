@@ -14,6 +14,7 @@
 #include <ctime>
 #include <vector>
 #include <fstream>
+#include <memory>
 
 //Key attributes
 //These are overwrittein in init_read_keys_from_ini()
@@ -2609,7 +2610,7 @@ void action_record_scene_for_actor() {
 		Ped actorPed = actor.getActorPed();
 
 		//the actual recording
-		std::vector<std::reference_wrapper<ActorRecordingItem>> actorRecording;
+		std::vector<std::shared_ptr<ActorRecordingItem>> actorRecording;
 		actorRecording.reserve(1000);
 
 		Vehicle previousVehicle = 0;
@@ -2658,14 +2659,14 @@ void action_record_scene_for_actor() {
 						}
 
 						static ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh, seat, enterSpeed );
-						actorRecording.push_back(recordingItem);
+						actorRecording.push_back(std::make_shared<ActorVehicleEnterRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString()); 
 						previousVehicle = actorVeh;
 
 					}
 					else {
-						static ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh);
-						actorRecording.push_back(recordingItem);
+						ActorVehicleRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh);
+						actorRecording.push_back(std::make_shared<ActorVehicleRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 					}
 
@@ -2675,7 +2676,7 @@ void action_record_scene_for_actor() {
 				else {
 					float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
 					static ActorMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorHeading);
-					actorRecording.push_back(recordingItem);
+					actorRecording.push_back(std::make_shared<ActorMovementRecordingItem>(recordingItem));
 
 					log_to_file(recordingItem.toString());
 				}
@@ -2724,7 +2725,7 @@ void update_tick_recording_replay(Actor & actor) {
 	//get the recording playback controller. Remember that this is by value and must be updated back to the actor
 	ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
 
-	std::reference_wrapper<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+	std::shared_ptr<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
 
 	if (!recordingPlayback.hasTeleportedToStartLocation()) {
 		Entity entityToTeleport = actorPed;
@@ -2743,7 +2744,7 @@ void update_tick_recording_replay(Actor & actor) {
 		
 		if (ticksNow >= recordingPlayback.getTicksTeleportedToStartLocation() + 3000) {
 			DWORD ticksPlaybackStart = recordingPlayback.getTicksPlaybackStarted();
-			DWORD ticksDeltaStartFirst = recordingItem.get().getTicksAfterRecordStart();
+			DWORD ticksDeltaStartFirst = recordingItem->getTicksAfterRecordStart();
 			if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst) {
 				return;
 			}
@@ -2752,7 +2753,7 @@ void update_tick_recording_replay(Actor & actor) {
 				recordingPlayback.setTickLastCheckOfCurrentItem(ticksNow);
 				log_to_file("Starting first recording item");
 
-				recordingItem.get().executeNativesForRecording(actor);
+				recordingItem->executeNativesForRecording(actor);
 			}
 		}
 		else {
@@ -2762,11 +2763,11 @@ void update_tick_recording_replay(Actor & actor) {
 	}
 
 	//check every recordingItem.getTicksDeltaCheckCompletion() ticks
-	if (ticksNow >= recordingPlayback.getTickLastCheckOfCurrentItem() + recordingItem.get().getTicksDeltaCheckCompletion()) {
+	if (ticksNow >= recordingPlayback.getTickLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion()) {
 		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
-		log_to_file(std::to_string(ticksNow) + " checking for completion of item "+ recordingItem.get().toString() );
+		log_to_file(std::to_string(ticksNow) + " checking for completion of item "+ recordingItem->toString() );
 
-		if (recordingItem.get().isRecordingItemCompleted(actor, currentLocation)) {
+		if (recordingItem->isRecordingItemCompleted(actor, currentLocation)) {
 			//skip to next or end if this is the last 
 			if (recordingPlayback.isCurrentRecordedItemLast()) {
 				recordingPlayback.setPlaybackCompleted();
@@ -2775,8 +2776,8 @@ void update_tick_recording_replay(Actor & actor) {
 			else {
 				recordingPlayback.nextRecordingItemIndex(GetTickCount());
 				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
-				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem.get().toString());
-				recordingItem.get().executeNativesForRecording(actor);
+				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem->toString());
+				recordingItem->executeNativesForRecording(actor);
 			}
 		}
 		else {

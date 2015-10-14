@@ -3,6 +3,7 @@
 #include "..\..\inc\types.h"
 #include "script.h"
 #include <string>
+#include <memory>
 
 //forward declaration
 class Actor;
