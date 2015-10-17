@@ -230,6 +230,14 @@ bool Actor::isCurrentlyPlayingRecording()
 	return m_replayRecordingInProgress;
 }
 
+void Actor::removeRecording()
+{
+	m_hasRecording = false;
+	m_hasStartLocation = false;
+	m_startLocation = Vector3();
+
+}
+
 ActorRecordingPlayback& Actor::getRecordingPlayback()
 {
 	return m_actorRecordingPlayback;
@@ -243,6 +251,26 @@ void Actor::setRecordingPlayback(ActorRecordingPlayback recordingPlayback)
 bool Actor::hasRecording()
 {
 	return m_hasRecording;
+}
+
+void Actor::setStartLocationVehicle(Vehicle vehicle)
+{
+	m_startLocationVehicle = vehicle;
+}
+
+Vehicle Actor::getStartLocationVehicle()
+{
+	return m_startLocationVehicle;
+}
+
+void Actor::setStartLocationVehicleSeat(int seat)
+{
+	m_startLocationVehicleSeat = seat;
+}
+
+int Actor::getStartLocationVehicleSeat()
+{
+	return m_startLocationVehicleSeat;
 }
 
 void Actor::setRecording(std::vector<std::shared_ptr<ActorRecordingItem>> actorRecordingItems)

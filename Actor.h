@@ -29,6 +29,8 @@ private:
 	bool m_hasStartLocation=false;
 	Vector3 m_startLocation;
 	float m_startLocationHeading;
+	Vehicle m_startLocationVehicle;
+	int m_startLocationVehicleSeat = -1; 
 	
 	bool m_hasSpotlight = false;
 	SPOT_LIGHT_TYPE m_spotlightType;
@@ -113,6 +115,12 @@ public:
 	void setHasRecording(bool hasRecording);
 	bool hasRecording();
 
+	void setStartLocationVehicle(Vehicle vehicle);
+	Vehicle getStartLocationVehicle();
+
+	void setStartLocationVehicleSeat(int seat);
+	int getStartLocationVehicleSeat();
+
 	void setRecording(std::vector<std::shared_ptr<ActorRecordingItem>> actorRecordingItems);
 	std::vector<std::shared_ptr<ActorRecordingItem>> getRecording();
 	std::shared_ptr<ActorRecordingItem> getRecordingAt(int index);
@@ -122,6 +130,8 @@ public:
 	void resumeReplayRecording();
 
 	bool isCurrentlyPlayingRecording();
+
+	void removeRecording();
 
 	ActorRecordingPlayback& getRecordingPlayback();
 	void setRecordingPlayback(ActorRecordingPlayback recordingPlayback);

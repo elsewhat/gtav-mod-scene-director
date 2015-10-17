@@ -61,6 +61,8 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_DRIVING_MODE = 49,
 	SUBMENU_ITEM_TEST_RECORDING = 50,
 	SUBMENU_ITEM_IS_PLAYING_RECORDING = 51,
+	SUBMENU_ITEM_RECORD_PLAYER_WOTHERS = 52,
+	SUBMENU_ITEM_DELETE_RECORDING = 53,
 	SUBMENU_ITEM_BLACKOUT = 60,
 	SUBMENU_ITEM_TIMELAPSE = 61,
 	SUBMENU_ITEM_WEATHER = 62,
@@ -504,6 +506,36 @@ void draw_instructional_buttons() {
 	}
 }
 
+void draw_instructional_buttons_player_recording() {
+	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
+		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+
+		char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_R");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Stop recording");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_RGBA(scaleForm, 255, 255, 255, 255);
+	}
+	else {
+		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
+	}
+}
+
 void draw_submenu_world(int drawIndex) {
 	int submenu_index = 0;
 
@@ -597,19 +629,40 @@ void draw_submenu_player(int drawIndex) {
 
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		submenu_active_action = SUBMENU_ITEM_RECORD_PLAYER;
+		if (actor.hasRecording()) {
+			submenu_active_action = SUBMENU_ITEM_DELETE_RECORDING;
+		}
+		else {
+			submenu_active_action = SUBMENU_ITEM_RECORD_PLAYER;
+		}
 	}
 	else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
 	if (actor.hasRecording()) {
-		DRAW_TEXT("Re-record actor", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		DRAW_TEXT("Remove recording", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	else {
-		DRAW_TEXT("Record actor", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		DRAW_TEXT("Record - Scene setup", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	}
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	if (!actor.hasRecording()) {
+		drawIndex++;
+		submenu_index++;
+
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_RECORD_PLAYER_WOTHERS;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT("Record - Scene active", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
 
 
 	if (actor.hasRecording() && !actor.isCurrentlyPlayingRecording()) {
@@ -1616,7 +1669,15 @@ void action_enter_nearest_vehicle_as_passenger() {
 
 	Vehicle vehicle = VEHICLE::GET_CLOSEST_VEHICLE(coord.x, coord.y, coord.z, 100.0, 0, 71);
 
-	AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, 0, 1.0, 1, 0);
+	int seat = 0;
+	for (int i = 0; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle); i++) {
+		if (VEHICLE::GET_PED_IN_VEHICLE_SEAT(vehicle, i) == playerPed) {
+			seat = i;
+			break;
+		}
+	}
+
+	AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, seat, 1.0, 1, 0);
 	nextWaitTicks = 200;
 }
 
@@ -1868,25 +1929,28 @@ void action_remove_actor_from_index(int pedShortcutsIndex) {
 	}
 }
 
-void swap_to_actor_with_index(int pedShortcutsIndex) {
+void action_swap_to_actor_with_index(int pedShortcutsIndex) {
 	if (actors[pedShortcutsIndex-1].isNullActor()) {
 		set_status_text("No stored actor. Store with CTRL+" + std::to_string(pedShortcutsIndex));
 	}
 	else {
 		log_to_file("action_if_ped_execute_shortcut_key_pressed: Retrieve ped in slot " + std::to_string(pedShortcutsIndex));
 		Actor actor = actors[pedShortcutsIndex - 1];
-		Ped pedInSlot = actor.getActorPed();
-		if (ENTITY::IS_ENTITY_DEAD(pedInSlot)) {
+		Ped actorPed = actor.getActorPed();
+		if (!ENTITY::DOES_ENTITY_EXIST(actorPed)) {
+			set_status_text("Actor does not exist anymore. Removing it");
+			action_remove_actor_from_index(pedShortcutsIndex );
+		}else if (ENTITY::IS_ENTITY_DEAD(actorPed)) {
 			log_to_file("action_if_ped_execute_shortcut_key_pressed: Dead ped in slot " + std::to_string(pedShortcutsIndex));
 			set_status_text("Thou shalt not swap to a dead actor");
 		}
 		else {
-			log_to_file("action_if_ped_execute_shortcut_key_pressed: Switching to ped:  " + std::to_string(pedInSlot));
+			log_to_file("action_if_ped_execute_shortcut_key_pressed: Switching to ped:  " + std::to_string(actorPed));
 
 			//first store the waypoint for the current actor
-			store_current_waypoint_for_actor(PLAYER::PLAYER_PED_ID());
+			store_current_waypoint_for_actor(actorPed);
 
-			possess_ped(pedInSlot);
+			possess_ped(actorPed);
 		}
 	}
 }
@@ -1936,7 +2000,7 @@ void action_if_ped_execute_shortcut_key_pressed()
 			//TODO: Check if it exist
 			nextWaitTicks = 300;
 
-			swap_to_actor_with_index(pedShortcutsIndex);
+			action_swap_to_actor_with_index(pedShortcutsIndex);
 		}
 	}
 }
@@ -2201,14 +2265,19 @@ void action_teleport_to_start_locations() {
 				log_to_file("First revive");
 				haveDeadActors = true;
 				ENTITY::SET_ENTITY_HEALTH(actor.getActorPed(), ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
-
-				//see http://gtaforums.com/topic/801452-death-recording-no-more-wastedbusted-screen-automatic-radio-off/
-				AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
-				//PED::RESURRECT_PED(actorPed);
-				//PED::REVIVE_INJURED_PED(actorShortcut[i]);
 				Vector3 location = actor.getStartLocation();
 				location.z = location.z + 1.0;
-				actor.setStartLocation(location);
+				teleport_entity_to_location(entityToTeleport, location, true);
+
+				//see http://gtaforums.com/topic/801452-death-recording-no-more-wastedbusted-screen-automatic-radio-off/
+				PED::SET_PED_CAN_RAGDOLL(actorPed, true);
+				AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
+				teleport_entity_to_location(entityToTeleport, location, true);
+				//PED::RESURRECT_PED(actorPed);
+				//PED::REVIVE_INJURED_PED(actorShortcut[i]);
+				//Vector3 location = actor.getStartLocation();
+				//location.z = location.z + 1.0;
+				//actor.setStartLocation(location);
 
 			}
 
@@ -2596,181 +2665,6 @@ bool record_scene_for_actor_key_press() {
 	}
 }
 
-void action_record_scene_for_actor() {
-
-	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
-	if (actor.isNullActor()) {
-		set_status_text("Actor must be assigned slot 1-9 before recording actions");
-	}
-	else {
-		set_status_text("Recording actions for current actions. Press ALT+R to stop recording");
-		Ped actorPed = actor.getActorPed();
-
-		//the actual recording
-		std::vector<std::shared_ptr<ActorRecordingItem>> actorRecording;
-		actorRecording.reserve(1000);
-
-		Vehicle previousVehicle = 0;
-		if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
-			previousVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
-		}
-
-		float lastEntitySpeed = 0.0;
-		Scenario currentScenario;
-		DWORD ticksCurrentScenarioStart;
-		bool isActorUsingScenario = false;
-		std::shared_ptr<ActorScenarioRecordingItem> ongoingActorScenarioRecordingItem;
-
-
-		//1. Store start location
-		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
-		actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
-		actor.setHasStartLocation(true);
-
-		WAIT(300);
-
-		bool bRecording = true;
-		DWORD ticksStart = GetTickCount();
-		DWORD ticksLast = ticksStart;
-		DWORD ticksNow = ticksStart;
-		CONST DWORD DELTA_TICKS = 1000;
-		//4000 works well for boats
-
-		//main loop
-		while (bRecording == true) {
-			ticksNow = GetTickCount();
-
-
-			//record only once pr DELTA_TICKS
-			if (ticksNow - ticksLast >= DELTA_TICKS) {
-				DWORD ticksSinceStart = ticksNow - ticksStart;
-
-				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
-
-				//Section if the actor is currently in a vehicle
-				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
-					Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
-
-					//check if it's a new vehicle
-					if (previousVehicle != actorVeh) {
-						
-						float enterSpeed = 1.0;
-						if (AI::IS_PED_RUNNING(actorPed)) {
-							enterSpeed = 2.0;
-						}
-						int seat = -1;
-						//find seat
-						for (int i = -1; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(actorVeh); i++) {
-							if (VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, i) == actorPed) {
-								seat = i; 
-								break;
-							}
-						}
-
-						ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh, seat, enterSpeed );
-						actorRecording.push_back(std::make_shared<ActorVehicleEnterRecordingItem>(recordingItem));
-						log_to_file(recordingItem.toString()); 
-						previousVehicle = actorVeh;
-
-					}
-					else {//Existing vehicle movement
-						float entitySpeed = ENTITY::GET_ENTITY_SPEED(actorVeh);
-						float vehicleMaxSpeed = VEHICLE::_GET_VEHICLE_MAX_SPEED(ENTITY::GET_ENTITY_MODEL(actorVeh));
-						float recordedSpeed = vehicleMaxSpeed;
-						//if both previous and last speed is less than half max speed, we assume it's on purpose
-						if (entitySpeed < (vehicleMaxSpeed / 2.0) && lastEntitySpeed < (vehicleMaxSpeed / 2.0)) {
-							//make the speed the average of the last two
-							recordedSpeed = (entitySpeed + lastEntitySpeed) / 2.0;
-						}
-
-
-						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, actorVeh, recordedSpeed);
-						actorRecording.push_back(std::make_shared<ActorVehicleMovementRecordingItem>(recordingItem));
-						log_to_file(recordingItem.toString());
-
-						lastEntitySpeed = entitySpeed;
-					}	
-				}
-				else {
-					//Section if the actors is currently on foot
-					//ActorVehicleExitRecordingItem
-					//If actor was previously in a vehicle, the have exited. Record this
-					if (previousVehicle != 0) {
-						ActorVehicleExitRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, previousVehicle);
-						actorRecording.push_back(std::make_shared<ActorVehicleExitRecordingItem>(recordingItem));
-						log_to_file(recordingItem.toString());
-						previousVehicle = 0;
-					}
-					else {
-						//check for a scenario. Only apply if it's the first scenario or a new one
-						if (PED::IS_PED_USING_ANY_SCENARIO(actorPed) && (isActorUsingScenario ==false || PED::IS_PED_USING_SCENARIO(actorPed, currentScenario.name) == false)) {
-							isActorUsingScenario = true;
-							//find scenario in use
-							for (const auto scenario : gtaScenarios) {
-								if (PED::IS_PED_USING_SCENARIO(actorPed, scenario.name)) {
-									log_to_file("action_record_scene_for_actor: Found scenario player is using");
-									log_to_file(scenario.name);
-									currentScenario = scenario;
-								}
-							}
-							log_to_file("action_record_scene_for_actor: Will add scenario");
-							ticksCurrentScenarioStart = ticksNow;
-							ActorScenarioRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, currentScenario);
-							recordingItem.setTicksLength((DWORD)1000);
-							ongoingActorScenarioRecordingItem = std::make_shared<ActorScenarioRecordingItem>(recordingItem);
-							actorRecording.push_back(ongoingActorScenarioRecordingItem);
-							log_to_file(recordingItem.toString());
-
-
-						}
-						else if (PED::IS_PED_USING_ANY_SCENARIO(actorPed)) {
-							log_to_file("action_record_scene_for_actor: Ped is still using the same scenario");
-						}else {
-							if (isActorUsingScenario) {//actor just stopped using scearion
-								isActorUsingScenario = false;
-								ongoingActorScenarioRecordingItem->setTicksLength(ticksNow - ticksCurrentScenarioStart);
-							}
-							
-							currentScenario = Scenario();
-							//record movement on foot
-							float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
-
-							float walkSpeed = 1.0;
-							if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
-								walkSpeed = 2.0;
-							}
-
-							ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, actorPed, actorLocation, walkSpeed);
-							actorRecording.push_back(std::make_shared<ActorOnFootMovementRecordingItem>(recordingItem));
-
-							log_to_file(recordingItem.toString());
-						}
-					}
-
-				}
-
-				ticksLast = ticksNow;
-			}
-
-
-
-			if (record_scene_for_actor_key_press()) {
-				bRecording = false;
-			}
-			WAIT(0);
-		}
-
-		actor.setRecording(actorRecording);
-		actor.setHasRecording(true);
-
-		log_to_file("Recorded " + std::to_string(actorRecording.size()) + " instructions");
-		set_status_text("Recorded " + std::to_string(actorRecording.size()) + " instructions");
-
-		set_status_text("Recording stopped");
-		nextWaitTicks = 400;
-
-	}
-}
 
 void action_start_replay_recording_for_actor(Actor actor) {
 	Ped actorPed = actor.getActorPed();
@@ -2800,6 +2694,11 @@ void update_tick_recording_replay(Actor & actor) {
 		if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
 			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
 		}
+		else if (ENTITY::DOES_ENTITY_EXIST(actor.getStartLocationVehicle())) {
+			entityToTeleport = actor.getStartLocationVehicle();
+			PED::SET_PED_INTO_VEHICLE(actorPed, entityToTeleport, actor.getStartLocationVehicleSeat());
+			
+		}
 
 		teleport_entity_to_location(entityToTeleport, actor.getStartLocation(), true);
 		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
@@ -2822,6 +2721,9 @@ void update_tick_recording_replay(Actor & actor) {
 				log_to_file("Starting first recording item");
 
 				recordingItem->executeNativesForRecording(actor);
+				
+				//try to avoid flee and other actions
+				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
 			}
 		}
 		else {
@@ -2848,6 +2750,8 @@ void update_tick_recording_replay(Actor & actor) {
 				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
 				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem->toString());
 				recordingItem->executeNativesForRecording(actor);
+				//try to avoid flee and other actions
+				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
 			}
 		}
 		else {
@@ -2856,116 +2760,6 @@ void update_tick_recording_replay(Actor & actor) {
 	}
 }
 
-void action_submenu_active_selected() {
-	log_to_file("action_submenu_active_selected " + std::to_string(submenu_active_action));
-	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
-	//switch to actor
-	if (submenu_active_action == SUBMENU_ITEM_RECORD_PLAYER) {
-		action_record_scene_for_actor();
-	} else	if (submenu_active_action == SUBMENU_ITEM_TEST_RECORDING) {
-		log_to_file("Will test recording for " + std::to_string(actor.getActorPed()));
-		actor.startReplayRecording(GetTickCount());
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_REMOVE_FROM_SLOT) {
-		//menu_active_action is the index of the actor from the main menu
-		action_remove_actor_from_index(menu_active_action);
-		submenu_is_displayed = false;
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_BLACKOUT) {
-		action_toggle_blackout();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_TIMELAPSE) {
-		action_toggle_timelapse();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_WEATHER) {
-		action_next_weather();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_WIND) {
-		action_toggle_wind();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT) {
-		action_next_spot_light();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT_COLOR) {
-		action_next_spot_light_color();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_WALK) {
-		action_next_walking_style();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_WALK_SPEED) {
-		action_next_walking_speed();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_DRIVING_MODE) {
-		action_next_driving_mode();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_RELATIONSHIP) {
-		action_next_relationshipgroup();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_HEALTH) {
-		action_next_health();
-	}
-	else if (submenu_active_action == SUBMENU_ITEM_VEHICLE_COSMETIC) {
-		action_toggle_vehicle_cosmetic();
-	}
-		
-}
-
-void action_menu_active_selected() {
-	//switch to actor
-	if (menu_active_action >= 1 && menu_active_action <= 9) {
-		swap_to_actor_with_index(menu_active_action);
-		//force the active menu to be set to the new actor
-		menu_active_index = -1;
-		menu_active_ped = PLAYER::PLAYER_PED_ID();
-	}
-	else if (menu_active_action == MENU_ITEM_AUTOPILOT) {
-		//autpilot is cancelled by switching to current actor
-		possess_ped(PLAYER::PLAYER_PED_ID());
-	}
-	else if (menu_active_action == MENU_ITEM_CHASE) {
-		action_vehicle_chase();
-	}
-	else if (menu_active_action == MENU_ITEM_ESCORT) {
-		action_vehicle_escort();
-	}
-	else if (menu_active_action == MENU_ITEM_SCENE_MODE) {
-		action_toggle_scene_mode();
-	}
-	else if (menu_active_action == MENU_ITEM_ADD_TO_SLOT) {
-		add_ped_to_slot(get_next_free_slot(), PLAYER::PLAYER_PED_ID());
-		//force the active menu to be set to the new actor
-		menu_active_index = -1;
-		menu_active_ped = PLAYER::PLAYER_PED_ID();
-	}
-	else if (menu_active_action == MENU_ITEM_ADD_CLONE_TO_SLOT && actor0IsClone) {
-		if (get_actor_from_ped(previousActor.getActorPed()).isNullActor()==true) {
-			int slot = get_next_free_slot();
-			if (slot != -1) {
-				add_ped_to_slot(slot, previousActor.getActorPed());
-				actor0IsClone = false;
-				swap_to_actor_with_index(slot);
-				//force the active menu to be set to the new actor
-				menu_active_index = -1;
-			}
-		}
-	}
-	else if (menu_active_action == MENU_ITEM_CLONE) {
-		action_clone_player();
-		menu_active_index = 0;
-	}
-	else if (menu_active_action == MENU_ITEM_CLONE_WITH_VEHICLE) {
-		action_clone_player_with_vehicle();
-		menu_active_index = 0;
-	}
-	else if (menu_active_action == MENU_ITEM_POSSESS) {
-		action_possess_ped();
-		menu_active_index = -1;
-	}
-	else if (menu_active_action == MENU_ITEM_FIRING_SQUAD) {
-		is_firing_squad_engaged = false;
-	}
-
-}
 
 
 /*
@@ -3268,6 +3062,488 @@ void menu_action_right() {
 		submenu_is_active = false;
 	}
 }
+
+
+
+void action_record_scene_for_actor(bool replayOtherActors) {
+
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor()) {
+		set_status_text("Actor must be assigned slot 1-9 before recording actions");
+	}
+	else {
+		set_status_text("Recording actions for current actions. Press ALT+R to stop recording");
+		Ped actorPed = actor.getActorPed();
+
+		//the actual recording
+		std::vector<std::shared_ptr<ActorRecordingItem>> actorRecording;
+		actorRecording.reserve(1000);
+
+		//start other actors
+		if (replayOtherActors) {
+			for (auto &actor : actors) {
+				actor.setActiveInScene(SCENE_MODE_ACTIVE);
+
+				//if not actor in slot, continue
+				if (actor.isNullActor()) {
+					continue;
+				}
+
+
+				if (actor.isActiveInScene() == SCENE_MODE_ACTIVE) {
+					//log_to_file("Actor " + std::to_string(i) + " Ped id:" + std::to_string(actorShortcut[i]) + " Has waypoint:"+ std::to_string(actorHasWaypoint[i])+  " Has start location:"+ std::to_string(actorHasStartLocation[i
+					log_to_file("Actor " + std::to_string(actorPed) + " Has relationshipgroup " + actor.getRelationshipGroup().name);
+					assign_actor_to_relationship_group(actorPed, actor.getRelationshipGroup());
+
+					if (actor.hasRecording()) {
+						actor.startReplayRecording(GetTickCount());
+					}
+				}
+			}
+		}
+
+
+		//store current vehicle and seat
+		Vehicle previousVehicle = 0;
+		if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+			previousVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+
+			actor.setStartLocationVehicle(previousVehicle);
+			//find seat
+			for (int i = -1; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(previousVehicle); i++) {
+				if (VEHICLE::GET_PED_IN_VEHICLE_SEAT(previousVehicle, i) == actorPed) {
+					actor.setStartLocationVehicleSeat(i);
+					break;
+				}
+			}
+
+		}
+
+		float lastEntitySpeed = 0.0;
+		Scenario currentScenario;
+		DWORD ticksCurrentScenarioStart;
+		bool isActorUsingScenario = false;
+		std::shared_ptr<ActorScenarioRecordingItem> ongoingActorScenarioRecordingItem;
+
+		bool isFreeAiming = false;
+		bool isAimingAtEntity = false;
+		Entity aimedAtEntity;
+		DWORD ticksCurrentAimAtStart;
+		std::shared_ptr<ActorAimAtRecordingItem> ongoingActorAimAtRecordingItem;
+
+
+		//1. Store start location
+		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
+		actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
+		actor.setHasStartLocation(true);
+
+		WAIT(300);
+
+		bool bRecording = true;
+		DWORD ticksStart = GetTickCount();
+		DWORD ticksLast = ticksStart;
+		DWORD ticksNow = ticksStart;
+		DWORD DELTA_TICKS = 1000;
+		//4000 works well for boats
+
+		//main loop
+		while (bRecording == true) {
+			ticksNow = GetTickCount();
+
+			draw_instructional_buttons_player_recording();
+
+			if (enter_nearest_vehicle_as_passenger_key_pressed()) {
+				action_enter_nearest_vehicle_as_passenger();
+			}
+
+			//play recording for other actors if the scene mode is active
+			if (replayOtherActors) {
+				for (auto & actor : actors) {
+					if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
+						update_tick_recording_replay(actor);
+					}
+				}
+			}
+
+
+			//record only once pr DELTA_TICKS
+			if (ticksNow - ticksLast >= DELTA_TICKS) {
+				DWORD ticksSinceStart = ticksNow - ticksStart;
+
+				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+
+				//Section if the actor is currently in a vehicle
+				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+
+					//don't record as often for certain vehicles
+					if (PED::IS_PED_IN_ANY_HELI(actorPed)) {
+						DELTA_TICKS = 4000;
+					}
+					else if (PED::IS_PED_IN_ANY_PLANE(actorPed)) {
+						DELTA_TICKS = 6000;
+					}
+					else if (PED::IS_PED_IN_ANY_BOAT(actorPed)) {
+						DELTA_TICKS = 4000;
+					}
+					else if (PED::IS_PED_IN_ANY_SUB(actorPed)) {
+						DELTA_TICKS = 3000;
+					}
+					else if (PED::IS_PED_ON_ANY_BIKE(actorPed)) {
+						DELTA_TICKS = 1000;
+					}
+					else {
+						DELTA_TICKS = 2000;
+					}
+
+					Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+
+					//check if it's a new vehicle
+					if (previousVehicle != actorVeh) {
+
+						float enterSpeed = 1.0;
+						if (AI::IS_PED_RUNNING(actorPed)) {
+							enterSpeed = 2.0;
+						}
+						int seat = -1;
+						//find seat
+						for (int i = -1; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(actorVeh); i++) {
+							if (VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, i) == actorPed) {
+								seat = i;
+								break;
+							}
+						}
+
+						ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, seat, enterSpeed);
+						actorRecording.push_back(std::make_shared<ActorVehicleEnterRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+						previousVehicle = actorVeh;
+
+					}
+					else {//Existing vehicle movement
+						float entitySpeed = ENTITY::GET_ENTITY_SPEED(actorVeh);
+						float vehicleMaxSpeed = VEHICLE::_GET_VEHICLE_MAX_SPEED(ENTITY::GET_ENTITY_MODEL(actorVeh));
+						float recordedSpeed = vehicleMaxSpeed;
+						//if both previous and last speed is less than half max speed, we assume it's on purpose
+						if (entitySpeed < (vehicleMaxSpeed / 2.0) && lastEntitySpeed < (vehicleMaxSpeed / 2.0)) {
+							//make the speed the average of the last two
+							recordedSpeed = (entitySpeed + lastEntitySpeed) / 2.0;
+						}
+
+
+						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, recordedSpeed);
+						actorRecording.push_back(std::make_shared<ActorVehicleMovementRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+
+						lastEntitySpeed = entitySpeed;
+					}
+				}
+				else {
+					DELTA_TICKS = 1000;
+
+
+
+					//Section if the actors is currently on foot
+					//ActorVehicleExitRecordingItem
+					//If actor was previously in a vehicle, the have exited. Record this
+					if (previousVehicle != 0) {
+						ActorVehicleExitRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, previousVehicle);
+						actorRecording.push_back(std::make_shared<ActorVehicleExitRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+						previousVehicle = 0;
+					}
+					else {
+						//check for a scenario. Only apply if it's the first scenario or a new one
+						if (PED::IS_PED_USING_ANY_SCENARIO(actorPed) && (isActorUsingScenario == false || PED::IS_PED_USING_SCENARIO(actorPed, currentScenario.name) == false)) {
+							DELTA_TICKS = 500;
+							isActorUsingScenario = true;
+							//find scenario in use
+							for (const auto scenario : gtaScenarios) {
+								if (PED::IS_PED_USING_SCENARIO(actorPed, scenario.name)) {
+									log_to_file("action_record_scene_for_actor: Found scenario player is using");
+									log_to_file(scenario.name);
+									currentScenario = scenario;
+								}
+							}
+							log_to_file("action_record_scene_for_actor: Will add scenario");
+							ticksCurrentScenarioStart = ticksNow;
+							ActorScenarioRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, currentScenario);
+							recordingItem.setTicksLength((DWORD)1000);
+							ongoingActorScenarioRecordingItem = std::make_shared<ActorScenarioRecordingItem>(recordingItem);
+							actorRecording.push_back(ongoingActorScenarioRecordingItem);
+							log_to_file(recordingItem.toString());
+
+
+						}
+						else if (PED::IS_PED_USING_ANY_SCENARIO(actorPed)) {
+							DELTA_TICKS = 500;
+							log_to_file("action_record_scene_for_actor: Ped is still using the same scenario");
+						}
+						else {
+							if (isActorUsingScenario) {//actor just stopped using scearion
+								isActorUsingScenario = false;
+								ongoingActorScenarioRecordingItem->setTicksLength(ticksNow - ticksCurrentScenarioStart);
+								currentScenario = Scenario();
+							}
+
+
+
+
+							//Record aiming and shooting
+							if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
+								DELTA_TICKS = 10;
+								isFreeAiming = true;
+								Entity targetEntity;
+								PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
+								log_to_file("Actor aiming at " + std::to_string(targetEntity));
+
+								if (PED::IS_PED_SHOOTING(actorPed) && ENTITY::DOES_ENTITY_EXIST(targetEntity)) {
+									//add recording item for shooting at
+									if (isAimingAtEntity) {
+										log_to_file("Stopped aiming since we're shooting at target " + std::to_string(aimedAtEntity) + "  for ActorShootAtRecordingItem");
+										isAimingAtEntity = false;
+										ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
+									}
+
+									ActorShootAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, targetEntity);
+									actorRecording.push_back(std::make_shared<ActorShootAtRecordingItem>(recordingItem));
+									log_to_file(recordingItem.toString());
+
+								}
+								else if (!isAimingAtEntity && ENTITY::DOES_ENTITY_EXIST(targetEntity)) {//if no existing target exist, record it.
+									log_to_file("Recording start of ActorAimAtRecordingItem");
+									isAimingAtEntity = true;
+									aimedAtEntity = targetEntity;
+									ticksCurrentAimAtStart = ticksNow;
+									//add recording item for aim at
+									ActorAimAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, targetEntity);
+									//default length 1000. Will be updated when aiming stops
+									recordingItem.setTicksLength((DWORD)500);
+									ongoingActorAimAtRecordingItem = std::make_shared<ActorAimAtRecordingItem>(recordingItem);
+									actorRecording.push_back(ongoingActorAimAtRecordingItem);
+									log_to_file(recordingItem.toString());
+								}
+								else if (isAimingAtEntity && targetEntity != aimedAtEntity && ENTITY::DOES_ENTITY_EXIST(targetEntity)) {//if new target whilst already aiming
+									log_to_file("Recording new target for ActorAimAtRecordingItem");
+									ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
+									aimedAtEntity = targetEntity;
+									ticksCurrentAimAtStart = ticksNow;
+									ActorAimAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, targetEntity);
+									//default length 1000. Will be updated when aiming stops
+									recordingItem.setTicksLength((DWORD)1000);
+									ongoingActorAimAtRecordingItem = std::make_shared<ActorAimAtRecordingItem>(recordingItem);
+									actorRecording.push_back(ongoingActorAimAtRecordingItem);
+									log_to_file(recordingItem.toString());
+								}
+								else if (isAimingAtEntity && targetEntity == aimedAtEntity) {
+									log_to_file("Still aiming at entity " + std::to_string(aimedAtEntity) + "  for ActorAimAtRecordingItem");
+								}
+								else if (isAimingAtEntity && !ENTITY::DOES_ENTITY_EXIST(targetEntity)) {
+									log_to_file("Stopped aiming at target " + std::to_string(aimedAtEntity) + "  for ActorAimAtRecordingItem");
+									isAimingAtEntity = false;
+									ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
+								}
+								else {
+									log_to_file("Unexpected ActorAimAtRecordingItem");
+								}
+
+
+							}
+							else if (isFreeAiming) {//finished free aiming. Stop recording
+								isFreeAiming = false;
+								if (isAimingAtEntity) {
+									isAimingAtEntity = false;
+									ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
+								}
+
+							}
+							else {
+								DELTA_TICKS = 1000;
+								//record movement on foot
+								float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+								float walkSpeed = 1.0;
+								if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
+									walkSpeed = 2.0;
+								}
+
+								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed);
+								actorRecording.push_back(std::make_shared<ActorOnFootMovementRecordingItem>(recordingItem));
+
+								log_to_file(recordingItem.toString());
+							}
+
+
+						}
+					}
+
+				}
+
+				ticksLast = ticksNow;
+			}
+
+
+
+			if (record_scene_for_actor_key_press()) {
+				bRecording = false;
+			}
+			WAIT(0);
+		}
+
+		for (auto recordingItem : actorRecording) {
+			log_to_file(recordingItem->toString());
+		}
+
+		if (actorRecording.size() > 0) {
+			actor.setRecording(actorRecording);
+			actor.setHasRecording(true);
+		}
+
+
+		log_to_file("Recorded " + std::to_string(actorRecording.size()) + " instructions");
+		set_status_text("Recorded " + std::to_string(actorRecording.size()) + " instructions");
+
+		set_status_text("Recording stopped");
+		nextWaitTicks = 400;
+
+	}
+}
+
+void action_submenu_active_selected() {
+	log_to_file("action_submenu_active_selected " + std::to_string(submenu_active_action));
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	//switch to actor
+	if (submenu_active_action == SUBMENU_ITEM_RECORD_PLAYER) {
+		action_record_scene_for_actor(false);
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_RECORD_PLAYER_WOTHERS) {
+		action_record_scene_for_actor(true);
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_TEST_RECORDING) {
+		log_to_file("Will test recording for " + std::to_string(actor.getActorPed()));
+		actor.startReplayRecording(GetTickCount());
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_IS_PLAYING_RECORDING) {
+		log_to_file("Skipping to next recording item since user pressed meny");
+
+		ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
+		//skip to next or end if this is the last 
+		if (recordingPlayback.isCurrentRecordedItemLast()) {
+			recordingPlayback.setPlaybackCompleted();
+			actor.stopReplayRecording();
+		}
+		else {
+			recordingPlayback.nextRecordingItemIndex(GetTickCount());
+			std::shared_ptr<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+			log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex()) + " : " + recordingItem->toString());
+			recordingItem->executeNativesForRecording(actor);
+		}
+
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_DELETE_RECORDING) {
+		log_to_file("Will remove recording for " + std::to_string(actor.getActorPed()));
+		actor.removeRecording();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_REMOVE_FROM_SLOT) {
+		//menu_active_action is the index of the actor from the main menu
+		action_remove_actor_from_index(menu_active_action);
+		submenu_is_displayed = false;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_BLACKOUT) {
+		action_toggle_blackout();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_TIMELAPSE) {
+		action_toggle_timelapse();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_WEATHER) {
+		action_next_weather();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_WIND) {
+		action_toggle_wind();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT) {
+		action_next_spot_light();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT_COLOR) {
+		action_next_spot_light_color();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_WALK) {
+		action_next_walking_style();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_WALK_SPEED) {
+		action_next_walking_speed();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_DRIVING_MODE) {
+		action_next_driving_mode();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_RELATIONSHIP) {
+		action_next_relationshipgroup();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_HEALTH) {
+		action_next_health();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_VEHICLE_COSMETIC) {
+		action_toggle_vehicle_cosmetic();
+	}
+
+}
+
+void action_menu_active_selected() {
+	//switch to actor
+	if (menu_active_action >= 1 && menu_active_action <= 9) {
+		action_swap_to_actor_with_index(menu_active_action);
+		//force the active menu to be set to the new actor
+		menu_active_index = -1;
+		menu_active_ped = PLAYER::PLAYER_PED_ID();
+	}
+	else if (menu_active_action == MENU_ITEM_AUTOPILOT) {
+		//autpilot is cancelled by switching to current actor
+		possess_ped(PLAYER::PLAYER_PED_ID());
+	}
+	else if (menu_active_action == MENU_ITEM_CHASE) {
+		action_vehicle_chase();
+	}
+	else if (menu_active_action == MENU_ITEM_ESCORT) {
+		action_vehicle_escort();
+	}
+	else if (menu_active_action == MENU_ITEM_SCENE_MODE) {
+		action_toggle_scene_mode();
+	}
+	else if (menu_active_action == MENU_ITEM_ADD_TO_SLOT) {
+		add_ped_to_slot(get_next_free_slot(), PLAYER::PLAYER_PED_ID());
+		//force the active menu to be set to the new actor
+		menu_active_index = -1;
+		menu_active_ped = PLAYER::PLAYER_PED_ID();
+	}
+	else if (menu_active_action == MENU_ITEM_ADD_CLONE_TO_SLOT && actor0IsClone) {
+		if (get_actor_from_ped(previousActor.getActorPed()).isNullActor() == true) {
+			int slot = get_next_free_slot();
+			if (slot != -1) {
+				add_ped_to_slot(slot, previousActor.getActorPed());
+				actor0IsClone = false;
+				action_swap_to_actor_with_index(slot);
+				//force the active menu to be set to the new actor
+				menu_active_index = -1;
+			}
+		}
+	}
+	else if (menu_active_action == MENU_ITEM_CLONE) {
+		action_clone_player();
+		menu_active_index = 0;
+	}
+	else if (menu_active_action == MENU_ITEM_CLONE_WITH_VEHICLE) {
+		action_clone_player_with_vehicle();
+		menu_active_index = 0;
+	}
+	else if (menu_active_action == MENU_ITEM_POSSESS) {
+		action_possess_ped();
+		menu_active_index = -1;
+	}
+	else if (menu_active_action == MENU_ITEM_FIRING_SQUAD) {
+		is_firing_squad_engaged = false;
+	}
+
+}
+
+
 
 void menu_action_select() {
 	if (submenu_is_active) {
@@ -3642,6 +3918,8 @@ void action_copy_player_actions() {
 
 
 }
+
+
 
 
 

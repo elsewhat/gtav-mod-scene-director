@@ -5,12 +5,13 @@
 #include "Actor.h"
 #include "scenario.h"
 
-ActorRecordingItem::ActorRecordingItem(DWORD ticksStart, Ped actor, Vector3 location)
+ActorRecordingItem::ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location)
 {
 	m_ticksAfterRecordStart = ticksStart;
 	m_actorPed = actor;
 	m_location = location;
 	m_ticksDeltaCheckCompletion = 300;
+	m_ticksDeltaWhenRecorded = ticksDeltaWhenRecorded;
 }
 
 DWORD ActorRecordingItem::getTicksAfterRecordStart()
@@ -24,45 +25,8 @@ Vector3 ActorRecordingItem::getLocation()
 	return m_location;
 }
 
-void ActorRecordingItem::executeNativesForRecording(Actor actor)
-{
-	playback_recording_to_waypoint(actor.getActorPed(), m_location);
-}
 
-bool ActorRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
-{
-	Ped actorPed = actor.getActorPed();
-	bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0);
-	bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(actorPed);
-	bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(actorPed);
-	bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(actorPed);
 
-	float minDistance = 4.0;
-
-	if (isPedInHeli) {
-		minDistance = 50.0;
-	}
-	else if (isPedInPlane) {
-		minDistance = 100.0;
-	}
-	else if (isPedInBoat) {
-		minDistance = 60.0;
-	}
-	else if (isInVehicle) {
-		minDistance = 15.0;
-	}
-
-	float distanceToTarget = SYSTEM::VDIST(m_location.x, m_location.y, m_location.z, location.x, location.y, location.z);
-	log_to_file("ActorRecordingItem: Distance to target: " + std::to_string(distanceToTarget));
-
-	if (distanceToTarget < minDistance) {
-		log_to_file("ActorRecordingItem: Close enough to target for ActorRecordingItem");
-		return true;
-	}
-	else {
-		return false;
-	}
-}
 
 DWORD ActorRecordingItem::getTicksDeltaCheckCompletion()
 {
@@ -81,14 +45,14 @@ DWORD ActorRecordingItem::getTicksLength()
 
 std::string ActorRecordingItem::toString()
 {
-	return "Recording start for actor " + std::to_string(m_actorPed) + " at " + std::to_string(m_ticksAfterRecordStart);
+	return "ActorRecordingItem " + std::to_string(m_actorPed) + " ticks: " + std::to_string(m_ticksAfterRecordStart) + " delta_ticks:" + std::to_string(m_ticksDeltaWhenRecorded);
 }
 
 void ActorRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 }
 
-ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float walkSpeed):ActorRecordingItem(ticksStart, actor, location)
+ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_walkSpeed = walkSpeed;
 }
@@ -105,19 +69,21 @@ void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor)
 
 bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
 {
-	float minDistance = 4.0;
-	if (m_walkSpeed > 1.0) {
-		minDistance = 7.0;
-	}
-	float distanceToTarget = SYSTEM::VDIST(m_location.x, m_location.y, m_location.z, location.x, location.y, location.z);
-	log_to_file("ActorMovementRecordingItem: Distance to target: " + std::to_string(distanceToTarget) + " Min distance: " + std::to_string(minDistance));
+	if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded / 2.0)) {
+		float minDistance = 4.0;
+		if (m_walkSpeed > 1.0) {
+			minDistance = 7.0;
+		}
+		float distanceToTarget = SYSTEM::VDIST(m_location.x, m_location.y, m_location.z, location.x, location.y, location.z);
+		log_to_file("ActorMovementRecordingItem: Distance to target: " + std::to_string(distanceToTarget) + " Min distance: " + std::to_string(minDistance));
 
-	if (distanceToTarget < minDistance) {
-		log_to_file("ActorMovementRecordingItem: Close enough to target for ActorRecordingItem");
-		return true;
-	}
-	else {
-		return false;
+		if (distanceToTarget < minDistance) {
+			log_to_file("ActorMovementRecordingItem: Close enough to target for ActorRecordingItem");
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 }
 
@@ -128,7 +94,7 @@ std::string ActorOnFootMovementRecordingItem::toString()
 }
 
 
-ActorVehicleRecordingItem::ActorVehicleRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh) :ActorRecordingItem(ticksStart, actor, location)
+ActorVehicleRecordingItem::ActorVehicleRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_vehicle = veh;
 	m_vehicleType = _getVehicleTypeFromNatives();
@@ -284,10 +250,12 @@ std::string ActorRecordingPlayback::toString()
 	return "ActorRecordingPlayback getHasFirstItemPlayback()=" + std::to_string(getHasFirstItemPlayback()) + " getRecordedItemIndex()" + std::to_string(getRecordedItemIndex());
 }
 
-ActorVehicleEnterRecordingItem::ActorVehicleEnterRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh, int vehicleSeat, float enterVehicleSpeed) : ActorVehicleRecordingItem(ticksStart, actor, location, veh)
+ActorVehicleEnterRecordingItem::ActorVehicleEnterRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, int vehicleSeat, float enterVehicleSpeed) : ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh)
 {
 	m_vehicleSeat = vehicleSeat;
 	m_enterVehicleSpeed = enterVehicleSpeed;
+	//check for completion every 200 ticks (default 1000)
+	m_ticksDeltaCheckCompletion = 100;
 }
 
 std::string ActorVehicleEnterRecordingItem::toString()
@@ -310,8 +278,10 @@ bool ActorVehicleEnterRecordingItem::isRecordingItemCompleted(DWORD ticksStart, 
 	}
 }
 
-ActorVehicleExitRecordingItem::ActorVehicleExitRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh): ActorVehicleRecordingItem(ticksStart, actor, location, veh)
+ActorVehicleExitRecordingItem::ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh): ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh)
 {
+	//check for completion every 200 ticks (default 1000)
+	m_ticksDeltaCheckCompletion = 100;
 }
 
 std::string ActorVehicleExitRecordingItem::toString()
@@ -339,10 +309,10 @@ bool ActorVehicleExitRecordingItem::isRecordingItemCompleted(DWORD ticksStart, D
 	}
 }
 
-ActorStandingStillRecordingItem::ActorStandingStillRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, float heading) :ActorRecordingItem(ticksStart, actor, location)
+ActorStandingStillRecordingItem::ActorStandingStillRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float heading) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_heading = heading;
-	m_ticksDeltaCheckCompletion = 1000;
+	m_ticksDeltaCheckCompletion = 200;
 }
 
 float ActorStandingStillRecordingItem::getHeading()
@@ -366,7 +336,7 @@ bool ActorStandingStillRecordingItem::isRecordingItemCompleted(DWORD ticksStart,
 	return true;
 }
 
-ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Vehicle veh, float speedInVehicle) : ActorVehicleRecordingItem(ticksStart, actor, location, veh)
+ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float speedInVehicle) : ActorVehicleRecordingItem(ticksStart,  ticksDeltaWhenRecorded, actor, location, veh)
 {
 	m_speedInVehicle = speedInVehicle;
 }
@@ -424,51 +394,58 @@ void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor)
 
 bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
 {
-	if (PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0)) {
-		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(m_actorPed);
+	if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded / 2.0)) {
+		//log_to_file("ticksNow - ticksStart = " + std::to_string(ticksNow - ticksStart) + " (m_ticksDeltaCheckCompletion / 2.0) = " + std::to_string((m_ticksDeltaWhenRecorded / 2.0)));
+		if (PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0)) {
+			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(m_actorPed);
 
-		bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0);
-		bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(m_actorPed);
-		bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(m_actorPed);
-		bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(m_actorPed);
+			bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0);
+			bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(m_actorPed);
+			bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(m_actorPed);
+			bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(m_actorPed);
 
-		float minDistance = 4.0;
+			float minDistance = 4.0;
 
-		if (isPedInHeli) {
-			minDistance = 50.0;
-		}
-		else if (isPedInPlane) {
-			minDistance = 100.0;
-		}
-		else if (isPedInBoat) {
-			minDistance = 60.0;
-		}
-		else if (isInVehicle) {
-			minDistance = 15.0;
-		}
+			if (isPedInHeli) {
+				minDistance = 90.0;
+			}
+			else if (isPedInPlane) {
+				minDistance = 100.0;
+			}
+			else if (isPedInBoat) {
+				minDistance = 60.0;
+			}
+			else if (isInVehicle) {
+				minDistance = 15.0;
+			}
 
-		float distanceToTarget = SYSTEM::VDIST(m_location.x, m_location.y, m_location.z, location.x, location.y, location.z);
-		log_to_file("ActorVehicleMovementRecordingItem: Distance to target: " + std::to_string(distanceToTarget));
+			float distanceToTarget = SYSTEM::VDIST(m_location.x, m_location.y, m_location.z, location.x, location.y, location.z);
+			log_to_file("ActorVehicleMovementRecordingItem: Distance to target: " + std::to_string(distanceToTarget));
 
-		if (distanceToTarget < minDistance) {
-			log_to_file("ActorVehicleMovementRecordingItem: Close enough to target for ActorRecordingItem");
-			return true;
+			if (distanceToTarget < minDistance) {
+				log_to_file("ActorVehicleMovementRecordingItem: Close enough to target for ActorRecordingItem");
+				return true;
+			}
+			else {
+				return false;
+			}
+
 		}
 		else {
-			return false;
+			//not in any vehicle so return true
+			log_to_file("ActorVehicleMovementRecordingItem: Not in any vehicle so returning true isRecordingItemCompleted");
+			return true;
 		}
-
-	}
-	else {
-		//not in any vehicle so return true
-		log_to_file("ActorVehicleMovementRecordingItem: Not in any vehicle so returning true isRecordingItemCompleted");
-		return true;
+	} else {
+		log_to_file("Waiting " + std::to_string((m_ticksDeltaCheckCompletion / 2.0)) + " before checking distance to target for completion");
 	}
 }
 
-ActorScenarioRecordingItem::ActorScenarioRecordingItem(DWORD ticksStart, Ped actor, Vector3 location, Scenario scenario): ActorRecordingItem(ticksStart, actor, location)
+ActorScenarioRecordingItem::ActorScenarioRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Scenario scenario): ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_scenario = scenario;
+	//check for completion every 200 ticks (default 1000)
+	m_ticksDeltaCheckCompletion = 100;
 }
 
 Scenario ActorScenarioRecordingItem::getScenario()
@@ -507,4 +484,73 @@ void ActorScenarioRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 	log_to_file("ActorScenarioRecordingItem: executeNativesAfterRecording calling AI::CLEAR_PED_TASKS");
 	AI::CLEAR_PED_TASKS(m_actorPed);
+}
+
+ActorAimAtRecordingItem::ActorAimAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity aimedAtEntity): ActorRecordingItem( ticksStart, ticksDeltaWhenRecorded, actor,  location)
+{
+	m_aimedAtEntity = aimedAtEntity;
+	//check for completion every 200 ticks (default 1000)
+	m_ticksDeltaCheckCompletion = 100;
+}
+
+Entity ActorAimAtRecordingItem::getAimedAtEntity()
+{
+	return m_aimedAtEntity;
+}
+
+std::string ActorAimAtRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorAimAtRecordingItem Entity " + std::to_string(m_aimedAtEntity) ;
+}
+
+void ActorAimAtRecordingItem::executeNativesForRecording(Actor actor)
+{
+	AI::TASK_AIM_GUN_AT_ENTITY(m_actorPed, m_aimedAtEntity, -1, 0);
+}
+
+bool ActorAimAtRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+{
+	if (ticksNow - ticksStart >= m_ticksLength) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void ActorAimAtRecordingItem::executeNativesAfterRecording(Actor actor)
+{
+	AI::CLEAR_PED_TASKS(actor.getActorPed());
+}
+
+ActorShootAtRecordingItem::ActorShootAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity shotAtEntity) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor,location)
+{
+	m_shotAtEntity = shotAtEntity;
+	//check for completion every 200 ticks (default 1000)
+	m_ticksDeltaCheckCompletion = 100;
+}
+
+Entity ActorShootAtRecordingItem::getShotAtEntity()
+{
+	return m_shotAtEntity;
+}
+
+std::string ActorShootAtRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorShootAtRecordingItem Entity " + std::to_string(m_shotAtEntity);
+}
+
+void ActorShootAtRecordingItem::executeNativesForRecording(Actor actor)
+{
+	AI::TASK_SHOOT_AT_ENTITY(m_actorPed, m_shotAtEntity, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+}
+
+bool ActorShootAtRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+{
+	return true;
+}
+
+void ActorShootAtRecordingItem::executeNativesAfterRecording(Actor actor)
+{
+	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
