@@ -9,6 +9,7 @@
 #include "driving_mode.h"
 #include "Actor.h"
 #include "ActorRecording.h"
+#include "Animation.h"
 
 #include <string>
 #include <ctime>
@@ -49,6 +50,7 @@ enum MENU_ITEM {
 	MENU_ITEM_CLONE_WITH_VEHICLE = 18,
 	MENU_ITEM_POSSESS = 19,
 	MENU_ITEM_WORLD = 20,
+	MENU_ITEM_ANIMATION =21,
 	SUBMENU_ITEM_RECORD_PLAYER = 40,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 41,
 	SUBMENU_ITEM_SPOT_LIGHT = 42,
@@ -972,6 +974,20 @@ void draw_menu() {
 
 	drawIndex++;
 
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Animation", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_ANIMATION;
+	}
+
+	drawIndex++;
 	if (menu_active_index == drawIndex) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	}
@@ -2260,6 +2276,9 @@ void action_teleport_to_start_locations() {
 			Ped entityToTeleport = actor.getActorPed();
 			Ped actorPed = actor.getActorPed();
 
+			PED::RESET_PED_VISIBLE_DAMAGE(actorPed);
+			PED::CLEAR_PED_BLOOD_DAMAGE(actorPed);
+
 			//ressurect any dead actors
 			if (ENTITY::IS_ENTITY_DEAD(actorPed)) {
 				log_to_file("First revive");
@@ -2584,6 +2603,43 @@ void action_next_relationshipgroup() {
 	}
 }
 
+
+void action_animation_code_input(){
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Ped actorPed = actor.getActorPed();
+
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		WAIT(0);
+	}
+
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strAnimationIndex = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strAnimationIndex);
+
+	Animation animation = getAnimationForShortcutIndex(keyboardValue);
+	if (animation.shortcutIndex != 0) {
+		STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+
+		//const System::DateTime endtime = System::DateTime::Now + System::TimeSpan(0, 0, 0, 0, 1000);
+
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
+		{
+			WAIT(0);
+		}
+
+		float duration = ENTITY::GET_ENTITY_ANIM_TOTAL_TIME((Entity)actorPed, animation.animLibrary, animation.animName);
+		log_to_file("Animation" + std::string(animation.animLibrary) +"  duration  " + std::to_string(duration));
+
+		duration = 2000;
+		AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, true, 8.0f, 0, 0, 0);
+		
+		duration = ENTITY::GET_ENTITY_ANIM_TOTAL_TIME((Entity)actorPed, animation.animLibrary, animation.animName);
+		log_to_file("Animation" + std::string(animation.animLibrary) + "  duration  " + std::to_string(duration));
+	}
+
+}
 
 
 void action_toggle_scene_mode() {
@@ -3501,6 +3557,9 @@ void action_menu_active_selected() {
 	else if (menu_active_action == MENU_ITEM_CHASE) {
 		action_vehicle_chase();
 	}
+	else if (menu_active_action == MENU_ITEM_ANIMATION) {
+		action_animation_code_input();
+	}
 	else if (menu_active_action == MENU_ITEM_ESCORT) {
 		action_vehicle_escort();
 	}
@@ -4080,7 +4139,15 @@ void ScriptMain()
 		STREAMING::REQUEST_CLIP_SET(walkingStyle.id);
 	}
 
-	
+	bool animOk = initAnimations("AnimIndex.txt");
+	if (animOk) {
+		log_to_file("GTA Animations initialized: ");
+	}
+	else {
+		log_to_file("GTA Animations initialization failed. AnimIndex.txt file missing?");
+	}
+	//std::vector<Animation> gtaAnimations = getAllAnimations();
+	//log_to_file("GTA Animations size: " + std::to_string(gtaAnimations.size()));
 
 	create_relationship_groups();
 	log_to_file("Screen Director initialized");
