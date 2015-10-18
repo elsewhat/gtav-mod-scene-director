@@ -85,6 +85,9 @@ bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(DWORD ticksStart
 			return false;
 		}
 	}
+	else {
+		return false;
+	}
 }
 
 
@@ -438,6 +441,7 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(DWORD ticksStar
 		}
 	} else {
 		log_to_file("Waiting " + std::to_string((m_ticksDeltaCheckCompletion / 2.0)) + " before checking distance to target for completion");
+		return false;
 	}
 }
 
