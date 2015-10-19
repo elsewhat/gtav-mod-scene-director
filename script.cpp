@@ -179,7 +179,10 @@ void log_to_file(std::string message, bool bAppend) {
 			logfile.open(filename, std::ios_base::app);
 		else
 			logfile.open(filename);
-		logfile << currentDateTime() << " " << message + "\n";
+		//logfile << currentDateTime() << " " << message + "\n";
+		logfile << message + "\n";
+
+
 		logfile.close();
 	}
 	return;
@@ -2608,6 +2611,103 @@ void action_animation_code_input(){
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	Ped actorPed = actor.getActorPed();
 
+	Vector3 startLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+	float startHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+
+
+	std::vector<Animation> animations = getAllAnimations();
+	log_to_file("Have " + std::to_string(animations.size()) + " animations");
+	for (int i = 999; i < animations.size();i++) {
+		Animation animation = animations[i];
+		if (animation.shortcutIndex != 0 && animation.duration != 0) {
+			STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+			DWORD ticksStart = GetTickCount();
+			bool hasLoaded = true;
+			while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
+			{
+				WAIT(0);
+				if (GetTickCount() > ticksStart + 1000) {
+					//log_to_file("Ticks overflow");
+					hasLoaded = false;
+					break;
+				}
+			}
+
+			if (hasLoaded) {
+				int duration = 500;
+				std::string strAnimation =  animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(animation.duration);
+				DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
+				
+				AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, true, 8.0f, 0, 0, 0);
+
+				ticksStart = GetTickCount();
+				while (!ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
+					WAIT(0);
+					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
+					if (GetTickCount() > ticksStart + 1000) {
+						//duration will be 0 if it's not loaded
+						//log_to_file("Ticks overflow2");
+						break;
+					}
+				}
+				log_to_file(animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName));
+				ticksStart = GetTickCount();
+				while (ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
+					WAIT(0);
+					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
+					if (GetTickCount() > ticksStart + 30000) {
+						//duration will be 0 if it's not loaded
+						//log_to_file("Ticks overflow2");
+						break;
+					}
+					CAM::STOP_CINEMATIC_SHOT(0xbeab4dff);
+				}
+				ENTITY::SET_ENTITY_COORDS_NO_OFFSET(actorPed, startLocation.x, startLocation.y, startLocation.z, 0, 0, 1);
+				ENTITY::SET_ENTITY_HEADING(actorPed, startHeading);
+			}
+			else {
+				log_to_file(animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(0));
+			}
+		}
+	}
+
+	/*
+	for (auto animation : animations) {
+		if (animation.shortcutIndex != 0) {
+			STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+			DWORD ticksStart = GetTickCount();
+			bool hasLoaded = true;
+			while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
+			{
+				WAIT(0);
+				if (GetTickCount() > ticksStart + 5000) {
+					//log_to_file("Ticks overflow");
+					hasLoaded = false;
+					break;
+				}
+			}
+
+			if (hasLoaded) {
+				int duration = 500;
+				AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, true, 8.0f, 0, 0, 0);
+				ticksStart = GetTickCount();
+				while (!ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
+					WAIT(0);
+					if (GetTickCount() > ticksStart + 5000) {
+						//duration will be 0 if it's not loaded
+						//log_to_file("Ticks overflow2");
+						break;
+					}
+				}
+				duration = (int)ENTITY::GET_ENTITY_ANIM_TOTAL_TIME((Entity)actorPed, animation.animLibrary, animation.animName);
+				log_to_file(animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(duration));
+			}
+			else {
+				log_to_file(animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(0));
+			}
+		}
+	}*/
+	/*
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
 
 	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
@@ -2629,15 +2729,15 @@ void action_animation_code_input(){
 			WAIT(0);
 		}
 
-		float duration = ENTITY::GET_ENTITY_ANIM_TOTAL_TIME((Entity)actorPed, animation.animLibrary, animation.animName);
-		log_to_file("Animation" + std::string(animation.animLibrary) +"  duration  " + std::to_string(duration));
-
-		duration = 2000;
-		AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, true, 8.0f, 0, 0, 0);
-		
+		int duration = 500;
+		AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, true, 8.0f, 0, 0, 0);
+		while (!ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
+			WAIT(0);
+		}
 		duration = ENTITY::GET_ENTITY_ANIM_TOTAL_TIME((Entity)actorPed, animation.animLibrary, animation.animName);
 		log_to_file("Animation" + std::string(animation.animLibrary) + "  duration  " + std::to_string(duration));
 	}
+	*/
 
 }
 

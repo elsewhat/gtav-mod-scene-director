@@ -7,6 +7,7 @@ struct Animation
 	std::string strShortcutIndex;
 	char* animLibrary;
 	char* animName;
+	int duration;
 };
 
 bool initAnimations(std::string fileName);

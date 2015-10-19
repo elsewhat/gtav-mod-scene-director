@@ -6,7 +6,7 @@
 #include <string>
 
 std::vector<Animation> gtaAnimations ={
- { 0,"00000","","" } 
+ { 0,"00000","","",0 } 
 };
 
 
@@ -29,10 +29,11 @@ bool initAnimations(std::string fileName) {
 	std::string strShortcutIndex;
 	std::string animLibrary;
 	std::string animName;
+	int duration;
 
-	while (animationsFile >> strShortcutIndex >> animLibrary >> animName)
+	while (animationsFile >> strShortcutIndex >> animLibrary >> animName >> duration)
 	{
-		gtaAnimations.push_back({ index,strShortcutIndex,strdup(animLibrary.c_str()),strdup(animName.c_str()) });
+		gtaAnimations.push_back({ index,strShortcutIndex,strdup(animLibrary.c_str()),strdup(animName.c_str()),duration });
 		index++;
 	}
 
