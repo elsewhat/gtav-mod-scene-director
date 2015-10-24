@@ -5,6 +5,37 @@
 #include <fstream>
 #include <string>
 
+
+std::vector<AnimationFlag> gtaAnimationFlags = {
+	{ "Flag1",ANIMATION_LOOP_FLAG1 },
+	{ "Flag2",ANIMATION_FLAG2 },
+	{ "Flag1+2",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG2 },
+	{ "Flag3",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG3 },
+	{ "Flag4",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG4 },
+	{ "Flag5",ANIMATION_LOOP_FLAG1 | ANIMATION_UPPER_BODY_FLAG5 },
+	{ "Flag6",ANIMATION_LOOP_FLAG1 | ANIMATION_ALLOW_MOVEMENT_FLAG6 },
+	{ "Flag7",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG7 },
+	{ "Flag8",ANIMATION_LOOP_FLAG1 | ANIMATION_ALLOW_WEAPONS_FLAG8 },
+	{ "Flag9",ANIMATION_LOOP_FLAG1 | ANIMATION_CRAZY_FLAG9 },
+	{ "Flag10",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG10 },
+	{ "Flag11",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG11 },
+	{ "Flag12",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG12 },
+	{ "Flag13",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG13 },
+	{ "Flag14",ANIMATION_LOOP_FLAG1 | ANIMATION_CANCEL_ON_MOVEMENT_FLAG14 },
+	{ "Flag15",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG15 },
+	{ "Flag16",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG16},
+	{ "Flag17",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG17 },
+	{ "Flag18",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG18 },
+	{ "Flag19",ANIMATION_LOOP_FLAG1 | ANIMATION_FLAG19 },
+
+};
+
+/*
+std::vector<AnimationFlag> gtaAnimationFlags = {
+	{ "Full body 33",33 },
+	{ "Upper body 49",49 },
+};*/
+
 std::vector<Animation> gtaAnimations ={
  { 0,"00000","","",0 } 
 };
@@ -58,4 +89,23 @@ Animation getAnimationForShortcutIndex(std::string strIndex) {
 }
 
 
+std::vector<AnimationFlag> getAnimationFlags() {
+	return gtaAnimationFlags;
+}
 
+AnimationFlag getDefaultAnimationFlag() {
+	return gtaAnimationFlags[0];
+}
+
+AnimationFlag getNextAnimationFlag(AnimationFlag animationFlag) {
+	//see http://stackoverflow.com/questions/14225932/search-for-a-struct-item-in-a-vector-by-member-data
+	int foundIndex = std::find_if(gtaAnimationFlags.begin(), gtaAnimationFlags.end(), [=](AnimationFlag const& flag) {
+		return (flag.id == animationFlag.id);
+	}) - gtaAnimationFlags.begin();
+	if (foundIndex + 1 >= gtaAnimationFlags.size()) {//color not found or in last element
+		return gtaAnimationFlags[0];
+	}
+	else {
+		return gtaAnimationFlags[foundIndex + 1];
+	}
+}

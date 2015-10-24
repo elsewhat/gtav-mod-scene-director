@@ -73,6 +73,7 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_WIND = 63,
 	SUBMENU_ITEM_ANIMATION_SINGLE = 70,
 	SUBMENU_ITEM_ANIMATION_PREVIEW = 71,
+	SUBMENU_ITEM_ANIMATION_FLAG = 72,
 
 
 
@@ -88,6 +89,9 @@ TODO: Refactor into Actor class
 std::vector<Actor>  actors(9);
 bool actor0IsClone = false;
 Actor previousActor = Actor::nullActor();
+
+AnimationFlag animationFlag = getDefaultAnimationFlag();
+Animation animationPrevious{ 0,"00000","","",0 };
 
 bool is_autopilot_engaged_for_player = false;
 bool is_chase_player_engaged = false;
@@ -585,9 +589,25 @@ void draw_instructional_buttons_animation_preview() {
 void draw_submenu_animation(int drawIndex) {
 	int submenu_index = 0;
 
+
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_ANIMATION_FLAG;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT(strdup(("Flag: "+ animationFlag.name).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_ANIMATION_SINGLE;
@@ -1077,7 +1097,7 @@ void draw_menu() {
 
 	}
 
-	DRAW_TEXT("Animation", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Animation (beta)", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 	if (menu_active_index == drawIndex) {
 		menu_active_action = MENU_ITEM_ANIMATION;
@@ -2527,6 +2547,10 @@ void action_toggle_blackout() {
 	nextWaitTicks = 100;
 }
 
+void action_next_animation_flag() {
+	animationFlag = getNextAnimationFlag(animationFlag);
+}
+
 void action_next_weather() {
 	index_weather++;
 	if (index_weather > gtaWeatherTypes.size() - 1) {
@@ -2702,7 +2726,7 @@ void action_next_relationshipgroup() {
 void action_animation_single() {
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	Ped actorPed = actor.getActorPed();
-
+	/*
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
 
 	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
@@ -2712,6 +2736,9 @@ void action_animation_single() {
 	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
 	std::string strAnimationIndex = std::string(keyboardValue);
 	log_to_file("Got keyboard value " + strAnimationIndex);
+	*/
+	char * keyboardValue = "01780";
+	std::string strAnimationIndex = std::string(keyboardValue);
 
 	Animation animation = getAnimationForShortcutIndex(keyboardValue);
 	if (animation.shortcutIndex != 0) {
@@ -2730,8 +2757,21 @@ void action_animation_single() {
 			}
 		}
 
+
+
+
 		int duration = 500;
-		AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, true, 8.0f, 0, 0, 0);
+		if (animationFlag.isFacialAnimation()) {
+			if (animationPrevious.shortcutIndex != 0) {
+				AI::STOP_ANIM_TASK(actorPed, animationPrevious.animLibrary, animationPrevious.animName, -4.0);
+			}
+			PED::PLAY_FACIAL_ANIM(actorPed, animation.animLibrary, animation.animName);
+		}
+		else {
+			AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, -1.0, animationFlag.id, 8.0f, 0, 0, 0);
+			animationPrevious = animation;
+		}
+
 	}
 }
 
@@ -3838,6 +3878,9 @@ void action_submenu_active_selected() {
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SINGLE) {
 		action_animation_single();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_FLAG) {
+		action_next_animation_flag();
 	}
 
 }
