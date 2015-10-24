@@ -17,6 +17,8 @@
 #include <fstream>
 #include <memory>
 
+#define PI 3.14159265
+
 //Key attributes
 //These are overwrittein in init_read_keys_from_ini()
 DWORD key_hud = VK_F10;
@@ -50,7 +52,7 @@ enum MENU_ITEM {
 	MENU_ITEM_CLONE_WITH_VEHICLE = 18,
 	MENU_ITEM_POSSESS = 19,
 	MENU_ITEM_WORLD = 20,
-	MENU_ITEM_ANIMATION =21,
+	MENU_ITEM_ANIMATION = 21,
 	SUBMENU_ITEM_RECORD_PLAYER = 40,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 41,
 	SUBMENU_ITEM_SPOT_LIGHT = 42,
@@ -69,6 +71,8 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_TIMELAPSE = 61,
 	SUBMENU_ITEM_WEATHER = 62,
 	SUBMENU_ITEM_WIND = 63,
+	SUBMENU_ITEM_ANIMATION_SINGLE = 70,
+	SUBMENU_ITEM_ANIMATION_PREVIEW = 71,
 
 
 
@@ -524,7 +528,7 @@ void draw_instructional_buttons_player_recording() {
 		char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_R");
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Stop recording");
@@ -539,6 +543,80 @@ void draw_instructional_buttons_player_recording() {
 	else {
 		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
 	}
+}
+
+void draw_instructional_buttons_animation_preview() {
+	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
+		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+
+		char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_C");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Stop preview");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_N");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Next animation");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_RGBA(scaleForm, 255, 255, 255, 255);
+	}
+	else {
+		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
+	}
+}
+
+void draw_submenu_animation(int drawIndex) {
+	int submenu_index = 0;
+
+	//colors for swapping from active to inactive... messy
+	int textColorR = 255, textColorG = 255, textColorB = 255;
+	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_ANIMATION_SINGLE;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Animation - Single", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_ANIMATION_PREVIEW;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Animation - Preview", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	submenu_max_index = submenu_index;
+
 }
 
 void draw_submenu_world(int drawIndex) {
@@ -982,6 +1060,21 @@ void draw_menu() {
 	}
 	else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	//show submenu for animation
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_ANIMATION;
+		draw_submenu_animation(drawIndex);
+		submenu_is_displayed = true;
+		if (submenu_active_index == -1) {
+			submenu_active_index = 0;
+		}
+		//dim the main menu selector if sub menu is active
+		if (submenu_is_active) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 180, bgColorG = 180, bgColorB = 180;
+		}
+
 	}
 
 	DRAW_TEXT("Animation", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
@@ -2606,44 +2699,130 @@ void action_next_relationshipgroup() {
 	}
 }
 
-
-void action_animation_code_input(){
+void action_animation_single() {
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	Ped actorPed = actor.getActorPed();
 
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		WAIT(0);
+	}
+
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strAnimationIndex = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strAnimationIndex);
+
+	Animation animation = getAnimationForShortcutIndex(keyboardValue);
+	if (animation.shortcutIndex != 0) {
+		STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+
+		DWORD ticksStart = GetTickCount();
+
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
+		{
+			WAIT(0);
+			if (GetTickCount() > ticksStart + 5000) {
+				//duration will be 0 if it's not loaded
+				log_to_file("Ticks overflow2");
+				set_status_text("Could not load animation with code " + strAnimationIndex);
+				return;
+			}
+		}
+
+		int duration = 500;
+		AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, true, 8.0f, 0, 0, 0);
+	}
+}
+
+
+void action_animations_preview(){
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Ped actorPed = actor.getActorPed();
+
+	set_status_text("Enter animation code to begin preview");
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		WAIT(0);
+	}
+
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strAnimationIndex = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strAnimationIndex);
+
+	Animation animation = getAnimationForShortcutIndex(keyboardValue);
+
+
 	Vector3 startLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
 	float startHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+	log_to_file("Start heading is " + std::to_string(startHeading));
+	Vector3 camOffset;
+	camOffset.x = sin((startHeading *PI / 180))*3.0;
+	camOffset.y = cos((startHeading *PI / 180))*3.0;
 
+
+
+	if (startLocation.x < 0) {
+		camOffset.x = -camOffset.x;
+	}
+	if (startLocation.y < 0) {
+		camOffset.y = -camOffset.y;
+	}
+
+
+	camOffset.z = 0.4;
+
+	log_to_file("Camera offset (" + std::to_string(camOffset.x) + ", " + std::to_string(camOffset.y) + ", " + std::to_string(camOffset.z) + ")");
+	Vector3 camLocation = ENTITY::GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS(actorPed, camOffset.x, camOffset.y, camOffset.z);
+
+	Any cameraHandle = CAM::CREATE_CAM_WITH_PARAMS("DEFAULT_SCRIPTED_CAMERA", camLocation.x, camLocation.y, camLocation.z, 0.0, 0.0, 0.0, 40.0, 1, 2);
+	CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+	CAM::POINT_CAM_AT_ENTITY(cameraHandle, actorPed, 0.0f, 0.0f, 0.0f, true);
+	CAM::RENDER_SCRIPT_CAMS(true, 0, 3000, 1, 0);
 
 	std::vector<Animation> animations = getAllAnimations();
 	log_to_file("Have " + std::to_string(animations.size()) + " animations");
-	for (int i = 999; i < animations.size();i++) {
+	for (int i = animation.shortcutIndex; i < animations.size();i++) {
 		Animation animation = animations[i];
+		std::string strAnimation = animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(animation.duration);
+
 		if (animation.shortcutIndex != 0 && animation.duration != 0) {
 			STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
 			DWORD ticksStart = GetTickCount();
 			bool hasLoaded = true;
 			while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
 			{
+
 				WAIT(0);
+				draw_instructional_buttons_animation_preview();
+				DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
 				if (GetTickCount() > ticksStart + 1000) {
 					//log_to_file("Ticks overflow");
 					hasLoaded = false;
 					break;
 				}
+				
 			}
 
 			if (hasLoaded) {
 				int duration = 500;
-				std::string strAnimation =  animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(animation.duration);
-				DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
 				
 				AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, true, 8.0f, 0, 0, 0);
 
 				ticksStart = GetTickCount();
 				while (!ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
 					WAIT(0);
+					draw_instructional_buttons_animation_preview();
 					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
+
+					CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
+					if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {//stop preview
+						//reset cam
+						CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
+						return;
+					}
+
 					if (GetTickCount() > ticksStart + 1000) {
 						//duration will be 0 if it's not loaded
 						//log_to_file("Ticks overflow2");
@@ -2654,13 +2833,24 @@ void action_animation_code_input(){
 				ticksStart = GetTickCount();
 				while (ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
 					WAIT(0);
-					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
-					if (GetTickCount() > ticksStart + 30000) {
+					draw_instructional_buttons_animation_preview();
+					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 255);
+
+					CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
+					if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {//stop preview
+						CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
+						return ;
+					}
+					else if (IsKeyDown(VK_MENU) && IsKeyDown(0x4E)) {//next animation
+						break;
+					}
+					
+					if (GetTickCount() > ticksStart + 60000) {
 						//duration will be 0 if it's not loaded
 						//log_to_file("Ticks overflow2");
 						break;
 					}
-					CAM::STOP_CINEMATIC_SHOT(0xbeab4dff);
+
 				}
 				ENTITY::SET_ENTITY_COORDS_NO_OFFSET(actorPed, startLocation.x, startLocation.y, startLocation.z, 0, 0, 1);
 				ENTITY::SET_ENTITY_HEADING(actorPed, startHeading);
@@ -2670,6 +2860,9 @@ void action_animation_code_input(){
 			}
 		}
 	}
+
+	//reset cam
+	CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
 
 	/*
 	for (auto animation : animations) {
@@ -3305,6 +3498,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		//main loop
 		while (bRecording == true) {
 			ticksNow = GetTickCount();
+			CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
 
 			draw_instructional_buttons_player_recording();
 
@@ -3639,6 +3833,12 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_VEHICLE_COSMETIC) {
 		action_toggle_vehicle_cosmetic();
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_PREVIEW) {
+		action_animations_preview();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SINGLE) {
+		action_animation_single();
+	}
 
 }
 
@@ -3656,9 +3856,6 @@ void action_menu_active_selected() {
 	}
 	else if (menu_active_action == MENU_ITEM_CHASE) {
 		action_vehicle_chase();
-	}
-	else if (menu_active_action == MENU_ITEM_ANIMATION) {
-		action_animation_code_input();
 	}
 	else if (menu_active_action == MENU_ITEM_ESCORT) {
 		action_vehicle_escort();
