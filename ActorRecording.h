@@ -8,7 +8,7 @@
 
 //forward declaration
 class Actor;
-class Scenario;
+struct Scenario;
 
 class ActorRecordingItem {
 protected:

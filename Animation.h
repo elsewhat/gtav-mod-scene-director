@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <windows.h>
 
 struct Animation
 {
@@ -14,6 +15,17 @@ struct Animation
 		return strShortcutIndex + " " + std::string(animLibrary) + " " + std::string(animName) + " " + std::to_string(duration);
 	}
 };
+
+
+struct AnimationSequence
+{
+	DWORD keyShortcut;
+	DWORD keyShortcut2;
+
+	std::vector<Animation> animationsInSequence;
+
+};
+
 
 struct AnimationFlag
 {

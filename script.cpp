@@ -82,17 +82,14 @@ enum MENU_ITEM {
 
 bool should_display_hud = false;
 
-/*
-TODO: Refactor into Actor class
-*/
-//attributes to the actors in the slot 1-9 
-//index 0 is reserved for the last actor
 std::vector<Actor>  actors(9);
 bool actor0IsClone = false;
 Actor previousActor = Actor::nullActor();
 
 AnimationFlag animationFlag = getDefaultAnimationFlag();
 Animation animationPrevious{ 0,"00000","","",0 };
+
+std::vector<AnimationSequence>  animationSequences;
 
 bool is_autopilot_engaged_for_player = false;
 bool is_chase_player_engaged = false;
@@ -1378,19 +1375,19 @@ void draw_spot_lights() {
 			case SPOT_LIGHT_NONE:
 				break;
 			case SPOT_LIGHT_ACTOR_ABOVE:
-				GRAPHICS::DRAW_SPOT_LIGHT(actorPos.x, actorPos.y, actorPos.z + 20.0, 0, 0, -1.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 4.0f, 1.0f);
+				GRAPHICS::DRAW_SPOT_LIGHT(actorPos.x, actorPos.y, actorPos.z + 20.0f, 0, 0, -1.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 4.0f, 1.0f);
 				break;
 			case SPOT_LIGHT_WEST:
-				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x+10.0, actorPos.y, actorPos.z, -1.0, 0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
+				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x+10.0f, actorPos.y, actorPos.z, -1.0, 0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
 				break;
 			case SPOT_LIGHT_EAST:
-				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x-10.0, actorPos.y, actorPos.z, 1.0, 0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
+				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x-10.0f, actorPos.y, actorPos.z, 1.0, 0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
 				break;
 			case SPOT_LIGHT_NORTH:
-				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x, actorPos.y - 10.0, actorPos.z, 0.0, 1.0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
+				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x, actorPos.y - 10.0f, actorPos.z, 0.0, 1.0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
 				break;
 			case SPOT_LIGHT_SOUTH:
-				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x, actorPos.y+10.0, actorPos.z, 0.0, -1.0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
+				GRAPHICS::_DRAW_SPOT_LIGHT_WITH_SHADOW(actorPos.x, actorPos.y+10.0f, actorPos.z, 0.0, -1.0, 0.0, colorR, colorG, colorB, 100.0f, 1.0, 0.0f, 6.0f, 1.0f,0);
 				break;
 			default:
 				break;
@@ -1727,7 +1724,7 @@ void action_clone_player() {
 		PED::SET_PED_INTO_VEHICLE(clonedPed, vehicle, -2);
 	}
 	else {//clone a bit ahead of the player and facing towards you
-		ENTITY::SET_ENTITY_HEADING(clonedPed, ENTITY::GET_ENTITY_HEADING(playerPed)+180.0);
+		ENTITY::SET_ENTITY_HEADING(clonedPed, ENTITY::GET_ENTITY_HEADING(playerPed)+180.0f);
 		teleport_entity_to_location(clonedPed, ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(playerPed, 1.0, 3.0, 0.0), false);
 	}
 
@@ -2416,7 +2413,7 @@ void action_teleport_to_start_locations() {
 				haveDeadActors = true;
 				ENTITY::SET_ENTITY_HEALTH(actor.getActorPed(), ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
 				Vector3 location = actor.getStartLocation();
-				location.z = location.z + 1.0;
+				location.z = location.z + 1.0f;
 				teleport_entity_to_location(entityToTeleport, location, true);
 
 				//see http://gtaforums.com/topic/801452-death-recording-no-more-wastedbusted-screen-automatic-radio-off/
@@ -2783,7 +2780,7 @@ void action_animation_single() {
 			PED::PLAY_FACIAL_ANIM(actorPed, animation.animLibrary, animation.animName);
 		}
 		else {
-			AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, -1.0, animationFlag.id, 8.0f, 0, 0, 0);
+			AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, -1, animationFlag.id, 8.0f, 0, 0, 0);
 			animationPrevious = animation;
 		}
 
@@ -2797,7 +2794,7 @@ void action_animation_sequence() {
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "INVALID_IN_ORDER_TO_DISPLAY_NOTHING", "", "", "", "", "", 256);
 
 	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
-		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 255);
+		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
 
 		WAIT(0);
 	}
@@ -2807,7 +2804,7 @@ void action_animation_sequence() {
 	log_to_file("Got keyboard value " + strAnimationIndex);
 
 	char* token = strtok(keyboardValue, " ");
-	std::vector<Animation> animationSequence = {};
+	std::vector<Animation> animations = {};
 	int i = 0;
 	while (token != NULL)
 	{
@@ -2815,7 +2812,7 @@ void action_animation_sequence() {
 		Animation animation = getAnimationForShortcutIndex(token);
 		if (animation.shortcutIndex != 0) {
 			log_to_file("Adding animation " + animation.toString());
-			animationSequence.push_back(animation);
+			animations.push_back(animation);
 		}
 		
 		token = strtok(NULL, " ");
@@ -2823,6 +2820,14 @@ void action_animation_sequence() {
 		if (i > 100) {
 			return;
 		}
+	}
+
+	if (animations.size() > 0) {
+		 AnimationSequence animSequence{ VK_MENU,0x52,animations };
+		 animationSequences.push_back(animSequence);
+		
+		 log_to_file("Animation sequences " +std::to_string(animationSequences.size()));
+
 	}
 
 }
@@ -2850,8 +2855,8 @@ void action_animations_preview(){
 	float startHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
 	log_to_file("Start heading is " + std::to_string(startHeading));
 	Vector3 camOffset;
-	camOffset.x = sin((startHeading *PI / 180))*3.0;
-	camOffset.y = cos((startHeading *PI / 180))*3.0;
+	camOffset.x = (float) sin((startHeading *PI / 180.0f))*3.0f;
+	camOffset.y = (float) cos((startHeading *PI / 180.0f))*3.0f;
 
 
 
@@ -3668,7 +3673,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						//if both previous and last speed is less than half max speed, we assume it's on purpose
 						if (entitySpeed < (vehicleMaxSpeed / 2.0) && lastEntitySpeed < (vehicleMaxSpeed / 2.0)) {
 							//make the speed the average of the last two
-							recordedSpeed = (entitySpeed + lastEntitySpeed) / 2.0;
+							recordedSpeed = (entitySpeed + lastEntitySpeed) / 2.0f;
 						}
 
 
@@ -4027,7 +4032,6 @@ void action_copy_player_actions() {
 		DWORD tickLast = tickStart;
 		DWORD tickNow = tickStart;
 		CONST DWORD DELTA_TICKS = 10;
-		float previousHeading;
 		Hash previousWeapon;
 		bool isFreeAiming = false;
 		bool isShooting = false;
