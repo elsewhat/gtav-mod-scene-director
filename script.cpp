@@ -74,6 +74,7 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_ANIMATION_SINGLE = 70,
 	SUBMENU_ITEM_ANIMATION_PREVIEW = 71,
 	SUBMENU_ITEM_ANIMATION_FLAG = 72,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE = 73,
 
 
 
@@ -187,8 +188,8 @@ void log_to_file(std::string message, bool bAppend) {
 			logfile.open(filename, std::ios_base::app);
 		else
 			logfile.open(filename);
-		//logfile << currentDateTime() << " " << message + "\n";
-		logfile << message + "\n";
+		logfile << currentDateTime() << " " << message + "\n";
+		//logfile << message + "\n";
 
 
 		logfile.close();
@@ -632,6 +633,20 @@ void draw_submenu_animation(int drawIndex) {
 
 
 	DRAW_TEXT("Animation - Preview", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_ANIMATION_SEQUENCE;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Animation - Sequence", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 
@@ -2775,6 +2790,43 @@ void action_animation_single() {
 	}
 }
 
+void action_animation_sequence() {
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Ped actorPed = actor.getActorPed();
+	
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "INVALID_IN_ORDER_TO_DISPLAY_NOTHING", "", "", "", "", "", 256);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 255);
+
+		WAIT(0);
+	}
+
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strAnimationIndex = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strAnimationIndex);
+
+	char* token = strtok(keyboardValue, " ");
+	std::vector<Animation> animationSequence = {};
+	int i = 0;
+	while (token != NULL)
+	{
+		log_to_file("Finding animation for token " + std::string(token));
+		Animation animation = getAnimationForShortcutIndex(token);
+		if (animation.shortcutIndex != 0) {
+			log_to_file("Adding animation " + animation.toString());
+			animationSequence.push_back(animation);
+		}
+		
+		token = strtok(NULL, " ");
+		i++;
+		if (i > 100) {
+			return;
+		}
+	}
+
+}
+
 
 void action_animations_preview(){
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
@@ -3882,6 +3934,9 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_FLAG) {
 		action_next_animation_flag();
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SEQUENCE) {
+		action_animation_sequence();
+	}
 
 }
 
@@ -4479,12 +4534,12 @@ void ScriptMain()
 		STREAMING::REQUEST_CLIP_SET(walkingStyle.id);
 	}
 
-	bool animOk = initAnimations("AnimIndex.txt");
+	bool animOk = initAnimations("SceneDirectorAnim.txt");
 	if (animOk) {
 		log_to_file("GTA Animations initialized: ");
 	}
 	else {
-		log_to_file("GTA Animations initialization failed. AnimIndex.txt file missing?");
+		log_to_file("GTA Animations initialization failed. SceneDirectorAnim.txt file missing?");
 	}
 	//std::vector<Animation> gtaAnimations = getAllAnimations();
 	//log_to_file("GTA Animations size: " + std::to_string(gtaAnimations.size()));

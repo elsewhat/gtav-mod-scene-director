@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 
 struct Animation
 {
@@ -8,6 +9,10 @@ struct Animation
 	char* animLibrary;
 	char* animName;
 	int duration;
+
+	std::string toString() {
+		return strShortcutIndex + " " + std::string(animLibrary) + " " + std::string(animName) + " " + std::to_string(duration);
+	}
 };
 
 struct AnimationFlag
