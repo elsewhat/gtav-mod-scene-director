@@ -2787,7 +2787,44 @@ void action_animation_single() {
 	}
 }
 
-void action_animation_sequence() {
+
+void action_animation_sequence_play(AnimationSequence animSequence) {
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Ped actorPed = actor.getActorPed();
+
+	//load animation dicts
+	for (auto &animation : animSequence.animationsInSequence) {
+		STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+
+		DWORD ticksStart = GetTickCount();
+
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
+		{
+			WAIT(0);
+			if (GetTickCount() > ticksStart + 5000) {
+				//duration will be 0 if it's not loaded
+				log_to_file("Ticks overflow2");
+				set_status_text("Could not load animation with code " + std::string(animation.animLibrary));
+				return;
+			}
+		}
+	}
+
+	//create task sequence
+	TaskSequence task_seq = 1;
+	AI::OPEN_SEQUENCE_TASK(&task_seq);
+
+	//load animation dicts
+	for (auto &animation : animSequence.animationsInSequence) {
+		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, animationFlag.id, 8.0f, 0, 0, 0);
+	}
+
+	AI::CLOSE_SEQUENCE_TASK(task_seq);
+	AI::TASK_PERFORM_SEQUENCE(actorPed, task_seq);
+	AI::CLEAR_SEQUENCE_TASK(&task_seq);
+}
+
+void action_animation_sequence_add() {
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	Ped actorPed = actor.getActorPed();
 	
@@ -2825,12 +2862,17 @@ void action_animation_sequence() {
 	if (animations.size() > 0) {
 		 AnimationSequence animSequence{ VK_MENU,0x52,animations };
 		 animationSequences.push_back(animSequence);
-		
-		 log_to_file("Animation sequences " +std::to_string(animationSequences.size()));
+
+		 log_to_file("Animation sequences " + std::to_string(animationSequences.size()));
+
+		 action_animation_sequence_play(animSequence);
+
 
 	}
 
 }
+
+
 
 
 void action_animations_preview(){
@@ -3940,7 +3982,7 @@ void action_submenu_active_selected() {
 		action_next_animation_flag();
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SEQUENCE) {
-		action_animation_sequence();
+		action_animation_sequence_add();
 	}
 
 }

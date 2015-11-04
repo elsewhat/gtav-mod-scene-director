@@ -212,7 +212,7 @@ void Actor::setHasRecording(bool hasRecording)
 void Actor::startReplayRecording(DWORD tickStart)
 {
 	m_replayRecordingInProgress = true;
-	m_actorRecordingPlayback = ActorRecordingPlayback(tickStart, m_actorRecordingItems.size());
+	m_actorRecordingPlayback = ActorRecordingPlayback(tickStart, (int)m_actorRecordingItems.size());
 }
 
 void Actor::stopReplayRecording()
