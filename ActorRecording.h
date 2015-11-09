@@ -27,6 +27,7 @@ public:
 
 
 	DWORD getTicksDeltaCheckCompletion();
+	void setTicksDeltaCheckCompletion(DWORD ticksDeltaCheckCompletion);
 
 	void setTicksLength(DWORD ticks);
 	DWORD getTicksLength();

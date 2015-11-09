@@ -33,6 +33,11 @@ DWORD ActorRecordingItem::getTicksDeltaCheckCompletion()
 	return m_ticksDeltaCheckCompletion;
 }
 
+void ActorRecordingItem::setTicksDeltaCheckCompletion(DWORD ticksDeltaCheckCompletion)
+{
+	m_ticksDeltaCheckCompletion = ticksDeltaCheckCompletion;
+}
+
 void ActorRecordingItem::setTicksLength(DWORD ticks)
 {
 	m_ticksLength = ticks;

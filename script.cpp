@@ -16,8 +16,11 @@
 #include <vector>
 #include <fstream>
 #include <memory>
+#include <bitset> 
 
 #define PI 3.14159265
+
+//bool isBitSet = IntBits(value).test(position);
 
 //Key attributes
 //These are overwrittein in init_read_keys_from_ini()
@@ -625,7 +628,13 @@ void draw_submenu_animation(int drawIndex) {
 			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 		}
 
-		DRAW_TEXT(strdup(("Anim #"+std::to_string(i + 1)+" - CTRL+NUM" + std::to_string(i+1)).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+
+		char* animText = strdup(("Anim #" + std::to_string(i + 1) + " ALT+NUM" + std::to_string(i + 1)).c_str());
+		if ((i + 1) >= 10) {
+			animText = strdup(("Anim #" + std::to_string(i + 1)).c_str());
+		}
+
+		DRAW_TEXT(animText, 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 		drawIndex++;
@@ -672,7 +681,7 @@ void draw_submenu_animation(int drawIndex) {
 	}
 
 
-	DRAW_TEXT("Animation - Preview", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Preview Animations", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
@@ -686,7 +695,7 @@ void draw_submenu_animation(int drawIndex) {
 	}
 
 
-	DRAW_TEXT("Add - Anim seq", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Add Anim by IDs", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 
@@ -3136,7 +3145,7 @@ void action_animations_preview(){
 
 AnimationSequence action_if_animation_sequence_shortcut_key_pressed(bool isRecording) {
 	//ALT key
-	if (IsKeyDown(VK_CONTROL)) {
+	if (IsKeyDown(VK_MENU)) {
 		int animSequenceIndex = -1;
 		if (IsKeyDown(VK_NUMPAD1)) {
 			animSequenceIndex = 0;
@@ -3773,6 +3782,8 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		while (bRecording == true) {
 			ticksNow = GetTickCount();
 			//CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
+			//disable ALT key
+			CONTROLS::DISABLE_CONTROL_ACTION(0, 19, 1);
 
 			draw_instructional_buttons_player_recording();
 
@@ -3786,8 +3797,23 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 				actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
 				ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, animationSeqRecorded,animationFlag);
-				actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
 				log_to_file(recordingItem.toString());
+
+
+
+				std::bitset<19> bitCheck(animationFlag.id);
+				log_to_file("Bitcheck " + bitCheck.to_string());
+				if (!bitCheck.test(5)) {//Bit 6 is not set
+					//log_to_file("Bitcheck 6");
+					recordingItem.setTicksDeltaCheckCompletion((DWORD)animationSeqRecorded.getDurationOfAnimations());
+					actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
+					WAIT(animationSeqRecorded.getDurationOfAnimations());
+				}
+				else {
+					//log_to_file("Bitcheck !6");
+					actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
+					WAIT(250);
+				}
 				DELTA_TICKS = 500;
 				ticksLast = ticksNow;
 			}
@@ -4623,6 +4649,9 @@ void main()
 
 	while (true)
 	{
+		//disable ALT key
+		CONTROLS::DISABLE_CONTROL_ACTION(0, 19, 1);
+
 		/* ACTIONS WHICH MAY NEED TO WAIT A FEW TICKS */
 		if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
 			//nextWaitTicks will be set by action methods in order to define how long before next input can be processed

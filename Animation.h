@@ -34,6 +34,20 @@ struct AnimationSequence
 		}
 	}
 
+	int getDurationOfAnimations() {
+		if (isNullAnimationSequence()) {
+			return 0;
+		}
+		else {
+			int duration = 0;
+			for (auto &animation : animationsInSequence) {
+				duration = duration + animation.duration;
+			}
+			return duration;
+		}
+
+	}
+
 	std::string toString() {
 		return std::to_string(animationsInSequence.size()) + " animations";
 	}
