@@ -7,19 +7,13 @@
 
 
 std::vector<AnimationFlag> gtaAnimationFlags = {
-	{ "Normal",ANIMATION_LOOP_FLAG1},
-	{ "Upper body",ANIMATION_LOOP_FLAG1 | ANIMATION_UPPER_BODY_FLAG5 },
 	{ "Allow movement",ANIMATION_LOOP_FLAG1 | ANIMATION_ALLOW_MOVEMENT_FLAG6 | ANIMATION_UPPER_BODY_FLAG5 },
+	{ "Normal",ANIMATION_LOOP_FLAG1 },
 	{ "Stop on movement",ANIMATION_LOOP_FLAG1 | ANIMATION_STOP_ON_MOVEMENT_FLAG8 },
 	{ "Crazy ",ANIMATION_LOOP_FLAG1 | ANIMATION_CRAZY_FLAG9 },
 
 };
 
-/*
-std::vector<AnimationFlag> gtaAnimationFlags = {
-	{ "Full body 33",33 },
-	{ "Upper body 49",49 },
-};*/
 
 std::vector<Animation> gtaAnimations ={
  { 0,"00000","","",0 } 

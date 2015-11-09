@@ -27,6 +27,7 @@ DWORD key_menu_down = VK_NUMPAD2;
 DWORD key_menu_left = VK_NUMPAD4;
 DWORD key_menu_right = VK_NUMPAD6;
 DWORD key_menu_select = VK_NUMPAD5;
+DWORD key_menu_delete = VK_DELETE;
 char key_hud_str[256];
 
 
@@ -75,6 +76,27 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_ANIMATION_PREVIEW = 71,
 	SUBMENU_ITEM_ANIMATION_FLAG = 72,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE = 73,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_0 = 200,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_1 = 201,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_2 = 202,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_3 = 203,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_4 = 204,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_5 = 205,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_6 = 206,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_7 = 207,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_8 = 208,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_9 = 209,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_10 = 210,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_11 = 211,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_12 = 212,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_13 = 213,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_14= 214,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_15 = 215,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_16 = 216,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_17 = 217,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_18 = 218,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_19 = 219,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE_20 = 220,
 
 
 
@@ -90,6 +112,7 @@ AnimationFlag animationFlag = getDefaultAnimationFlag();
 Animation animationPrevious{ 0,"00000","","",0 };
 
 std::vector<AnimationSequence>  animationSequences;
+int animationSequencesIndex = 0;
 
 bool is_autopilot_engaged_for_player = false;
 bool is_chase_player_engaged = false;
@@ -591,6 +614,24 @@ void draw_submenu_animation(int drawIndex) {
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+
+
+	for (int i = 0; i < animationSequences.size();i++) {
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = (MENU_ITEM) (SUBMENU_ITEM_ANIMATION_SEQUENCE_0 + i);
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT(strdup(("Anim #"+std::to_string(i + 1)+" - CTRL+NUM" + std::to_string(i+1)).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+	}
+
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_ANIMATION_FLAG;
@@ -599,13 +640,14 @@ void draw_submenu_animation(int drawIndex) {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-	DRAW_TEXT(strdup(("Flag: "+ animationFlag.name).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT(strdup(("Type: "+ animationFlag.name).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-
+	/*
 	drawIndex++;
 	submenu_index++;
 
+	
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_ANIMATION_SINGLE;
@@ -617,6 +659,7 @@ void draw_submenu_animation(int drawIndex) {
 	DRAW_TEXT("Animation - Single", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
+	*/
 
 	drawIndex++;
 	submenu_index++;
@@ -643,7 +686,7 @@ void draw_submenu_animation(int drawIndex) {
 	}
 
 
-	DRAW_TEXT("Animation - Sequence", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Add - Anim seq", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 
@@ -1267,7 +1310,7 @@ void draw_menu() {
 	}
 
 	//10. Possess actor
-	DRAW_TEXT("Possess nearest/aimed", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Control near/aimed", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 	if (menu_active_index == drawIndex) {
 		menu_active_action = MENU_ITEM_POSSESS;
@@ -2059,6 +2102,7 @@ void action_if_ped_assign_shortcut_key_pressed()
 		}
 	}
 }
+
 
 void action_remove_actor_from_index(int pedShortcutsIndex) {
 	if (actors[pedShortcutsIndex-1].isNullActor()) {
@@ -2860,8 +2904,18 @@ void action_animation_sequence_add() {
 	}
 
 	if (animations.size() > 0) {
+		//we currently ignore the key bindings, is based on index in vector instead
 		 AnimationSequence animSequence{ VK_MENU,0x52,animations };
-		 animationSequences.push_back(animSequence);
+
+		 if (animationSequences.size() >= 20) {
+			 animationSequences[animationSequencesIndex] = animSequence;
+			 animationSequencesIndex++;
+		 }
+		 else {
+			 animationSequences.push_back(animSequence);
+		 }
+
+
 
 		 log_to_file("Animation sequences " + std::to_string(animationSequences.size()));
 
@@ -3074,6 +3128,60 @@ void action_animations_preview(){
 }
 
 
+
+void action_if_animation_sequence_shortcut_key_pressed() {
+	//ALT key
+	if (IsKeyDown(VK_CONTROL)) {
+		int animSequenceIndex = -1;
+		if (IsKeyDown(VK_NUMPAD1)) {
+			animSequenceIndex = 0;
+		}
+		else if (IsKeyDown(VK_NUMPAD2)) {
+			animSequenceIndex = 1;
+		}
+		else if (IsKeyDown(VK_NUMPAD3)) {
+			animSequenceIndex = 2;
+		}
+		else if (IsKeyDown(VK_NUMPAD4)) {
+			animSequenceIndex = 3;
+		}
+		else if (IsKeyDown(VK_NUMPAD5)) {
+			animSequenceIndex = 4;
+		}
+		else if (IsKeyDown(VK_NUMPAD6)) {
+			animSequenceIndex = 5;
+		}
+		else if (IsKeyDown(VK_NUMPAD7)) {
+			animSequenceIndex = 6;
+		}
+		else if (IsKeyDown(VK_NUMPAD8)) {
+			animSequenceIndex = 7;
+		}
+		else if (IsKeyDown(VK_NUMPAD9)) {
+			animSequenceIndex = 8;
+		}
+		else if (IsKeyDown(VK_NUMPAD0)) {
+			animSequenceIndex = 9;
+		}
+
+		if (animSequenceIndex != -1) {
+
+			if (animationSequences.size() > animSequenceIndex) {
+				log_to_file("action_if_animation_sequence_shortcut_key_pressed");
+				nextWaitTicks = 250;
+
+				action_animation_sequence_play(animationSequences[animSequenceIndex]);
+
+			}
+			else {
+				set_status_text("No animation sequence in slot " + std::to_string(animSequenceIndex + 1));
+			}
+		}
+	}
+
+}
+
+
 void action_toggle_scene_mode() {
 	if (sceneMode == SCENE_MODE_ACTIVE) {
 		sceneMode = SCENE_MODE_SETUP;
@@ -3267,12 +3375,13 @@ void init_read_keys_from_ini() {
 	log_to_file("Converted keys to dword key_possess " + std::to_string(key_hud));
 
 
-	char key_menu_down_str[256], key_menu_up_str[256], key_menu_select_str[256], key_menu_left_str[256], key_menu_right_str[256];
+	char key_menu_down_str[256], key_menu_up_str[256], key_menu_select_str[256], key_menu_left_str[256], key_menu_right_str[256], key_menu_delete_str[256];
 	GetPrivateProfileString("keys", "key_menu_down", "NUM2", key_menu_down_str, sizeof(key_menu_down_str), config_path);
 	GetPrivateProfileString("keys", "key_menu_up", "NUM8", key_menu_up_str, sizeof(key_menu_up_str), config_path);
 	GetPrivateProfileString("keys", "key_menu_select", "NUM5", key_menu_select_str, sizeof(key_menu_select_str), config_path);
 	GetPrivateProfileString("keys", "key_menu_left", "NUM4", key_menu_left_str, sizeof(key_menu_left_str), config_path);
 	GetPrivateProfileString("keys", "key_menu_right", "NUM6", key_menu_right_str, sizeof(key_menu_right_str), config_path);
+	GetPrivateProfileString("keys", "key_menu_delete", "DELETE", key_menu_delete_str, sizeof(key_menu_delete_str), config_path);
 
 
 	key_menu_down = str2key(std::string(key_menu_down_str));
@@ -3303,6 +3412,12 @@ void init_read_keys_from_ini() {
 	if (key_menu_left == 0) {
 		log_to_file(std::string(key_menu_right_str) + " is not a valid key");
 		key_menu_right = str2key("NUM6");
+	}
+
+	key_menu_delete = str2key(std::string(key_menu_delete_str));
+	if (key_menu_delete == 0) {
+		log_to_file(std::string(key_menu_delete_str) + " is not a valid key");
+		key_menu_delete = str2key("DELETE");
 	}
 
 }
@@ -3487,6 +3602,15 @@ bool menu_right_key_pressed() {
 
 bool menu_select_key_pressed() {
 	if (IsKeyDown(key_menu_select)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool menu_delete_key_pressed() {
+	if (IsKeyDown(key_menu_delete)) {
 		return true;
 	}
 	else {
@@ -3984,7 +4108,42 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SEQUENCE) {
 		action_animation_sequence_add();
 	}
+	else if (submenu_active_action >= SUBMENU_ITEM_ANIMATION_SEQUENCE_0 && submenu_active_action <= SUBMENU_ITEM_ANIMATION_SEQUENCE_20) {
+		int animSequenceIndex = submenu_active_action - SUBMENU_ITEM_ANIMATION_SEQUENCE_0;
+		if (animSequenceIndex >= 0 && animSequenceIndex < animationSequences.size()) {
+			action_animation_sequence_play(animationSequences[animSequenceIndex]);
+		}
+	}
 
+}
+
+
+void action_submenu_active_delete() {
+	log_to_file("action_submenu_active_delete " + std::to_string(submenu_active_action));
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+
+	if (submenu_active_action >= SUBMENU_ITEM_ANIMATION_SEQUENCE_0 && submenu_active_action <= SUBMENU_ITEM_ANIMATION_SEQUENCE_20) {
+		int animSequenceIndex = submenu_active_action - SUBMENU_ITEM_ANIMATION_SEQUENCE_0;
+		if (animSequenceIndex >= 0 && animSequenceIndex < animationSequences.size()) {
+			animationSequences.erase(animationSequences.begin() + animSequenceIndex);
+		}
+	}
+}
+
+void action_menu_active_delete() {
+	log_to_file("action_menu_active_delete " + std::to_string(menu_active_action));
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+
+	if (menu_active_action >= 1 && menu_active_action <= 9) {
+		int actorIndex = menu_active_action-1;
+		if (actorIndex >= 0 && actorIndex < actors.size()) {
+			actors[actorIndex] = Actor::nullActor();
+			//force the active menu to be set to the new actor
+			menu_active_index = -1;
+			menu_active_ped = PLAYER::PLAYER_PED_ID();
+		}
+
+	}
 }
 
 void action_menu_active_selected() {
@@ -4052,6 +4211,16 @@ void menu_action_select() {
 	}
 	else {
 		action_menu_active_selected();
+	}
+	nextWaitTicks = 200;
+}
+
+void menu_action_delete() {
+	if (submenu_is_active) {
+		action_submenu_active_delete();
+	}
+	else {
+		action_menu_active_delete();
 	}
 	nextWaitTicks = 200;
 }
@@ -4439,6 +4608,7 @@ void main()
 				action_teleport_to_start_locations();
 			}
 
+
 			if (set_same_waypoint_for_all_actors_key_pressed()) {
 				action_set_same_waypoint_for_all_actors();
 			}
@@ -4514,12 +4684,17 @@ void main()
 				else if (menu_select_key_pressed()) {
 					menu_action_select();
 				}
+				else if (menu_delete_key_pressed()) {
+					menu_action_delete();
+				}
 			}
 
 
 			action_if_ped_assign_shortcut_key_pressed();
 
 			action_if_ped_execute_shortcut_key_pressed();
+
+			action_if_animation_sequence_shortcut_key_pressed();
 
 			check_if_player_is_passenger_and_has_waypoint();
 
