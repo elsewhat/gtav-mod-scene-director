@@ -3,6 +3,7 @@
 #include "..\..\inc\types.h"
 #include "script.h"
 #include "scenario.h"
+#include "Animation.h"
 #include <string>
 #include <memory>
 
@@ -143,6 +144,21 @@ public:
 	void executeNativesForRecording(Actor actor) override;
 	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
 };
+
+
+class ActorAnimationSequenceRecordingItem : public ActorRecordingItem {
+protected:
+	AnimationSequence m_animationSequence;
+	AnimationFlag m_animationFlag;
+public:
+	ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, AnimationSequence animationSequence, AnimationFlag animationFlag);
+	AnimationSequence getAnimationSequence();
+	std::string toString() override;
+	void executeNativesForRecording(Actor actor) override;
+	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+
+};
+
 
 class ActorRecordingPlayback {
 protected:

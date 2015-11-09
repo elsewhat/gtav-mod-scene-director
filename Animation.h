@@ -19,11 +19,24 @@ struct Animation
 
 struct AnimationSequence
 {
-	DWORD keyShortcut;
-	DWORD keyShortcut2;
-
 	std::vector<Animation> animationsInSequence;
 
+	static AnimationSequence nullAnimationSequence() {
+		return AnimationSequence{ std::vector<Animation>() };
+	}
+
+	bool isNullAnimationSequence() {
+		if (animationsInSequence.size() == 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	std::string toString() {
+		return std::to_string(animationsInSequence.size()) + " animations";
+	}
 };
 
 

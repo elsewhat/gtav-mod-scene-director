@@ -1310,7 +1310,7 @@ void draw_menu() {
 	}
 
 	//10. Possess actor
-	DRAW_TEXT("Control near/aimed", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Possess near/aimed", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 	if (menu_active_index == drawIndex) {
 		menu_active_action = MENU_ITEM_POSSESS;
@@ -2860,6 +2860,7 @@ void action_animation_sequence_play(AnimationSequence animSequence) {
 
 	//load animation dicts
 	for (auto &animation : animSequence.animationsInSequence) {
+		log_to_file("AI::TASK_PLAY_ANIM " + std::to_string(animation.shortcutIndex) + " " + std::string(animation.animName));
 		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, animationFlag.id, 8.0f, 0, 0, 0);
 	}
 
@@ -2905,7 +2906,7 @@ void action_animation_sequence_add() {
 
 	if (animations.size() > 0) {
 		//we currently ignore the key bindings, is based on index in vector instead
-		 AnimationSequence animSequence{ VK_MENU,0x52,animations };
+		 AnimationSequence animSequence{ animations };
 
 		 if (animationSequences.size() >= 20) {
 			 animationSequences[animationSequencesIndex] = animSequence;
@@ -2941,6 +2942,10 @@ void action_animations_preview(){
 	}
 
 	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	if (!keyboardValue) {
+		log_to_file("Got null keyboard value");
+		return;
+	}
 	std::string strAnimationIndex = std::string(keyboardValue);
 	log_to_file("Got keyboard value " + strAnimationIndex);
 
@@ -3129,7 +3134,7 @@ void action_animations_preview(){
 
 
 
-void action_if_animation_sequence_shortcut_key_pressed() {
+AnimationSequence action_if_animation_sequence_shortcut_key_pressed(bool isRecording) {
 	//ALT key
 	if (IsKeyDown(VK_CONTROL)) {
 		int animSequenceIndex = -1;
@@ -3171,6 +3176,7 @@ void action_if_animation_sequence_shortcut_key_pressed() {
 				nextWaitTicks = 250;
 
 				action_animation_sequence_play(animationSequences[animSequenceIndex]);
+				return animationSequences[animSequenceIndex];
 
 			}
 			else {
@@ -3178,6 +3184,8 @@ void action_if_animation_sequence_shortcut_key_pressed() {
 			}
 		}
 	}
+
+	return AnimationSequence::nullAnimationSequence();
 
 }
 
@@ -3751,23 +3759,39 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 		WAIT(300);
 
+		Vector3 actorLocation;
+
 		bool bRecording = true;
 		DWORD ticksStart = GetTickCount();
 		DWORD ticksLast = ticksStart;
 		DWORD ticksNow = ticksStart;
+		DWORD ticksSinceStart;
 		DWORD DELTA_TICKS = 1000;
 		//4000 works well for boats
 
 		//main loop
 		while (bRecording == true) {
 			ticksNow = GetTickCount();
-			CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
+			//CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
 
 			draw_instructional_buttons_player_recording();
 
 			if (enter_nearest_vehicle_as_passenger_key_pressed()) {
 				action_enter_nearest_vehicle_as_passenger();
 			}
+
+			AnimationSequence animationSeqRecorded = action_if_animation_sequence_shortcut_key_pressed(true);
+			if (!animationSeqRecorded.isNullAnimationSequence()) {
+				ticksSinceStart = ticksNow - ticksStart;
+
+				actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+				ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, animationSeqRecorded,animationFlag);
+				actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
+				log_to_file(recordingItem.toString());
+				DELTA_TICKS = 500;
+				ticksLast = ticksNow;
+			}
+
 
 			//play recording for other actors if the scene mode is active
 			if (replayOtherActors) {
@@ -3781,9 +3805,9 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 			//record only once pr DELTA_TICKS
 			if (ticksNow - ticksLast >= DELTA_TICKS) {
-				DWORD ticksSinceStart = ticksNow - ticksStart;
+				ticksSinceStart = ticksNow - ticksStart;
 
-				Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+				actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
 
 				//Section if the actor is currently in a vehicle
 				if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
@@ -4694,7 +4718,7 @@ void main()
 
 			action_if_ped_execute_shortcut_key_pressed();
 
-			action_if_animation_sequence_shortcut_key_pressed();
+			action_if_animation_sequence_shortcut_key_pressed(false);
 
 			check_if_player_is_passenger_and_has_waypoint();
 

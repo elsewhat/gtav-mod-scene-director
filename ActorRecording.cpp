@@ -558,3 +558,62 @@ void ActorShootAtRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
+
+ActorAnimationSequenceRecordingItem::ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, AnimationSequence animationSequence, AnimationFlag animationFlag):ActorRecordingItem(ticksStart,ticksDeltaWhenRecorded,actor,location)
+{
+	m_animationSequence = animationSequence;
+	m_animationFlag = animationFlag;
+	m_ticksDeltaCheckCompletion = 0;
+}
+
+AnimationSequence ActorAnimationSequenceRecordingItem::getAnimationSequence()
+{
+	return m_animationSequence;
+}
+
+std::string ActorAnimationSequenceRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorAnimationSequenceRecordingItem: " + m_animationSequence.toString();
+}
+
+void ActorAnimationSequenceRecordingItem::executeNativesForRecording(Actor actor)
+{
+	//load animation dicts
+	for (auto &animation : m_animationSequence.animationsInSequence) {
+		STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+
+		DWORD ticksStart = GetTickCount();
+
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
+		{
+			WAIT(0);
+			if (GetTickCount() > ticksStart + 5000) {
+				//duration will be 0 if it's not loaded
+				log_to_file("Ticks overflow2");
+				set_status_text("Could not load animation with code " + std::string(animation.animLibrary));
+				return;
+			}
+		}
+	}
+
+	//create task sequence
+	TaskSequence task_seq = 1;
+	AI::OPEN_SEQUENCE_TASK(&task_seq);
+
+	//load animation dicts
+	for (auto &animation : m_animationSequence.animationsInSequence) {
+		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, m_animationFlag.id, 8.0f, 0, 0, 0);
+	}
+
+	AI::CLOSE_SEQUENCE_TASK(task_seq);
+	AI::TASK_PERFORM_SEQUENCE(actor.getActorPed(), task_seq);
+	AI::CLEAR_SEQUENCE_TASK(&task_seq);
+}
+
+bool ActorAnimationSequenceRecordingItem::isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+{
+	int progress = AI::GET_SEQUENCE_PROGRESS(actor.getActorPed());
+	
+	log_to_file("ActorAnimationSequenceRecordingItem::isRecordingItemCompleted " + std::to_string(progress));
+	return true;
+}
