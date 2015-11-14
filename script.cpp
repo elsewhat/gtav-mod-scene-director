@@ -492,12 +492,14 @@ void draw_instructional_buttons() {
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 		*/
 
+		/* Waypoint to all less focus now
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
 		GRAPHICS::_0xE83A3E3557A56640(insControlKey);
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Waypoint to all");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+		*/
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
@@ -3380,7 +3382,15 @@ void update_tick_recording_replay(Actor & actor) {
 		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
 		log_to_file(std::to_string(ticksNow) + " checking for completion of item "+ recordingItem->toString() );
 
-		if (recordingItem->isRecordingItemCompleted(recordingPlayback.getTicksStartCurrentItem(), ticksNow,  actor, currentLocation)) {
+
+		std::shared_ptr<ActorRecordingItem> nextRecordingItem;
+		if (!recordingPlayback.isCurrentRecordedItemLast()) {
+			nextRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex()+1);
+		}
+
+
+
+		if (recordingItem->isRecordingItemCompleted(nextRecordingItem,recordingPlayback.getTicksStartCurrentItem(), ticksNow,  actor, currentLocation)) {
 			//execute any post actions (normally empty)
 			recordingItem->executeNativesAfterRecording(actor);
 
