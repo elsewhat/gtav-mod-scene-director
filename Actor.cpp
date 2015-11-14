@@ -253,14 +253,34 @@ bool Actor::hasRecording()
 	return m_hasRecording;
 }
 
-void Actor::setStartLocationVehicle(Vehicle vehicle)
+void Actor::setStartLocationVehicle(Vehicle vehicle, Vector3 startLocationVehicleLocation, float startLocationVehicleHeading)
 {
 	m_startLocationVehicle = vehicle;
+	m_startLocationVehicleLocation = startLocationVehicleLocation;
+	m_startLocationVehicleHeading = startLocationVehicleHeading;
+}
+
+Vector3 Actor::getStartLocationVehicleLocation() {
+	return m_startLocationVehicleLocation;
 }
 
 Vehicle Actor::getStartLocationVehicle()
 {
 	return m_startLocationVehicle;
+}
+
+float Actor::getStartLocationVehicleHeading()
+{
+	return m_startLocationVehicleHeading;
+}
+
+bool Actor::hasStartLocationVehicle() {
+	if (m_startLocationVehicle != 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 void Actor::setStartLocationVehicleSeat(int seat)

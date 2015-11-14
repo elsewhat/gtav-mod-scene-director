@@ -30,6 +30,8 @@ private:
 	Vector3 m_startLocation;
 	float m_startLocationHeading;
 	Vehicle m_startLocationVehicle;
+	Vector3 m_startLocationVehicleLocation;
+	float m_startLocationVehicleHeading;
 	int m_startLocationVehicleSeat = -1; 
 	
 	bool m_hasSpotlight = false;
@@ -115,8 +117,11 @@ public:
 	void setHasRecording(bool hasRecording);
 	bool hasRecording();
 
-	void setStartLocationVehicle(Vehicle vehicle);
+	void setStartLocationVehicle(Vehicle vehicle, Vector3 startLocationVehicleLocation,float startLocationVehicleHeading);
 	Vehicle getStartLocationVehicle();
+	Vector3 getStartLocationVehicleLocation();
+	bool hasStartLocationVehicle();
+	float getStartLocationVehicleHeading();
 
 	void setStartLocationVehicleSeat(int seat);
 	int getStartLocationVehicleSeat();

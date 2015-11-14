@@ -17,6 +17,7 @@
 #include <fstream>
 #include <memory>
 #include <bitset> 
+#include <map>
 
 #define PI 3.14159265
 
@@ -2451,10 +2452,14 @@ void action_teleport_to_start_locations() {
 	log_to_file("action_teleport_to_start_locations");
 
 	bool haveDeadActors = false;
-	
+
+	std::map <Vehicle, std::tuple<DWORD, Vector3, float>> vehicleFirstRecorded;
+
 	for (auto &actor : actors) {
 		if(actor.isNullActor()==false && actor.hasStartLocation()){
 			Ped entityToTeleport = actor.getActorPed();
+			float entityToTeleportHeading = actor.getStartLocationHeading();
+			Vector3 entityToTeleportLocation = actor.getStartLocation();
 			Ped actorPed = actor.getActorPed();
 
 			PED::RESET_PED_VISIBLE_DAMAGE(actorPed);
@@ -2473,69 +2478,47 @@ void action_teleport_to_start_locations() {
 				PED::SET_PED_CAN_RAGDOLL(actorPed, true);
 				AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
 				teleport_entity_to_location(entityToTeleport, location, true);
-				//PED::RESURRECT_PED(actorPed);
-				//PED::REVIVE_INJURED_PED(actorShortcut[i]);
-				//Vector3 location = actor.getStartLocation();
-				//location.z = location.z + 1.0;
-				//actor.setStartLocation(location);
 
 			}
 
-			//pause the actor. seems to be stuck some times
+			if (actor.hasStartLocationVehicle()) {
+				entityToTeleport = actor.getStartLocationVehicle();
+				Vehicle vehicleToTeleport = actor.getStartLocationVehicle();
+				entityToTeleportLocation = actor.getStartLocationVehicleLocation();
+				entityToTeleportHeading = actor.getStartLocationVehicleHeading();
 
+				if (!PED::IS_PED_IN_VEHICLE(actorPed, entityToTeleport, false)) {
+					PED::SET_PED_INTO_VEHICLE(actorPed, entityToTeleport, actor.getStartLocationVehicleSeat());
+				}
 
-			//AI::CLEAR_PED_TASKS(actorShortcut[i]);
-			//AI::TASK_PAUSE(actorShortcut[i], 10000);
-
-			if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
-				entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
 				VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
 				VEHICLE::SET_VEHICLE_UNDRIVEABLE(entityToTeleport, true);
 
+				//update if it's the first time we see vehicle or if the start time is less
+				if (vehicleFirstRecorded.find(vehicleToTeleport) == vehicleFirstRecorded.end() || std::get<0>(vehicleFirstRecorded[vehicleToTeleport]) != 0)
+				{
+					vehicleFirstRecorded[vehicleToTeleport] = std::make_tuple(0, entityToTeleportLocation, entityToTeleportHeading);
+				}
 			}
+			
 
 			//try to prevent fleeing during teleport
 			AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorPed, true);
 			PED::SET_PED_FLEE_ATTRIBUTES(actorPed, 0, 0);
 
 			//teleport and wait
-			teleport_entity_to_location(entityToTeleport, actor.getStartLocation(), true);
-			ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
+			teleport_entity_to_location(entityToTeleport, entityToTeleportLocation, true);
+			ENTITY::SET_ENTITY_HEADING(entityToTeleport, entityToTeleportHeading);
 
 			WAIT(300);
-
-			//ressurect any dead actors
-			/*
-			if (ENTITY::IS_ENTITY_DEAD(actorShortcut[i])) {
-				log_to_file("Second revive");
-				PED::RESURRECT_PED(actorShortcut[i]);
-				//PED::REVIVE_INJURED_PED(actorShortcut[i]);
-				ENTITY::SET_ENTITY_HEALTH(actorShortcut[i], ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[i]));
-			}
-			*/
-
-
 		}
 
 	}
-	/*
-	if (haveDeadActors) {
-		WAIT(3000);
-		for (int i = 0; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-			//ressurect any dead actors
-			if (actorShortcut[i] != 0 && ENTITY::IS_ENTITY_DEAD(actorShortcut[i])) {
-				log_to_file("Third revive");
-				ENTITY::SET_ENTITY_INVINCIBLE(actorShortcut[i], true);
-				PED::RESURRECT_PED(actorShortcut[i]);
-				ENTITY::SET_ENTITY_INVINCIBLE(actorShortcut[i], true);
-				ENTITY::SET_ENTITY_HEALTH(actorShortcut[i], ENTITY::GET_ENTITY_MAX_HEALTH(actorShortcut[i]));
-			}
-		}
-	}*/
-
 
 
 	log_to_file("Setting vehicle to undrivable");
+
+	log_to_file("Checking if there are other used vehicles which should be teleported");
 
 	for (auto &actor : actors) {
 		if (actor.isNullActor() == false && actor.hasStartLocation()) {
@@ -2546,8 +2529,44 @@ void action_teleport_to_start_locations() {
 				VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, true);
 				VEHICLE::START_VEHICLE_ALARM(teleportedVehicle);
 			}
+
+			if (actor.hasRecording()) {
+				log_to_file("About to do dynamic_pointer_cast");
+				std::vector<std::shared_ptr<ActorRecordingItem>> actorRecording =  actor.getRecording();
+				for (auto &recordingitem : actorRecording) {
+					std::shared_ptr<ActorVehicleRecordingItem> vehicleRecording = std::dynamic_pointer_cast<ActorVehicleRecordingItem>(recordingitem);
+
+					if (vehicleRecording != NULL) {
+						Vehicle veh = vehicleRecording->getVehicle();
+						log_to_file("ActorVehicleRecordingItem with vehicle " + std::to_string(veh));
+
+						//update if it's the first time we see vehicle or if the start time is less
+						if (vehicleFirstRecorded.find(veh) == vehicleFirstRecorded.end() || std::get<0>(vehicleFirstRecorded[veh]) > vehicleRecording->getTicksAfterRecordStart())
+						{
+							vehicleFirstRecorded[veh] = std::make_tuple(vehicleRecording->getTicksAfterRecordStart(), vehicleRecording->getLocation(), vehicleRecording->getVehicleHeading());
+						}
+
+					}
+				}
+
+
+			}
 		}
 	}
+
+	log_to_file("Teleporting all vehicles used in recordings");
+
+	for (auto const &vehicleToBeTeleported : vehicleFirstRecorded) {
+		
+		log_to_file("Teleporting back to start location vehicle " + std::to_string(vehicleToBeTeleported.first));
+
+		//teleport and wait
+		teleport_entity_to_location(vehicleToBeTeleported.first, std::get<1>(vehicleToBeTeleported.second), true);
+		ENTITY::SET_ENTITY_HEADING(vehicleToBeTeleported.first, std::get<2>(vehicleToBeTeleported.second));
+
+		WAIT(300);
+	}
+
 
 	WAIT(1000);
 
@@ -2614,6 +2633,9 @@ void action_toggle_blackout() {
 
 void action_next_animation_flag() {
 	animationFlag = getNextAnimationFlag(animationFlag);
+	if (animationFlag.name.compare("Controllable*") == 0) {
+		set_status_text("Only the first animation in a sequence is used when Controllable is selected");
+	}
 }
 
 void action_next_weather() {
@@ -2885,9 +2907,15 @@ void action_animation_sequence_add() {
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "INVALID_IN_ORDER_TO_DISPLAY_NOTHING", "", "", "", "", "", 256);
 
 	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		DRAW_TEXT("View animations on Youtube http://bit.ly/GTAVAnims", 0.3, 0.30, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
+		DRAW_TEXT("Add one or more animations to an animation sequence below", 0.3, 0.325, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
 		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
-
 		WAIT(0);
+	}
+
+	if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+		log_to_file("Got null keyboard value");
+		return;
 	}
 
 	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
@@ -2944,17 +2972,20 @@ void action_animations_preview(){
 	Ped actorPed = actor.getActorPed();
 
 	set_status_text("Enter animation code to begin preview");
+	set_status_text("Rotate character before starting preview for different angle");
+	set_status_text("Also available on Youtube through http://bit.ly/GTAVAnims");
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
 
 	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
 		WAIT(0);
 	}
 
-	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
-	if (!keyboardValue) {
+
+	if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
 		log_to_file("Got null keyboard value");
 		return;
 	}
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
 	std::string strAnimationIndex = std::string(keyboardValue);
 	log_to_file("Got keyboard value " + strAnimationIndex);
 
@@ -3736,8 +3767,11 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		Vehicle previousVehicle = 0;
 		if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 			previousVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+			float previousVehicleHeading = ENTITY::GET_ENTITY_HEADING(previousVehicle);
+			Vector3 previousVehicleLocation = ENTITY::GET_ENTITY_COORDS(previousVehicle, true);
 
-			actor.setStartLocationVehicle(previousVehicle);
+
+			actor.setStartLocationVehicle(previousVehicle, previousVehicleLocation, previousVehicleHeading);
 			//find seat
 			for (int i = -1; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(previousVehicle); i++) {
 				if (VEHICLE::GET_PED_IN_VEHICLE_SEAT(previousVehicle, i) == actorPed) {
@@ -3859,6 +3893,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					}
 
 					Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+					float actorVehHeading = ENTITY::GET_ENTITY_HEADING(actorVeh);
 
 					//check if it's a new vehicle
 					if (previousVehicle != actorVeh) {
@@ -3875,8 +3910,9 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								break;
 							}
 						}
+						
 
-						ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, seat, enterSpeed);
+						ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, actorVehHeading, seat, enterSpeed);
 						actorRecording.push_back(std::make_shared<ActorVehicleEnterRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 						previousVehicle = actorVeh;
@@ -3893,7 +3929,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						}
 
 
-						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, recordedSpeed);
+						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh,actorVehHeading, recordedSpeed);
 						actorRecording.push_back(std::make_shared<ActorVehicleMovementRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 
@@ -3903,13 +3939,13 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 				else {
 					DELTA_TICKS = 1000;
 
-
+					float previousVehicleHeading = ENTITY::GET_ENTITY_HEADING(previousVehicle);
 
 					//Section if the actors is currently on foot
 					//ActorVehicleExitRecordingItem
 					//If actor was previously in a vehicle, the have exited. Record this
 					if (previousVehicle != 0) {
-						ActorVehicleExitRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, previousVehicle);
+						ActorVehicleExitRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, previousVehicle, previousVehicleHeading);
 						actorRecording.push_back(std::make_shared<ActorVehicleExitRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 						previousVehicle = 0;

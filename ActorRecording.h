@@ -104,12 +104,14 @@ public:
 class ActorVehicleRecordingItem : public ActorRecordingItem {
 protected:
 	Vehicle m_vehicle;
+	float m_vehicleHeading;
 	VEHICLE_TYPE m_vehicleType;
 	VEHICLE_TYPE _getVehicleTypeFromNatives();
 public:
-	ActorVehicleRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh);
+	ActorVehicleRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
 	Vehicle getVehicle();
 	VEHICLE_TYPE getVehicleType();
+	float getVehicleHeading();
 	std::string toString() override;
 };
 
@@ -118,7 +120,7 @@ protected:
 	int m_vehicleSeat;
 	float m_enterVehicleSpeed;
 public:
-	ActorVehicleEnterRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, int vehicleSeat,float enterVehicleSpeed);
+	ActorVehicleEnterRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, int vehicleSeat,float enterVehicleSpeed);
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
 	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
@@ -129,7 +131,7 @@ protected:
 	int m_vehicleSeat;
 	float m_enterVehicleSpeed;
 public:
-	ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh);
+	ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
 	bool isRecordingItemCompleted(DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
@@ -139,7 +141,7 @@ class ActorVehicleMovementRecordingItem : public ActorVehicleRecordingItem {
 protected:
 	float m_speedInVehicle;
 public:
-	ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh,  float speedInVehicle);
+	ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, float speedInVehicle);
 	std::string toString() override;
 	float getSpeedInVehicle();
 	void executeNativesForRecording(Actor actor) override;
