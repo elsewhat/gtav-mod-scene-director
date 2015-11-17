@@ -101,10 +101,10 @@ bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<
 		else {
 			return false;
 		}
-	}
-	else {
-		return false;
-	}
+	}else {
+	 log_to_file("Need to wait " + std::to_string((m_ticksDeltaWhenRecorded / 2.0)) + " before checking distance to target for completion");
+	 return false;
+ }
 }
 
 
@@ -139,7 +139,7 @@ VEHICLE_TYPE ActorVehicleRecordingItem::getVehicleType()
 
 std::string ActorVehicleRecordingItem::toString()
 {
-	return ActorRecordingItem::toString() + " ActorVehicleRecordingItem Vehicle " + std::to_string(m_vehicle) + " Vehicle type " + std::to_string(m_vehicleType) + " Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ")";
+	return ActorRecordingItem::toString() + " ActorVehicleRecordingItem Vehicle " + std::to_string(m_vehicle) + " Vehicle type " + std::to_string(m_vehicleType) + " Heading  " + std::to_string(m_vehicleHeading)+ " Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ")";
 }
 
 VEHICLE_TYPE ActorVehicleRecordingItem::_getVehicleTypeFromNatives()
@@ -419,7 +419,7 @@ void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor)
 
 bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
 {
-	if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded / 2.0)) {
+	if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded - 500)) {
 		//log_to_file("ticksNow - ticksStart = " + std::to_string(ticksNow - ticksStart) + " (m_ticksDeltaCheckCompletion / 2.0) = " + std::to_string((m_ticksDeltaWhenRecorded / 2.0)));
 		if (PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0)) {
 			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(m_actorPed);
@@ -444,6 +444,25 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 				minDistance = 15.0;
 			}
 
+			//check if next is not a vehicle movement (will often be exit vehicle) Then the threshold should be much less
+			std::shared_ptr<ActorVehicleMovementRecordingItem> nextVehicleMovement = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(nextRecordingItem);
+			if (nextVehicleMovement == NULL) {
+				log_to_file("Next recording is not a vehicle movement, will require a smaller distance to target");
+				if (isPedInHeli) {
+					minDistance = 45.0;
+				}
+				else if (isPedInPlane) {
+					minDistance = 50.0;
+				}
+				else if (isPedInBoat) {
+					minDistance = 30.0;
+				}
+				else if (isInVehicle) {
+					minDistance = 5.0;
+				}
+			}
+
+
 			float distanceToTarget = SYSTEM::VDIST(m_location.x, m_location.y, m_location.z, location.x, location.y, location.z);
 			log_to_file("ActorVehicleMovementRecordingItem: Distance to target: " + std::to_string(distanceToTarget));
 
@@ -462,7 +481,7 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 			return true;
 		}
 	} else {
-		log_to_file("Waiting " + std::to_string((m_ticksDeltaCheckCompletion / 2.0)) + " before checking distance to target for completion");
+		log_to_file("Need to wait " + std::to_string((m_ticksDeltaWhenRecorded / 2.0)) + " before checking distance to target for completion");
 		return false;
 	}
 }

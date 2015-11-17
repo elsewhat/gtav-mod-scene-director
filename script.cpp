@@ -1870,7 +1870,7 @@ void action_enter_nearest_vehicle_as_passenger() {
 
 	int seat = 0;
 	for (int i = 0; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle); i++) {
-		if (VEHICLE::GET_PED_IN_VEHICLE_SEAT(vehicle, i) == playerPed) {
+		if (VEHICLE::IS_VEHICLE_SEAT_FREE(vehicle, i)) {
 			seat = i;
 			break;
 		}
@@ -2483,23 +2483,39 @@ void action_teleport_to_start_locations() {
 
 			}
 
-			if (actor.hasStartLocationVehicle()) {
-				entityToTeleport = actor.getStartLocationVehicle();
-				Vehicle vehicleToTeleport = actor.getStartLocationVehicle();
-				entityToTeleportLocation = actor.getStartLocationVehicleLocation();
-				entityToTeleportHeading = actor.getStartLocationVehicleHeading();
 
-				if (!PED::IS_PED_IN_VEHICLE(actorPed, entityToTeleport, false)) {
-					PED::SET_PED_INTO_VEHICLE(actorPed, entityToTeleport, actor.getStartLocationVehicleSeat());
+			if (actor.hasRecording()) {
+				
+				if (actor.hasStartLocationVehicle()) {
+					log_to_file("Actor " + std::to_string(actorPed) + " has recording with start location vehicle");
+					entityToTeleport = actor.getStartLocationVehicle();
+					Vehicle vehicleToTeleport = actor.getStartLocationVehicle();
+					entityToTeleportLocation = actor.getStartLocationVehicleLocation();
+					entityToTeleportHeading = actor.getStartLocationVehicleHeading();
+
+					if (!PED::IS_PED_IN_VEHICLE(actorPed, entityToTeleport, false)) {
+						PED::SET_PED_INTO_VEHICLE(actorPed, entityToTeleport, actor.getStartLocationVehicleSeat());
+					}
+
+					VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
+					VEHICLE::SET_VEHICLE_UNDRIVEABLE(entityToTeleport, true);
+
+					//update if it's the first time we see vehicle or if the start time is less
+					if (vehicleFirstRecorded.find(vehicleToTeleport) == vehicleFirstRecorded.end() || std::get<0>(vehicleFirstRecorded[vehicleToTeleport]) != 0)
+					{
+						vehicleFirstRecorded[vehicleToTeleport] = std::make_tuple(0, entityToTeleportLocation, entityToTeleportHeading);
+					}
 				}
-
-				VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
-				VEHICLE::SET_VEHICLE_UNDRIVEABLE(entityToTeleport, true);
-
-				//update if it's the first time we see vehicle or if the start time is less
-				if (vehicleFirstRecorded.find(vehicleToTeleport) == vehicleFirstRecorded.end() || std::get<0>(vehicleFirstRecorded[vehicleToTeleport]) != 0)
-				{
-					vehicleFirstRecorded[vehicleToTeleport] = std::make_tuple(0, entityToTeleportLocation, entityToTeleportHeading);
+				else if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+					log_to_file("Actor " + std::to_string(actorPed) + " has recording without start location vehicle");
+					AI::TASK_LEAVE_VEHICLE(actorPed, PED::GET_VEHICLE_PED_IS_USING(actorPed), 4160);
+				}
+			}
+			else {
+				if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
+					entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
+					VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
+					VEHICLE::SET_VEHICLE_UNDRIVEABLE(entityToTeleport, true);
 				}
 			}
 			
@@ -2540,7 +2556,7 @@ void action_teleport_to_start_locations() {
 
 					if (vehicleRecording != NULL) {
 						Vehicle veh = vehicleRecording->getVehicle();
-						log_to_file("ActorVehicleRecordingItem with vehicle " + std::to_string(veh));
+						log_to_file("ActorVehicleRecordingItem with vehicle " + std::to_string(veh) + " heading " + std::to_string(vehicleRecording->getVehicleHeading()));
 
 						//update if it's the first time we see vehicle or if the start time is less
 						if (vehicleFirstRecorded.find(veh) == vehicleFirstRecorded.end() || std::get<0>(vehicleFirstRecorded[veh]) > vehicleRecording->getTicksAfterRecordStart())
@@ -2549,6 +2565,8 @@ void action_teleport_to_start_locations() {
 						}
 
 					}
+
+
 				}
 
 
@@ -2561,7 +2579,7 @@ void action_teleport_to_start_locations() {
 	for (auto const &vehicleToBeTeleported : vehicleFirstRecorded) {
 		
 		log_to_file("Teleporting back to start location vehicle " + std::to_string(vehicleToBeTeleported.first));
-
+		ENTITY::SET_ENTITY_AS_MISSION_ENTITY(vehicleToBeTeleported.first, true, true);
 		//teleport and wait
 		teleport_entity_to_location(vehicleToBeTeleported.first, std::get<1>(vehicleToBeTeleported.second), true);
 		ENTITY::SET_ENTITY_HEADING(vehicleToBeTeleported.first, std::get<2>(vehicleToBeTeleported.second));
@@ -3313,15 +3331,7 @@ bool record_scene_for_actor_key_press() {
 
 
 void action_start_replay_recording_for_actor(Actor actor) {
-	Ped actorPed = actor.getActorPed();
-	Entity entityToTeleport = actorPed;
-	if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
-		entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
-	}
-
-	teleport_entity_to_location(entityToTeleport, actor.getStartLocation(), true);
-	ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
-
+	action_teleport_to_start_locations();
 	actor.startReplayRecording(GetTickCount());
 
 }
@@ -4002,10 +4012,11 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								DELTA_TICKS = 10;
 								isFreeAiming = true;
 								Entity targetEntity;
-								PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
+								bool playerIsAimingAtEntity = PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
+
 								log_to_file("Actor aiming at " + std::to_string(targetEntity));
 
-								if (PED::IS_PED_SHOOTING(actorPed) && ENTITY::DOES_ENTITY_EXIST(targetEntity)) {
+								if (PED::IS_PED_SHOOTING(actorPed) && playerIsAimingAtEntity) {
 									//add recording item for shooting at
 									if (isAimingAtEntity) {
 										log_to_file("Stopped aiming since we're shooting at target " + std::to_string(aimedAtEntity) + "  for ActorShootAtRecordingItem");
@@ -4018,7 +4029,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 									log_to_file(recordingItem.toString());
 
 								}
-								else if (!isAimingAtEntity && ENTITY::DOES_ENTITY_EXIST(targetEntity)) {//if no existing target exist, record it.
+								else if (!isAimingAtEntity && playerIsAimingAtEntity) {//if no existing target exist, record it.
 									log_to_file("Recording start of ActorAimAtRecordingItem");
 									isAimingAtEntity = true;
 									aimedAtEntity = targetEntity;
@@ -4031,7 +4042,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 									actorRecording.push_back(ongoingActorAimAtRecordingItem);
 									log_to_file(recordingItem.toString());
 								}
-								else if (isAimingAtEntity && targetEntity != aimedAtEntity && ENTITY::DOES_ENTITY_EXIST(targetEntity)) {//if new target whilst already aiming
+								else if (isAimingAtEntity && targetEntity != aimedAtEntity && playerIsAimingAtEntity) {//if new target whilst already aiming
 									log_to_file("Recording new target for ActorAimAtRecordingItem");
 									ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
 									aimedAtEntity = targetEntity;
@@ -4046,7 +4057,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								else if (isAimingAtEntity && targetEntity == aimedAtEntity) {
 									log_to_file("Still aiming at entity " + std::to_string(aimedAtEntity) + "  for ActorAimAtRecordingItem");
 								}
-								else if (isAimingAtEntity && !ENTITY::DOES_ENTITY_EXIST(targetEntity)) {
+								else if (isAimingAtEntity && !playerIsAimingAtEntity) {
 									log_to_file("Stopped aiming at target " + std::to_string(aimedAtEntity) + "  for ActorAimAtRecordingItem");
 									isAimingAtEntity = false;
 									ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
@@ -4128,7 +4139,7 @@ void action_submenu_active_selected() {
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_TEST_RECORDING) {
 		log_to_file("Will test recording for " + std::to_string(actor.getActorPed()));
-		actor.startReplayRecording(GetTickCount());
+		action_start_replay_recording_for_actor(actor);
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_IS_PLAYING_RECORDING) {
 		log_to_file("Skipping to next recording item since user pressed meny");
@@ -4481,10 +4492,10 @@ void action_copy_player_actions() {
 				if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
 					isFreeAiming = true;
 					Entity targetEntity;
-					PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
+					bool playerIsAimingAtEntity = PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
 					log_to_file("Player aiming at " + std::to_string(targetEntity));
 					//if new target which exist, make all actors aim at it
-					if (ENTITY::DOES_ENTITY_EXIST(targetEntity) && targetEntity != currentTarget) {
+					if (playerIsAimingAtEntity && targetEntity != currentTarget) {
 						currentTarget = targetEntity;
 						for (auto &actor : actors) {
 							if (actor.isNullActor() == false && actor.isActorThisPed(playerPed) == false) {
