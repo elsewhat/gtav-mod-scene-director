@@ -58,6 +58,7 @@ enum MENU_ITEM {
 	MENU_ITEM_POSSESS = 19,
 	MENU_ITEM_WORLD = 20,
 	MENU_ITEM_ANIMATION = 21,
+	MENU_ITEM_BACK_TO_START = 21,
 	SUBMENU_ITEM_RECORD_PLAYER = 40,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 41,
 	SUBMENU_ITEM_SPOT_LIGHT = 42,
@@ -520,7 +521,7 @@ void draw_instructional_buttons() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
 		GRAPHICS::_0xE83A3E3557A56640(delControlKey);
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Reset scene");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Back to start");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		/* Hiding scene mode
@@ -563,6 +564,13 @@ void draw_instructional_buttons_player_recording() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_R");
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Stop recording");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Enter as passenger");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
@@ -1120,6 +1128,22 @@ void draw_menu() {
 	if (menu_active_index == drawIndex) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	} else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	//3a. Back to start
+	DRAW_TEXT("Back to start", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_BACK_TO_START;
+	}
+	drawIndex++;
+
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
@@ -2453,15 +2477,18 @@ void action_set_same_waypoint_for_all_actors() {
 }
 
 void action_teleport_to_start_locations() {
-	set_status_text("Resetting the scene. Will take a few seconds");
+	set_status_text("Setting up the scene. Will take a few seconds");
 	log_to_file("action_teleport_to_start_locations");
 
 	bool haveDeadActors = false;
 
 	std::map <Vehicle, std::tuple<DWORD, Vector3, float>> vehicleFirstRecorded;
 
+	bool existActorWithStartLocation = false;
+
 	for (auto &actor : actors) {
 		if(actor.isNullActor()==false && actor.hasStartLocation()){
+			existActorWithStartLocation = true;
 			Ped entityToTeleport = actor.getActorPed();
 			log_to_file("action_teleport_to_start_locations actor:"+std::to_string(entityToTeleport));
 			float entityToTeleportHeading = actor.getStartLocationHeading();
@@ -2540,7 +2567,10 @@ void action_teleport_to_start_locations() {
 		}
 
 	}
-
+	if (!existActorWithStartLocation) {
+		set_status_text("No actor with start location. Record or set scene to active first to get a start location");
+		return;
+	}
 
 	log_to_file("Setting vehicle to undrivable");
 
@@ -3880,8 +3910,6 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, animationSeqRecorded, animationFlag);
 					log_to_file(recordingItem.toString());
 
-
-
 					std::bitset<19> bitCheck(animationFlag.id);
 					log_to_file("Bitcheck " + bitCheck.to_string());
 					if (!bitCheck.test(5)) {//Bit 6 is not set
@@ -3889,8 +3917,10 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						recordingItem.setTicksDeltaCheckCompletion((DWORD)animationSeqRecorded.getDurationOfAnimations());
 						actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
 
+						//take no new animation input before the animation is complete
 						ticksNextControl = ticksNow + animationSeqRecorded.getDurationOfAnimations();
-
+						//do not other recording before the animation is complete
+						DELTA_TICKS = animationSeqRecorded.getDurationOfAnimations();
 
 					}
 					else {
@@ -4304,6 +4334,9 @@ void action_menu_active_selected() {
 	}
 	else if (menu_active_action == MENU_ITEM_SCENE_MODE) {
 		action_toggle_scene_mode();
+	}
+	else if (menu_active_action == MENU_ITEM_BACK_TO_START) {
+		action_teleport_to_start_locations();
 	}
 	else if (menu_active_action == MENU_ITEM_ADD_TO_SLOT) {
 		add_ped_to_slot(get_next_free_slot(), PLAYER::PLAYER_PED_ID());
