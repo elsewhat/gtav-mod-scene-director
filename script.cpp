@@ -1050,7 +1050,7 @@ void draw_menu() {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-	DRAW_TEXT("BETA RELEASE OF SCENE DIRECTOR BY ELSEWHAT - NOT FOR DISTRIBUTION", 0.0, 0.0, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 155);
+	//DRAW_TEXT("BETA RELEASE OF SCENE DIRECTOR BY ELSEWHAT - NOT FOR DISTRIBUTION", 0.0, 0.0, 0.3, 0.3, 0, false, false, false, false, 255, 255, 255, 155);
 
 
 
@@ -1867,14 +1867,17 @@ void action_enter_nearest_vehicle_as_passenger() {
 	Vector3 coord = ENTITY::GET_ENTITY_COORDS(playerPed, true);
 
 	Vehicle vehicle = VEHICLE::GET_CLOSEST_VEHICLE(coord.x, coord.y, coord.z, 100.0, 0, 71);
+	log_to_file("Vehicle has " + std::to_string(VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle)) + " seats");
 
-	int seat = 0;
+	int seat = -2;
 	for (int i = 0; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle); i++) {
 		if (VEHICLE::IS_VEHICLE_SEAT_FREE(vehicle, i)) {
 			seat = i;
 			break;
 		}
 	}
+	log_to_file("Seat is " + std::to_string(seat));
+
 
 	AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, seat, 1.0, 1, 0);
 	nextWaitTicks = 200;
@@ -2460,6 +2463,7 @@ void action_teleport_to_start_locations() {
 	for (auto &actor : actors) {
 		if(actor.isNullActor()==false && actor.hasStartLocation()){
 			Ped entityToTeleport = actor.getActorPed();
+			log_to_file("action_teleport_to_start_locations actor:"+std::to_string(entityToTeleport));
 			float entityToTeleportHeading = actor.getStartLocationHeading();
 			Vector3 entityToTeleportLocation = actor.getStartLocation();
 			Ped actorPed = actor.getActorPed();
@@ -2487,7 +2491,7 @@ void action_teleport_to_start_locations() {
 			if (actor.hasRecording()) {
 				
 				if (actor.hasStartLocationVehicle()) {
-					log_to_file("Actor " + std::to_string(actorPed) + " has recording with start location vehicle");
+					log_to_file("Actor " + std::to_string(actor.getActorPed()) + " has recording with start location vehicle");
 					entityToTeleport = actor.getStartLocationVehicle();
 					Vehicle vehicleToTeleport = actor.getStartLocationVehicle();
 					entityToTeleportLocation = actor.getStartLocationVehicleLocation();
@@ -2500,15 +2504,18 @@ void action_teleport_to_start_locations() {
 					VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
 					VEHICLE::SET_VEHICLE_UNDRIVEABLE(entityToTeleport, true);
 
+					log_to_file("Before vehicleFirstRecorded");
 					//update if it's the first time we see vehicle or if the start time is less
-					if (vehicleFirstRecorded.find(vehicleToTeleport) == vehicleFirstRecorded.end() || std::get<0>(vehicleFirstRecorded[vehicleToTeleport]) != 0)
+					if (vehicleFirstRecorded.find(vehicleToTeleport) == vehicleFirstRecorded.end())
 					{
 						vehicleFirstRecorded[vehicleToTeleport] = std::make_tuple(0, entityToTeleportLocation, entityToTeleportHeading);
 					}
+					log_to_file("After vehicleFirstRecorded");
 				}
 				else if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
-					log_to_file("Actor " + std::to_string(actorPed) + " has recording without start location vehicle");
+					log_to_file("Actor " + std::to_string(actorPed) + " has recording without start location vehicle and is in a vehicle");
 					AI::TASK_LEAVE_VEHICLE(actorPed, PED::GET_VEHICLE_PED_IS_USING(actorPed), 4160);
+					WAIT(500);
 				}
 			}
 			else {
@@ -2519,15 +2526,16 @@ void action_teleport_to_start_locations() {
 				}
 			}
 			
-
+			log_to_file("Before TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS");
 			//try to prevent fleeing during teleport
 			AI::TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorPed, true);
 			PED::SET_PED_FLEE_ATTRIBUTES(actorPed, 0, 0);
-
+			
+			log_to_file("Before teleport_entity_to_location");
 			//teleport and wait
 			teleport_entity_to_location(entityToTeleport, entityToTeleportLocation, true);
 			ENTITY::SET_ENTITY_HEADING(entityToTeleport, entityToTeleportHeading);
-
+			log_to_file("Before wait");
 			WAIT(300);
 		}
 
@@ -2556,7 +2564,7 @@ void action_teleport_to_start_locations() {
 
 					if (vehicleRecording != NULL) {
 						Vehicle veh = vehicleRecording->getVehicle();
-						log_to_file("ActorVehicleRecordingItem with vehicle " + std::to_string(veh) + " heading " + std::to_string(vehicleRecording->getVehicleHeading()));
+						//log_to_file("ActorVehicleRecordingItem with vehicle " + std::to_string(veh) + " heading " + std::to_string(vehicleRecording->getVehicleHeading()));
 
 						//update if it's the first time we see vehicle or if the start time is less
 						if (vehicleFirstRecorded.find(veh) == vehicleFirstRecorded.end() || std::get<0>(vehicleFirstRecorded[veh]) > vehicleRecording->getTicksAfterRecordStart())
@@ -2584,6 +2592,8 @@ void action_teleport_to_start_locations() {
 		teleport_entity_to_location(vehicleToBeTeleported.first, std::get<1>(vehicleToBeTeleported.second), true);
 		ENTITY::SET_ENTITY_HEADING(vehicleToBeTeleported.first, std::get<2>(vehicleToBeTeleported.second));
 
+		VEHICLE::SET_VEHICLE_DOORS_SHUT(vehicleToBeTeleported.first, true);
+
 		WAIT(300);
 	}
 
@@ -2604,6 +2614,7 @@ void action_teleport_to_start_locations() {
 				VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(teleportedVehicle);
 				VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, false);
 				VEHICLE::SET_VEHICLE_UNDRIVEABLE(teleportedVehicle, false);
+				VEHICLE::SET_VEHICLE_DOORS_SHUT(teleportedVehicle, true);
 			}
 		}
 	}
@@ -2613,6 +2624,7 @@ void action_teleport_to_start_locations() {
 		Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(orgPed);
 		VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, false);
 		VEHICLE::SET_VEHICLE_UNDRIVEABLE(teleportedVehicle, false);
+		VEHICLE::SET_VEHICLE_DOORS_SHUT(teleportedVehicle, true);
 	}
 
 }
@@ -3330,7 +3342,7 @@ bool record_scene_for_actor_key_press() {
 }
 
 
-void action_start_replay_recording_for_actor(Actor actor) {
+void action_start_replay_recording_for_actor(Actor & actor) {
 	action_teleport_to_start_locations();
 	actor.startReplayRecording(GetTickCount());
 
@@ -3346,7 +3358,7 @@ void update_tick_recording_replay(Actor & actor) {
 	std::shared_ptr<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
 
 	if (!recordingPlayback.hasTeleportedToStartLocation()) {
-		Entity entityToTeleport = actorPed;
+		/*Entity entityToTeleport = actorPed;
 		if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
 			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
 		}
@@ -3357,7 +3369,18 @@ void update_tick_recording_replay(Actor & actor) {
 		}
 
 		teleport_entity_to_location(entityToTeleport, actor.getStartLocation(), true);
-		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());
+		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());*/
+		log_to_file("update_tick_recording_replay - Initiate telport to start location for all actors");
+		action_teleport_to_start_locations();
+		
+		//update setting for all actors
+		for (auto & actor : actors) {
+			if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
+				ActorRecordingPlayback & otherActorRecordingPlayback = actor.getRecordingPlayback();
+				otherActorRecordingPlayback.setHasTeleportedToStartLocation(ticksNow);
+			}
+		}
+
 		recordingPlayback.setHasTeleportedToStartLocation(ticksNow);
 		return;
 	}
@@ -3400,7 +3423,7 @@ void update_tick_recording_replay(Actor & actor) {
 
 
 
-		if (recordingItem->isRecordingItemCompleted(nextRecordingItem,recordingPlayback.getTicksStartCurrentItem(), ticksNow,  actor, currentLocation)) {
+		if (recordingItem->isRecordingItemCompleted(nextRecordingItem,recordingPlayback.getTicksStartCurrentItem(), ticksNow, recordingPlayback.getAttemptsCheckedCompletion() , actor, currentLocation)) {
 			//execute any post actions (normally empty)
 			recordingItem->executeNativesAfterRecording(actor);
 
@@ -3420,6 +3443,7 @@ void update_tick_recording_replay(Actor & actor) {
 		}
 		else {
 			recordingPlayback.setTicksLastCheckOfCurrentItem(ticksNow);
+			recordingPlayback.incrementAttempstCheckedCompletion();
 		}
 	}
 }
@@ -3790,7 +3814,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 			float previousVehicleHeading = ENTITY::GET_ENTITY_HEADING(previousVehicle);
 			Vector3 previousVehicleLocation = ENTITY::GET_ENTITY_COORDS(previousVehicle, true);
 
-
+			log_to_file("Actor has start location vehicle " + std::to_string(previousVehicle));
 			actor.setStartLocationVehicle(previousVehicle, previousVehicleLocation, previousVehicleHeading);
 			//find seat
 			for (int i = -1; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(previousVehicle); i++) {
@@ -3830,6 +3854,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		DWORD ticksNow = ticksStart;
 		DWORD ticksSinceStart;
 		DWORD DELTA_TICKS = 1000;
+		DWORD ticksNextControl=ticksNow;
 		//4000 works well for boats
 
 		//main loop
@@ -3841,35 +3866,41 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 			draw_instructional_buttons_player_recording();
 
-			if (enter_nearest_vehicle_as_passenger_key_pressed()) {
-				action_enter_nearest_vehicle_as_passenger();
-			}
-
-			AnimationSequence animationSeqRecorded = action_if_animation_sequence_shortcut_key_pressed(true);
-			if (!animationSeqRecorded.isNullAnimationSequence()) {
-				ticksSinceStart = ticksNow - ticksStart;
-
-				actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
-				ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, animationSeqRecorded,animationFlag);
-				log_to_file(recordingItem.toString());
-
-
-
-				std::bitset<19> bitCheck(animationFlag.id);
-				log_to_file("Bitcheck " + bitCheck.to_string());
-				if (!bitCheck.test(5)) {//Bit 6 is not set
-					//log_to_file("Bitcheck 6");
-					recordingItem.setTicksDeltaCheckCompletion((DWORD)animationSeqRecorded.getDurationOfAnimations());
-					actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
-					WAIT(animationSeqRecorded.getDurationOfAnimations());
+			if (ticksNow >= ticksNextControl) {
+				if (enter_nearest_vehicle_as_passenger_key_pressed()) {
+					action_enter_nearest_vehicle_as_passenger();
+					ticksNextControl = ticksNow + 200;
 				}
-				else {
-					//log_to_file("Bitcheck !6");
-					actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
-					WAIT(250);
+
+				AnimationSequence animationSeqRecorded = action_if_animation_sequence_shortcut_key_pressed(true);
+				if (!animationSeqRecorded.isNullAnimationSequence()) {
+					ticksSinceStart = ticksNow - ticksStart;
+
+					actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+					ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, animationSeqRecorded, animationFlag);
+					log_to_file(recordingItem.toString());
+
+
+
+					std::bitset<19> bitCheck(animationFlag.id);
+					log_to_file("Bitcheck " + bitCheck.to_string());
+					if (!bitCheck.test(5)) {//Bit 6 is not set
+						//log_to_file("Bitcheck 6");
+						recordingItem.setTicksDeltaCheckCompletion((DWORD)animationSeqRecorded.getDurationOfAnimations());
+						actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
+
+						ticksNextControl = ticksNow + animationSeqRecorded.getDurationOfAnimations();
+
+
+					}
+					else {
+						//log_to_file("Bitcheck !6");
+						actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
+						ticksNextControl = ticksNow + 250;
+					}
+					DELTA_TICKS = 500;
+					ticksLast = ticksNow;
 				}
-				DELTA_TICKS = 500;
-				ticksLast = ticksNow;
 			}
 
 
@@ -4107,7 +4138,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 			}
 			WAIT(0);
 		}
-
+		log_to_file("Here are the recordings made for this actor:");
 		for (auto recordingItem : actorRecording) {
 			log_to_file(recordingItem->toString());
 		}
@@ -4728,6 +4759,7 @@ void main()
 					should_display_hud = false;
 				}
 				else {
+					set_status_text("Scene director 2.0 by elsewhat");
 					should_display_hud = true;
 				}
 			}
@@ -4853,7 +4885,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 2.0 Beta2 by elsewhat");
+	set_status_text("Scene director 2.0 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 

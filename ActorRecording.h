@@ -33,7 +33,7 @@ public:
 	DWORD getTicksLength();
 
 	virtual void executeNativesForRecording(Actor actor)=0;
-	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem,DWORD ticksStart, DWORD ticksNow,Actor actor, Vector3 location)=0;
+	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem,DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)=0;
 	virtual std::string toString();
 	virtual void executeNativesAfterRecording(Actor actor);
 };
@@ -45,7 +45,7 @@ public:
 	ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed);
 	float getWalkSpeed();
 	virtual void executeNativesForRecording(Actor actor);
-	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location);
+	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location);
 	std::string toString() override;
 
 };
@@ -58,7 +58,7 @@ public:
 	float getHeading();
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem,DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem,DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 
 };
 
@@ -70,7 +70,7 @@ public:
 	Entity getAimedAtEntity();
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	virtual void executeNativesAfterRecording(Actor actor) override;
 };
 
@@ -82,7 +82,7 @@ public:
 	Entity getShotAtEntity();
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	virtual void executeNativesAfterRecording(Actor actor) override;
 
 };
@@ -96,7 +96,7 @@ public:
 	Scenario getScenario();
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	void executeNativesAfterRecording(Actor actor) override;
 
 };
@@ -123,7 +123,7 @@ public:
 	ActorVehicleEnterRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, int vehicleSeat,float enterVehicleSpeed);
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 };
 
 class ActorVehicleExitRecordingItem : public ActorVehicleRecordingItem {
@@ -134,7 +134,7 @@ public:
 	ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 };
 
 class ActorVehicleMovementRecordingItem : public ActorVehicleRecordingItem {
@@ -145,7 +145,7 @@ public:
 	std::string toString() override;
 	float getSpeedInVehicle();
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 };
 
 
@@ -158,7 +158,7 @@ public:
 	AnimationSequence getAnimationSequence();
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 
 };
 
@@ -170,6 +170,7 @@ protected:
 	bool m_hasTeleportedToStartLocation = false;
 	int m_recordingItemIndex;
 	int m_maxRecordingItemIndex;
+	int m_attemptsCheckCompletion;
 	DWORD m_ticksStartCurrentItem;
 	DWORD m_ticksLastCheckOfCurrentItem;
 	DWORD m_ticksPlaybackStarted;
@@ -185,6 +186,10 @@ public:
 	bool isCurrentRecordedItemLast();
 	int getRecordedItemIndex();
 	int getNumberOfRecordedItems();
+
+	int getAttemptsCheckedCompletion();
+	void incrementAttempstCheckedCompletion();
+
 
 	void setPlaybackCompleted();
 	bool hasPlaybackCompleted();

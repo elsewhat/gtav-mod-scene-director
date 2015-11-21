@@ -12,6 +12,7 @@ Actor::Actor(Ped ped) {
 	m_ped = ped;
 	setRelationshipGroup(getDefaultRelationshipGroup());
 	setDrivingMode(getDefaultDrivingMode());
+	m_startLocationVehicle = 0;
 }
 
 Ped Actor::getActorPed()
@@ -275,6 +276,7 @@ float Actor::getStartLocationVehicleHeading()
 }
 
 bool Actor::hasStartLocationVehicle() {
+	log_to_file(std::to_string(m_ped) + " has start location vehicle value " + std::to_string(m_startLocationVehicle));
 	if (m_startLocationVehicle != 0) {
 		return true;
 	}

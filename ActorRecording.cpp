@@ -72,7 +72,7 @@ void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor)
 	AI::TASK_GO_STRAIGHT_TO_COORD(m_actorPed, m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, 27.0f, 0.5f);
 }
 
-bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded / 2.0)) {
 		float minDistance = 4.0;
@@ -99,7 +99,14 @@ bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<
 			return true;
 		}
 		else {
-			return false;
+			if (nrOfChecksForCompletion > 10) {
+				log_to_file("Giving up after " + std::to_string(nrOfChecksForCompletion) + " attempts");
+				return true;
+			}
+			else {
+				return false;
+			}
+
 		}
 	}else {
 	 log_to_file("Need to wait " + std::to_string((m_ticksDeltaWhenRecorded / 2.0)) + " before checking distance to target for completion");
@@ -169,6 +176,7 @@ ActorRecordingPlayback::ActorRecordingPlayback()
 {
 	m_recordingItemIndex = 0;
 	m_ticksStartCurrentItem = 0;
+	m_attemptsCheckCompletion = 0;
 }
 
 ActorRecordingPlayback::ActorRecordingPlayback(DWORD tickStart, int maxRecordingItemIndex)
@@ -177,6 +185,7 @@ ActorRecordingPlayback::ActorRecordingPlayback(DWORD tickStart, int maxRecording
 	m_ticksStartCurrentItem = tickStart;
 	m_ticksPlaybackStarted = tickStart;
 	m_maxRecordingItemIndex = maxRecordingItemIndex;
+	m_attemptsCheckCompletion = 0;
 }
 
 
@@ -195,6 +204,7 @@ void ActorRecordingPlayback::nextRecordingItemIndex(DWORD ticksNow)
 	m_recordingItemIndex = m_recordingItemIndex+1;
 	m_ticksLastCheckOfCurrentItem = ticksNow;
 	m_ticksStartCurrentItem = ticksNow;
+	m_attemptsCheckCompletion = 0;
 }
 
 bool ActorRecordingPlayback::isCurrentRecordedItemLast()
@@ -218,9 +228,20 @@ int ActorRecordingPlayback::getNumberOfRecordedItems()
 	return m_maxRecordingItemIndex;
 }
 
+int ActorRecordingPlayback::getAttemptsCheckedCompletion()
+{
+	return m_attemptsCheckCompletion;
+}
+
+void ActorRecordingPlayback::incrementAttempstCheckedCompletion()
+{
+	m_attemptsCheckCompletion++;
+}
+
 void ActorRecordingPlayback::setPlaybackCompleted()
 {
 	m_playbackCompleted = true;
+	m_attemptsCheckCompletion = 0;
 }
 
 bool ActorRecordingPlayback::hasPlaybackCompleted()
@@ -293,7 +314,7 @@ void ActorVehicleEnterRecordingItem::executeNativesForRecording(Actor actor)
 	AI::TASK_ENTER_VEHICLE(m_actorPed, m_vehicle, -1, m_vehicleSeat, m_enterVehicleSpeed, 1, 0);
 }
 
-bool ActorVehicleEnterRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorVehicleEnterRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	if (PED::IS_PED_SITTING_IN_VEHICLE(m_actorPed,m_vehicle)) {
 		return true;
@@ -319,7 +340,7 @@ void ActorVehicleExitRecordingItem::executeNativesForRecording(Actor actor)
 	AI::TASK_LEAVE_VEHICLE(m_actorPed, m_vehicle, 0);
 }
 
-bool ActorVehicleExitRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorVehicleExitRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	if (PED::IS_PED_SITTING_IN_VEHICLE(m_actorPed, m_vehicle)) {
 		return false;
@@ -355,7 +376,7 @@ void ActorStandingStillRecordingItem::executeNativesForRecording(Actor actor)
 	AI::CLEAR_PED_TASKS(m_actorPed);
 }
 
-bool ActorStandingStillRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorStandingStillRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart,  DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	//will first be checked after m_ticksDeltaCheckCompletion
 	return true;
@@ -417,7 +438,7 @@ void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor)
 
 }
 
-bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded - 500)) {
 		//log_to_file("ticksNow - ticksStart = " + std::to_string(ticksNow - ticksStart) + " (m_ticksDeltaCheckCompletion / 2.0) = " + std::to_string((m_ticksDeltaWhenRecorded / 2.0)));
@@ -458,7 +479,7 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 					minDistance = 30.0;
 				}
 				else if (isInVehicle) {
-					minDistance = 5.0;
+					minDistance = 8.0;
 				}
 			}
 
@@ -471,7 +492,13 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 				return true;
 			}
 			else {
-				return false;
+				if (nrOfChecksForCompletion > 10) {
+					log_to_file("Giving up after " + std::to_string(nrOfChecksForCompletion) + " attempts");
+					return true;
+				}
+				else {
+					return false;
+				}
 			}
 
 		}
@@ -514,7 +541,7 @@ void ActorScenarioRecordingItem::executeNativesForRecording(Actor actor)
 	}
 }
 
-bool ActorScenarioRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorScenarioRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	if (ticksNow - ticksStart >= m_ticksLength) {
 		return true;
@@ -553,7 +580,7 @@ void ActorAimAtRecordingItem::executeNativesForRecording(Actor actor)
 	AI::TASK_AIM_GUN_AT_ENTITY(m_actorPed, m_aimedAtEntity, -1, 0);
 }
 
-bool ActorAimAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorAimAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	if (ticksNow - ticksStart >= m_ticksLength) {
 		return true;
@@ -590,7 +617,7 @@ void ActorShootAtRecordingItem::executeNativesForRecording(Actor actor)
 	AI::TASK_SHOOT_AT_ENTITY(m_actorPed, m_shotAtEntity, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
 }
 
-bool ActorShootAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorShootAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	return true;
 }
@@ -651,7 +678,7 @@ void ActorAnimationSequenceRecordingItem::executeNativesForRecording(Actor actor
 	AI::CLEAR_SEQUENCE_TASK(&task_seq);
 }
 
-bool ActorAnimationSequenceRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, Actor actor, Vector3 location)
+bool ActorAnimationSequenceRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	int progress = AI::GET_SEQUENCE_PROGRESS(actor.getActorPed());
 	
