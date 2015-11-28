@@ -428,7 +428,7 @@ void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor)
 				log_to_file("playback_recording_to_waypoint: In boat : " + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
 			}
 			else {
-				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, m_speedInVehicle, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actor.getDrivingMode().value, 5.0, -1);
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, m_speedInVehicle, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actor.getDrivingMode().value, 2.0, -1);
 				log_to_file("playback_recording_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
 
 			}
@@ -462,7 +462,7 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 				minDistance = 60.0;
 			}
 			else if (isInVehicle) {
-				minDistance = 15.0;
+				minDistance = 10.0;
 			}
 
 			//check if next is not a vehicle movement (will often be exit vehicle) Then the threshold should be much less
@@ -479,8 +479,17 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 					minDistance = 30.0;
 				}
 				else if (isInVehicle) {
-					minDistance = 8.0;
+					minDistance = 2.0;
 				}
+			}
+			else {
+				if (nextVehicleMovement->getSpeedInVehicle() == 0.0) {
+					log_to_file("nextVehicleMovement->getSpeedInVehicle() == 0");
+					if (isInVehicle) {
+						minDistance = 2.0;
+					}
+				}
+
 			}
 
 

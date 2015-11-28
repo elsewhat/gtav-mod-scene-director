@@ -1902,8 +1902,8 @@ void action_enter_nearest_vehicle_as_passenger() {
 	}
 	log_to_file("Seat is " + std::to_string(seat));
 
-
 	AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, seat, 1.0, 1, 0);
+
 	nextWaitTicks = 200;
 }
 
@@ -3970,7 +3970,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						DELTA_TICKS = 1000;
 					}
 					else {
-						DELTA_TICKS = 2000;
+						DELTA_TICKS = 500;
 					}
 
 					Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
@@ -4008,9 +4008,10 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 							//make the speed the average of the last two
 							recordedSpeed = (entitySpeed + lastEntitySpeed) / 2.0f;
 						}
+						//use vehicle location and not actor location
+						Vector3 location = ENTITY::GET_ENTITY_COORDS(actorVeh, true);
 
-
-						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh,actorVehHeading, recordedSpeed);
+						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, location, actorVeh,actorVehHeading, recordedSpeed);
 						actorRecording.push_back(std::make_shared<ActorVehicleMovementRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 
@@ -4221,6 +4222,7 @@ void action_submenu_active_selected() {
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_DELETE_RECORDING) {
 		log_to_file("Will remove recording for " + std::to_string(actor.getActorPed()));
+		actor.stopReplayRecording();
 		actor.removeRecording();
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_REMOVE_FROM_SLOT) {
@@ -4289,13 +4291,30 @@ void action_submenu_active_selected() {
 void action_submenu_active_delete() {
 	log_to_file("action_submenu_active_delete " + std::to_string(submenu_active_action));
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	Ped actorPed = actor.getActorPed();
 
 	if (submenu_active_action >= SUBMENU_ITEM_ANIMATION_SEQUENCE_0 && submenu_active_action <= SUBMENU_ITEM_ANIMATION_SEQUENCE_20) {
 		int animSequenceIndex = submenu_active_action - SUBMENU_ITEM_ANIMATION_SEQUENCE_0;
 		if (animSequenceIndex >= 0 && animSequenceIndex < animationSequences.size()) {
 			animationSequences.erase(animationSequences.begin() + animSequenceIndex);
 		}
+	}else if (submenu_active_action == SUBMENU_ITEM_IS_PLAYING_RECORDING) {
+		log_to_file("Skipping to next recording item since user pressed meny");
+
+		ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
+		std::shared_ptr<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+		Vector3 targetLocation = recordingItem->getLocation();
+		Entity entityToTeleport = actorPed;
+		if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+		}
+		teleport_entity_to_location(entityToTeleport, targetLocation, true);
+
 	}
+
+
+
+
 }
 
 void action_menu_active_delete() {
