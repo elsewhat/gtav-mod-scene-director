@@ -8,6 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="ActorProp.cpp" />
     <ClCompile Include="ActorRecording.cpp" />
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="clipset_movement.cpp" />
@@ -27,6 +28,7 @@
     <ClInclude Include="..\..\inc\natives.h" />
     <ClInclude Include="..\..\inc\types.h" />
     <ClInclude Include="Actor.h" />
+    <ClInclude Include="ActorProp.h" />
     <ClInclude Include="ActorRecording.h" />
     <ClInclude Include="Animation.h" />
     <ClInclude Include="clipset_movement.h" />

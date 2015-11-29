@@ -14,6 +14,7 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="ActorRecording.cpp" />
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="ActorProp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\enums.h">
@@ -40,6 +41,7 @@
     <ClInclude Include="Actor.h" />
     <ClInclude Include="ActorRecording.h" />
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="ActorProp.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

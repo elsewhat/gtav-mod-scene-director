@@ -10,6 +10,7 @@
 #include "Actor.h"
 #include "ActorRecording.h"
 #include "Animation.h"
+#include "ActorProp.h"
 
 #include <string>
 #include <ctime>
@@ -81,6 +82,8 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_ANIMATION_PREVIEW = 71,
 	SUBMENU_ITEM_ANIMATION_FLAG = 72,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE = 73,
+	SUBMENU_ITEM_ACTOR_PROP_SELECT = 80,
+	SUBMENU_ITEM_ACTOR_PROP_ADD = 81,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_0 = 200,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_1 = 201,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_2 = 202,
@@ -102,6 +105,7 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_18 = 218,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_19 = 219,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_20 = 220,
+
 
 
 
@@ -168,6 +172,8 @@ std::vector<RelationshipGroup> modRelationshipGroups;
 
 std::vector<ClipSet> gtaWalkingStyles;
 int index_walking_style = -1;
+
+ActorProp currentActorProp = getDefaultActorProp();
 
 std::string statusText;
 DWORD statusTextDrawTicksMax;
@@ -708,6 +714,35 @@ void draw_submenu_animation(int drawIndex) {
 
 	DRAW_TEXT("Add Anim by IDs", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_ACTOR_PROP_ADD;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Add prop to actor", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_ACTOR_PROP_SELECT;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT(strdup(("Prop: " + currentActorProp.name).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
 
 
 	submenu_max_index = submenu_index;
@@ -2700,6 +2735,10 @@ void action_next_animation_flag() {
 	}
 }
 
+void action_next_actor_prop() {
+	currentActorProp = getNextActorProp(currentActorProp);
+}
+
 void action_next_weather() {
 	index_weather++;
 	if (index_weather > gtaWeatherTypes.size() - 1) {
@@ -3289,6 +3328,29 @@ AnimationSequence action_if_animation_sequence_shortcut_key_pressed(bool isRecor
 
 	return AnimationSequence::nullAnimationSequence();
 
+}
+
+void action_add_prop_to_actor(Actor actor, ActorProp actorProp) {
+	Ped actorPed = actor.getActorPed();
+
+	Vector3 position = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(actorPed, 1.0, 2.0, 0.0);
+	STREAMING::REQUEST_MODEL(GAMEPLAY::GET_HASH_KEY(actorProp.propId));
+	DWORD ticksStart = GetTickCount();
+	
+	log_to_file("Loading prop with name " + actorProp.name + " (" + actorProp.propId + ")");
+
+	while (!STREAMING::HAS_MODEL_LOADED(GAMEPLAY::GET_HASH_KEY(actorProp.propId))) {
+		WAIT(0);
+
+		if (GetTickCount() > ticksStart + 5000) {
+			//duration will be 0 if it's not loaded
+			set_status_text("Failed to load prop " + actorProp.name + " (" + actorProp.propId + ")");
+			return;
+		}
+	}
+		
+	Object propObject = OBJECT::CREATE_OBJECT(GAMEPLAY::GET_HASH_KEY(actorProp.propId), position.x, position.y, position.z, 1, 1, 0);
+	ENTITY::ATTACH_ENTITY_TO_ENTITY(propObject, actor.getActorPed(), actorProp.bone, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 2, 1);
 }
 
 
@@ -4283,6 +4345,12 @@ void action_submenu_active_selected() {
 		if (animSequenceIndex >= 0 && animSequenceIndex < animationSequences.size()) {
 			action_animation_sequence_play(animationSequences[animSequenceIndex]);
 		}
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_ACTOR_PROP_SELECT) {
+		action_next_actor_prop();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_ACTOR_PROP_ADD) {
+		action_add_prop_to_actor(actor, currentActorProp);
 	}
 
 }
