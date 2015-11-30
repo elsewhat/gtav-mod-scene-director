@@ -613,7 +613,35 @@ void draw_instructional_buttons_animation_preview() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_N");
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Next animation");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Next");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_B");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Previous");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(197);
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Rotate cam");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(196);
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Rotate cam");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_L");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
@@ -715,7 +743,7 @@ void draw_submenu_animation(int drawIndex) {
 	DRAW_TEXT("Add Anim by IDs", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-
+	/*
 	drawIndex++;
 	submenu_index++;
 	if (submenu_is_active && submenu_active_index == submenu_index) {
@@ -743,7 +771,7 @@ void draw_submenu_animation(int drawIndex) {
 	DRAW_TEXT(strdup(("Prop: " + currentActorProp.name).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-
+	*/
 
 	submenu_max_index = submenu_index;
 
@@ -960,7 +988,7 @@ void draw_submenu_player(int drawIndex) {
 			vehCosmeticText = vehCosmeticText + "No damage";
 		}
 		else {
-			vehCosmeticText = vehCosmeticText + "Normal damage";
+			vehCosmeticText = vehCosmeticText + "Normal dmg";
 		}
 		DRAW_TEXT(strdup(vehCosmeticText.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
@@ -1699,6 +1727,8 @@ void teleport_player_to_waypoint() {
 
 	if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
 		entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
+
+
 	}
 
 	if (UI::IS_WAYPOINT_ACTIVE()) {
@@ -1706,6 +1736,10 @@ void teleport_player_to_waypoint() {
 		Vector3 waypointCoord = UI::GET_BLIP_COORDS(waypointID);
 
 		teleport_entity_to_location(entityToTeleport, waypointCoord,false);
+		if (VEHICLE::IS_VEHICLE_STUCK_ON_ROOF(entityToTeleport)) {
+			VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(entityToTeleport);
+			WAIT(100);
+		}
 	}
 	else {
 		set_status_text("Set waypoint before teleporting");
@@ -3122,6 +3156,11 @@ void action_animations_preview(){
 
 	std::vector<Animation> animations = getAllAnimations();
 	log_to_file("Have " + std::to_string(animations.size()) + " animations");
+
+	bool doLoop = false;
+
+	float currentCamHeading = startHeading;
+
 	for (int i = animation.shortcutIndex; i < animations.size();i++) {
 		Animation animation = animations[i];
 		std::string strAnimation = animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(animation.duration);
@@ -3183,6 +3222,54 @@ void action_animations_preview(){
 					else if (IsKeyDown(VK_MENU) && IsKeyDown(0x4E)) {//next animation
 						break;
 					}
+					else if (IsKeyDown(VK_MENU) && IsKeyDown(0x42)) {//previous animation
+						i = i - 2;
+						break;
+					}
+					else if (IsKeyDown(VK_MENU) && IsKeyDown(0x4C)) {//previous animation
+						
+						if (doLoop) {
+							set_status_text("Stopped looping");
+							doLoop = false;
+						}
+						else {
+							doLoop = true;
+							set_status_text("Now looping current animation");
+						}
+						
+						WAIT(100);
+					}
+					else if (IsKeyDown(VK_MENU) && IsKeyDown(VK_LEFT)) {//previous animation
+						currentCamHeading += 10.0;
+						if (currentCamHeading >= 359.9) {
+							currentCamHeading = 0.0;
+						}
+							
+						camOffset.x = (float)sin((currentCamHeading *PI / 180.0f))*3.0f;
+						camOffset.y = (float)cos((currentCamHeading *PI / 180.0f))*3.0f;
+						//camLocation = ENTITY::GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS(actorPed, camOffset.x, camOffset.y, camOffset.z);
+
+						CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+
+						WAIT(100);
+					}
+					else if (IsKeyDown(VK_MENU) && IsKeyDown(VK_RIGHT)) {//previous animation
+						currentCamHeading -= 10.0;
+						if (currentCamHeading < 0.0) {
+							currentCamHeading += 360.0;
+						}
+
+						camOffset.x = (float)sin((currentCamHeading *PI / 180.0f))*3.0f;
+						camOffset.y = (float)cos((currentCamHeading *PI / 180.0f))*3.0f;
+						//camLocation = ENTITY::GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS(actorPed, camOffset.x, camOffset.y, camOffset.z);
+
+						CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+
+
+						WAIT(100);
+					}
+
+
 					
 					if (GetTickCount() > ticksStart + 60000) {
 						//duration will be 0 if it's not loaded
@@ -3196,6 +3283,9 @@ void action_animations_preview(){
 			}
 			else {
 				log_to_file(animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(0));
+			}
+			if (doLoop) {
+				i = i - 1;
 			}
 		}
 	}
@@ -3350,7 +3440,7 @@ void action_add_prop_to_actor(Actor actor, ActorProp actorProp) {
 	}
 		
 	Object propObject = OBJECT::CREATE_OBJECT(GAMEPLAY::GET_HASH_KEY(actorProp.propId), position.x, position.y, position.z, 1, 1, 0);
-	ENTITY::ATTACH_ENTITY_TO_ENTITY(propObject, actor.getActorPed(), actorProp.bone, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 2, 1);
+	ENTITY::ATTACH_ENTITY_TO_ENTITY(propObject, actorPed, PED::GET_PED_BONE_INDEX(actorPed, actorProp.bone), 0.0, 0.15, 0.0, 0.0, -20.0, 180.0, 0, 0, 0, 0, 2, 1);
 }
 
 
@@ -3432,13 +3522,22 @@ bool record_scene_for_actor_key_press() {
 		return false;
 	}
 }
-
+void action_stop_all_recording_replays() {
+	for (auto & actor : actors) {
+		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
+			actor.stopReplayRecording();
+		}
+	}
+}
 
 void action_start_replay_recording_for_actor(Actor & actor) {
 	action_teleport_to_start_locations();
+	action_stop_all_recording_replays();
 	actor.startReplayRecording(GetTickCount());
 
 }
+
+
 
 void update_tick_recording_replay(Actor & actor) {
 	Ped actorPed = actor.getActorPed();
@@ -4375,6 +4474,11 @@ void action_submenu_active_delete() {
 		Entity entityToTeleport = actorPed;
 		if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+			if (VEHICLE::IS_VEHICLE_STUCK_ON_ROOF(entityToTeleport)) {
+				VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(entityToTeleport);
+				WAIT(100);
+			}
+
 		}
 		teleport_entity_to_location(entityToTeleport, targetLocation, true);
 
@@ -4423,6 +4527,7 @@ void action_menu_active_selected() {
 		action_toggle_scene_mode();
 	}
 	else if (menu_active_action == MENU_ITEM_BACK_TO_START) {
+		action_stop_all_recording_replays();
 		action_teleport_to_start_locations();
 	}
 	else if (menu_active_action == MENU_ITEM_ADD_TO_SLOT) {
@@ -4866,6 +4971,7 @@ void main()
 			nextWaitTicks = 0;
 
 			if (scene_teleport_to_start_locations_key_pressed()) {
+				action_stop_all_recording_replays();
 				action_teleport_to_start_locations();
 			}
 
@@ -4879,7 +4985,7 @@ void main()
 					should_display_hud = false;
 				}
 				else {
-					set_status_text("Scene director 2.0 by elsewhat");
+					set_status_text("Scene director 2.01 by elsewhat");
 					should_display_hud = true;
 				}
 			}
@@ -5005,7 +5111,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 2.0 by elsewhat");
+	set_status_text("Scene director 2.01 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 

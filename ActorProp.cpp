@@ -3,8 +3,10 @@
 #include <algorithm>
 
 std::vector<ActorProp> gtaActorProps = {
-	{"Guitar","prop_acc_guitar_01",28252 },
-	{"Barbell", "Prop_Barbell_02",61163}
+	{"Guitar","prop_acc_guitar_01",24818 },
+	{"Barbell", "Prop_Barbell_02",24818 },
+	{ "Stick", "prop_cs_walking_stick",24818 },
+	{ "Camera", "Prop_Pap_Camera_01",18905 },
 };
 
 ActorProp getDefaultActorProp() {

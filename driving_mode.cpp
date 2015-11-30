@@ -3,7 +3,7 @@
 #include <algorithm>
 
 std::vector<DrivingMode> gtaDrivingModes= {
-	{ FLAG25_IGN_PATHING, "Direct(no roads)",true, 0.0 },
+	{ FLAG25_IGN_PATHING, "Direct",true, 0.0 },
 	{ FLAG25_IGN_PATHING | FLAG11_REVERSE, "Direct-Reverse", true,0.0 },
 	{ 786469, "Road-Aggressive", true, 0.0 },
 	{ FLAG3_AVOID_VEHS|FLAG5_AVOID_PEDS|FLAG6_AVOID_OBJS, "Road-Aggressive 2", true, 0.0 },
