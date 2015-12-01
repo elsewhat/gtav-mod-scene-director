@@ -74,6 +74,7 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_IS_PLAYING_RECORDING = 51,
 	SUBMENU_ITEM_RECORD_PLAYER_WOTHERS = 52,
 	SUBMENU_ITEM_DELETE_RECORDING = 53,
+	SUBMENU_ITEM_RECORDING_DELAY = 54,
 	SUBMENU_ITEM_BLACKOUT = 60,
 	SUBMENU_ITEM_TIMELAPSE = 61,
 	SUBMENU_ITEM_WEATHER = 62,
@@ -184,7 +185,6 @@ DWORD mainTickLast=0;
 DWORD nextWaitTicks = 0;
 
 int forceSlotIndexOverWrite = -1;
-
 
 
 void set_status_text(std::string text)
@@ -483,6 +483,20 @@ void draw_instructional_buttons() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Hide HUD menu");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
+		GRAPHICS::_0xE83A3E3557A56640(delControlKey);
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Back to start");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F");
+		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Enter as passenger");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
 		/* Clone moved to menu
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
@@ -523,12 +537,7 @@ void draw_instructional_buttons() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Firing squad");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
-		GRAPHICS::_0xE83A3E3557A56640(delControlKey);
-		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Back to start");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
 
 		/* Hiding scene mode
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
@@ -743,7 +752,7 @@ void draw_submenu_animation(int drawIndex) {
 	DRAW_TEXT("Add Anim by IDs", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-	/*
+
 	drawIndex++;
 	submenu_index++;
 	if (submenu_is_active && submenu_active_index == submenu_index) {
@@ -771,7 +780,6 @@ void draw_submenu_animation(int drawIndex) {
 	DRAW_TEXT(strdup(("Prop: " + currentActorProp.name).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-	*/
 
 	submenu_max_index = submenu_index;
 
@@ -919,6 +927,22 @@ void draw_submenu_player(int drawIndex) {
 		}
 
 		DRAW_TEXT("Test recording", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_RECORDING_DELAY;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		std::string recordingDelayStr = "Rec. delay: " + std::to_string(actor.getRecordingDelay());
+
+		DRAW_TEXT(strdup(recordingDelayStr.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 	}
 
@@ -3096,6 +3120,12 @@ void action_animation_sequence_add() {
 
 
 	}
+	else {
+		set_status_text("No valid animations IDs found in input");
+		if (getAllAnimations().size() <= 1) {
+			set_status_text("Missing or empty SceneDirectorAnim.txt");
+		}
+	}
 
 }
 
@@ -3105,6 +3135,8 @@ void action_animation_sequence_add() {
 void action_animations_preview(){
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	Ped actorPed = actor.getActorPed();
+
+	boolean customCamera = false; 
 
 	set_status_text("Enter animation code to begin preview");
 	set_status_text("Rotate character before starting preview for different angle");
@@ -3148,14 +3180,22 @@ void action_animations_preview(){
 
 	log_to_file("Camera offset (" + std::to_string(camOffset.x) + ", " + std::to_string(camOffset.y) + ", " + std::to_string(camOffset.z) + ")");
 	Vector3 camLocation = ENTITY::GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS(actorPed, camOffset.x, camOffset.y, camOffset.z);
-
-	Any cameraHandle = CAM::CREATE_CAM_WITH_PARAMS("DEFAULT_SCRIPTED_CAMERA", camLocation.x, camLocation.y, camLocation.z, 0.0, 0.0, 0.0, 40.0, 1, 2);
-	CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
-	CAM::POINT_CAM_AT_ENTITY(cameraHandle, actorPed, 0.0f, 0.0f, 0.0f, true);
-	CAM::RENDER_SCRIPT_CAMS(true, 0, 3000, 1, 0);
+	Any cameraHandle;
+	if (customCamera) {
+		cameraHandle = CAM::CREATE_CAM_WITH_PARAMS("DEFAULT_SCRIPTED_CAMERA", camLocation.x, camLocation.y, camLocation.z, 0.0, 0.0, 0.0, 40.0, 1, 2);
+		CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+		CAM::POINT_CAM_AT_ENTITY(cameraHandle, actorPed, 0.0f, 0.0f, 0.0f, true);
+		CAM::RENDER_SCRIPT_CAMS(true, 0, 3000, 1, 0);
+	}
 
 	std::vector<Animation> animations = getAllAnimations();
 	log_to_file("Have " + std::to_string(animations.size()) + " animations");
+
+	if (animations.size() <= 1) {
+		set_status_text("Missing or empty SceneDirectorAnim.txt");
+		return;
+	}
+
 
 	bool doLoop = false;
 
@@ -3175,8 +3215,8 @@ void action_animations_preview(){
 				WAIT(0);
 				draw_instructional_buttons_animation_preview();
 				DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
-				if (GetTickCount() > ticksStart + 1000) {
-					//log_to_file("Ticks overflow");
+				if (GetTickCount() > ticksStart + 10000) {
+					log_to_file("Failed STREAMING::HAS_ANIM_DICT_LOADED for "+ std::string(animation.animLibrary));
 					hasLoaded = false;
 					break;
 				}
@@ -3248,10 +3288,10 @@ void action_animations_preview(){
 						camOffset.x = (float)sin((currentCamHeading *PI / 180.0f))*3.0f;
 						camOffset.y = (float)cos((currentCamHeading *PI / 180.0f))*3.0f;
 						//camLocation = ENTITY::GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS(actorPed, camOffset.x, camOffset.y, camOffset.z);
-
-						CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
-
-						WAIT(100);
+						if (customCamera) {
+							CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+							WAIT(100);
+						}
 					}
 					else if (IsKeyDown(VK_MENU) && IsKeyDown(VK_RIGHT)) {//previous animation
 						currentCamHeading -= 10.0;
@@ -3262,11 +3302,12 @@ void action_animations_preview(){
 						camOffset.x = (float)sin((currentCamHeading *PI / 180.0f))*3.0f;
 						camOffset.y = (float)cos((currentCamHeading *PI / 180.0f))*3.0f;
 						//camLocation = ENTITY::GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS(actorPed, camOffset.x, camOffset.y, camOffset.z);
+						if (customCamera) {
+							CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+							WAIT(100);
+						}
 
-						CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
 
-
-						WAIT(100);
 					}
 
 
@@ -3531,9 +3572,35 @@ void action_stop_all_recording_replays() {
 }
 
 void action_start_replay_recording_for_actor(Actor & actor) {
-	action_teleport_to_start_locations();
+	//action_teleport_to_start_locations();
 	action_stop_all_recording_replays();
 	actor.startReplayRecording(GetTickCount());
+
+}
+
+void action_set_recording_delay(Actor & actor) {
+
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", strdup(std::to_string(actor.getRecordingDelay()).c_str()), "", "", "", 6);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		WAIT(0);
+	}
+
+	if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+		log_to_file("Got null keyboard value");
+		return;
+	}
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	try {
+		int recordingDelay = std::stoi(keyboardValue);
+		DWORD ticksDelay = (DWORD)recordingDelay;
+		actor.setRecordingDelay(ticksDelay);
+	}catch (std::exception &ex){
+		log_to_file("Failed to parse " + std::string(keyboardValue));
+		set_status_text("Failed to parse " + std::string(keyboardValue));
+		return;
+	}
+
 
 }
 
@@ -3582,7 +3649,8 @@ void update_tick_recording_replay(Actor & actor) {
 		if (ticksNow >= recordingPlayback.getTicksTeleportedToStartLocation() + 2000) {
 			DWORD ticksPlaybackStart = recordingPlayback.getTicksPlaybackStarted();
 			DWORD ticksDeltaStartFirst = recordingItem->getTicksAfterRecordStart();
-			if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst) {
+
+			if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst + actor.getRecordingDelay()) {
 				return;
 			}
 			else {
@@ -3907,7 +3975,8 @@ void menu_action_up() {
 	if(submenu_is_active == false){
 		menu_active_index++;
 		if (menu_active_index > menu_max_index) {
-			menu_active_index = menu_max_index;
+			menu_active_index = 0;
+			nextWaitTicks = 200;
 		}
 		else {
 			submenu_is_displayed = false;
@@ -3928,7 +3997,8 @@ void menu_action_down() {
 	if (submenu_is_active == false) {
 		menu_active_index--;
 		if (menu_active_index < 0) {
-			menu_active_index = 0;
+			menu_active_index = menu_max_index;
+			nextWaitTicks = 200;
 		}
 		else {
 			submenu_is_displayed = false;
@@ -4363,6 +4433,9 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_TEST_RECORDING) {
 		log_to_file("Will test recording for " + std::to_string(actor.getActorPed()));
 		action_start_replay_recording_for_actor(actor);
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_RECORDING_DELAY) {
+		action_set_recording_delay(actor);
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_IS_PLAYING_RECORDING) {
 		log_to_file("Skipping to next recording item since user pressed meny");

@@ -254,6 +254,16 @@ bool Actor::hasRecording()
 	return m_hasRecording;
 }
 
+void Actor::setRecordingDelay(DWORD ticks)
+{
+	m_recordingDelay = ticks;
+}
+
+DWORD Actor::getRecordingDelay()
+{
+	return m_recordingDelay;
+}
+
 void Actor::setStartLocationVehicle(Vehicle vehicle, Vector3 startLocationVehicleLocation, float startLocationVehicleHeading)
 {
 	m_startLocationVehicle = vehicle;

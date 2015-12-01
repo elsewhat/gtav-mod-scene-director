@@ -54,6 +54,7 @@ private:
 	bool m_replayRecordingInProgress = false;
 	ActorRecordingPlayback m_actorRecordingPlayback;
 
+	DWORD m_recordingDelay;
 
 public:
 	Actor();
@@ -116,6 +117,9 @@ public:
 
 	void setHasRecording(bool hasRecording);
 	bool hasRecording();
+
+	void setRecordingDelay(DWORD ticks);
+	DWORD getRecordingDelay();
 
 	void setStartLocationVehicle(Vehicle vehicle, Vector3 startLocationVehicleLocation,float startLocationVehicleHeading);
 	Vehicle getStartLocationVehicle();
