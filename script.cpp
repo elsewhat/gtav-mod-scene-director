@@ -47,44 +47,45 @@ enum MENU_ITEM {
 	MENU_ITEM_ACTOR_7 = 7,
 	MENU_ITEM_ACTOR_8 = 8,
 	MENU_ITEM_ACTOR_9 = 9,
-	MENU_ITEM_SCENE_MODE = 10,
-	MENU_ITEM_AUTOPILOT = 11,
-	MENU_ITEM_ESCORT = 12,
-	MENU_ITEM_CHASE = 13,
-	MENU_ITEM_FIRING_SQUAD = 14,
-	MENU_ITEM_ADD_TO_SLOT = 15,
-	MENU_ITEM_ADD_CLONE_TO_SLOT = 16,
-	MENU_ITEM_CLONE = 17,
-	MENU_ITEM_CLONE_WITH_VEHICLE = 18,
-	MENU_ITEM_POSSESS = 19,
-	MENU_ITEM_WORLD = 20,
-	MENU_ITEM_ANIMATION = 21,
-	MENU_ITEM_BACK_TO_START = 21,
-	SUBMENU_ITEM_RECORD_PLAYER = 40,
-	SUBMENU_ITEM_REMOVE_FROM_SLOT = 41,
-	SUBMENU_ITEM_SPOT_LIGHT = 42,
-	SUBMENU_ITEM_SPOT_LIGHT_COLOR = 43,
-	SUBMENU_ITEM_WALK = 44,
-	SUBMENU_ITEM_RELATIONSHIP = 45,
-	SUBMENU_ITEM_HEALTH = 46,
-	SUBMENU_ITEM_VEHICLE_COSMETIC = 47,
-	SUBMENU_ITEM_WALK_SPEED = 48,
-	SUBMENU_ITEM_DRIVING_MODE = 49,
-	SUBMENU_ITEM_TEST_RECORDING = 50,
-	SUBMENU_ITEM_IS_PLAYING_RECORDING = 51,
-	SUBMENU_ITEM_RECORD_PLAYER_WOTHERS = 52,
-	SUBMENU_ITEM_DELETE_RECORDING = 53,
-	SUBMENU_ITEM_RECORDING_DELAY = 54,
-	SUBMENU_ITEM_BLACKOUT = 60,
-	SUBMENU_ITEM_TIMELAPSE = 61,
-	SUBMENU_ITEM_WEATHER = 62,
-	SUBMENU_ITEM_WIND = 63,
-	SUBMENU_ITEM_ANIMATION_SINGLE = 70,
-	SUBMENU_ITEM_ANIMATION_PREVIEW = 71,
-	SUBMENU_ITEM_ANIMATION_FLAG = 72,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE = 73,
-	SUBMENU_ITEM_ACTOR_PROP_SELECT = 80,
-	SUBMENU_ITEM_ACTOR_PROP_ADD = 81,
+	MENU_ITEM_SCENE_MODE = 110,
+	MENU_ITEM_AUTOPILOT = 111,
+	MENU_ITEM_ESCORT = 112,
+	MENU_ITEM_CHASE = 113,
+	MENU_ITEM_FIRING_SQUAD = 114,
+	MENU_ITEM_ADD_TO_SLOT = 115,
+	MENU_ITEM_ADD_CLONE_TO_SLOT = 116,
+	MENU_ITEM_CLONE = 117,
+	MENU_ITEM_CLONE_WITH_VEHICLE = 118,
+	MENU_ITEM_POSSESS = 119,
+	MENU_ITEM_WORLD = 120,
+	MENU_ITEM_ANIMATION = 121,
+	MENU_ITEM_BACK_TO_START = 121,
+	SUBMENU_ITEM_RECORD_PLAYER = 140,
+	SUBMENU_ITEM_REMOVE_FROM_SLOT = 141,
+	SUBMENU_ITEM_SPOT_LIGHT = 142,
+	SUBMENU_ITEM_SPOT_LIGHT_COLOR = 143,
+	SUBMENU_ITEM_WALK = 144,
+	SUBMENU_ITEM_RELATIONSHIP = 145,
+	SUBMENU_ITEM_HEALTH = 146,
+	SUBMENU_ITEM_VEHICLE_COSMETIC = 147,
+	SUBMENU_ITEM_WALK_SPEED = 148,
+	SUBMENU_ITEM_DRIVING_MODE = 149,
+	SUBMENU_ITEM_TEST_RECORDING = 150,
+	SUBMENU_ITEM_IS_PLAYING_RECORDING = 151,
+	SUBMENU_ITEM_RECORD_PLAYER_WOTHERS = 152,
+	SUBMENU_ITEM_DELETE_RECORDING = 153,
+	SUBMENU_ITEM_RECORDING_DELAY = 154,
+	SUBMENU_ITEM_COPY_REC_TO_OTHERS = 155,
+	SUBMENU_ITEM_BLACKOUT = 160,
+	SUBMENU_ITEM_TIMELAPSE = 161,
+	SUBMENU_ITEM_WEATHER = 162,
+	SUBMENU_ITEM_WIND = 163,
+	SUBMENU_ITEM_ANIMATION_SINGLE = 170,
+	SUBMENU_ITEM_ANIMATION_PREVIEW = 171,
+	SUBMENU_ITEM_ANIMATION_FLAG = 172,
+	SUBMENU_ITEM_ANIMATION_SEQUENCE = 173,
+	SUBMENU_ITEM_ACTOR_PROP_SELECT = 180,
+	SUBMENU_ITEM_ACTOR_PROP_ADD = 181,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_0 = 200,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_1 = 201,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_2 = 202,
@@ -114,7 +115,7 @@ enum MENU_ITEM {
 
 bool should_display_hud = false;
 
-std::vector<Actor>  actors(9);
+std::vector<Actor>  actors(20);
 bool actor0IsClone = false;
 Actor previousActor = Actor::nullActor();
 
@@ -944,6 +945,22 @@ void draw_submenu_player(int drawIndex) {
 
 		DRAW_TEXT(strdup(recordingDelayStr.c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_COPY_REC_TO_OTHERS;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+
+		DRAW_TEXT("Copy rec. to other actors", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		
 	}
 
 	if (actor.isCurrentlyPlayingRecording()) {
@@ -3136,7 +3153,7 @@ void action_animations_preview(){
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	Ped actorPed = actor.getActorPed();
 
-	boolean customCamera = false; 
+	boolean customCamera = true; 
 
 	set_status_text("Enter animation code to begin preview");
 	set_status_text("Rotate character before starting preview for different angle");
@@ -3459,6 +3476,70 @@ AnimationSequence action_if_animation_sequence_shortcut_key_pressed(bool isRecor
 
 	return AnimationSequence::nullAnimationSequence();
 
+}
+
+void action_set_actor_as_passenger_of_other_actor(Actor passenger, Actor actorWithVehicle) {
+	if (actorWithVehicle.isNullActor()) {
+		set_status_text("Target actor does not exist");
+		return;
+	}
+
+	Ped passengerPed = passenger.getActorPed();
+	Ped pedWithVehicle = actorWithVehicle.getActorPed();
+
+	if (passengerPed == pedWithVehicle) {
+		set_status_text("Target actor is the same as current actor");
+		return;
+	}
+
+	if (PED::IS_PED_IN_ANY_VEHICLE(pedWithVehicle, 0)) {
+		Vehicle targetVehicle = PED::GET_VEHICLE_PED_IS_USING(pedWithVehicle);
+		PED::SET_PED_INTO_VEHICLE(passengerPed, targetVehicle, -2);
+	}
+	else {
+		set_status_text("Target actor is not in any vehicle");
+	}
+}
+
+void check_if_actor_as_passenger_of_other_actor_key_pressed() {
+	if (IsKeyDown(VK_PRIOR)) {
+		int actorIndex = -1;
+		if (IsKeyDown(0x31)) {
+			//0 index is reserved for previously possessed or cloned
+			actorIndex = 0;
+		}
+		else if (IsKeyDown(0x32)) {
+			actorIndex = 1;
+		}
+		else if (IsKeyDown(0x33)) {
+			actorIndex = 2;
+		}
+		else if (IsKeyDown(0x34)) {
+			actorIndex = 3;
+		}
+		else if (IsKeyDown(0x35)) {
+			actorIndex = 4;
+		}
+		else if (IsKeyDown(0x36)) {
+			actorIndex = 5;
+		}
+		else if (IsKeyDown(0x37)) {
+			actorIndex = 6;
+		}
+		else if (IsKeyDown(0x38)) {
+			actorIndex = 7;
+		}
+		else if (IsKeyDown(0x39)) {
+			actorIndex = 8;
+		}
+		if (actorIndex != -1) {
+			Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+			action_set_actor_as_passenger_of_other_actor(actor, actors.at(actorIndex));
+		}
+		else {
+			//do nothing
+		}
+	}
 }
 
 void action_add_prop_to_actor(Actor actor, ActorProp actorProp) {
@@ -4028,7 +4109,33 @@ void menu_action_right() {
 	}
 }
 
+void action_copy_recording_to_other_actors(Actor actorCopyFrom) {
+	Ped actorCopyFromPed = actorCopyFrom.getActorPed();
 
+	if (!actorCopyFrom.hasRecording()) {
+		set_status_text("Actor has no recording to copy to others");
+	}
+	else {
+		int nrCopiedTo = 0;
+		std::vector<std::shared_ptr<ActorRecordingItem>> recordingToCopy = actorCopyFrom.getRecording();
+
+		for (auto &actor : actors) {
+			if (!actor.isActorThisPed(actorCopyFromPed) && !actor.hasRecording()) {
+				Ped actorPed = actor.getActorPed();
+				actor.setRecording(recordingToCopy);
+				actor.setHasRecording(true);
+
+				actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
+				actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
+				actor.setHasStartLocation(true);
+				nrCopiedTo++;
+			}
+		}
+		set_status_text("Copied actor recording to " + std::to_string(nrCopiedTo) + " other actors");
+
+	}
+
+}
 
 void action_record_scene_for_actor(bool replayOtherActors) {
 
@@ -4464,6 +4571,9 @@ void action_submenu_active_selected() {
 		action_remove_actor_from_index(menu_active_action);
 		submenu_is_displayed = false;
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_COPY_REC_TO_OTHERS) {
+		action_copy_recording_to_other_actors(actor);
+	}
 	else if (submenu_active_action == SUBMENU_ITEM_BLACKOUT) {
 		action_toggle_blackout();
 	}
@@ -4580,7 +4690,7 @@ void action_menu_active_delete() {
 
 void action_menu_active_selected() {
 	//switch to actor
-	if (menu_active_action >= 1 && menu_active_action <= 9) {
+	if (menu_active_action >= 1 && menu_active_action <= 100) {
 		action_swap_to_actor_with_index(menu_active_action);
 		//force the active menu to be set to the new actor
 		menu_active_index = -1;
@@ -5138,6 +5248,8 @@ void main()
 			action_if_animation_sequence_shortcut_key_pressed(false);
 
 			check_if_player_is_passenger_and_has_waypoint();
+
+			check_if_actor_as_passenger_of_other_actor_key_pressed();
 
 			mainTickLast = GetTickCount();
 		}

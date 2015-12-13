@@ -413,7 +413,7 @@ void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor)
 		else {
 
 			if (PED::IS_PED_IN_ANY_HELI(m_actorPed)) {
-				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, m_speedInVehicle, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, 5.0, -1);
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, m_speedInVehicle, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, -1.0, -1);
 				log_to_file("playback_recording_to_waypoint: Flying in heli with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
 			}
 			else if (PED::IS_PED_IN_ANY_PLANE(m_actorPed)) {

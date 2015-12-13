@@ -13,6 +13,7 @@ Actor::Actor(Ped ped) {
 	setRelationshipGroup(getDefaultRelationshipGroup());
 	setDrivingMode(getDefaultDrivingMode());
 	m_startLocationVehicle = 0;
+	m_recordingDelay = 0;
 }
 
 Ped Actor::getActorPed()
