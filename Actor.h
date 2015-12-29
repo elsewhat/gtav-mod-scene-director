@@ -73,6 +73,8 @@ public:
 	void setBlipId(int blipId);
 	int getBlipId();
 
+	void changeActorPed(Ped newPed);
+
 	void setHasWaypoint(bool hasWaypoint); 
 	bool hasWaypoint();
 

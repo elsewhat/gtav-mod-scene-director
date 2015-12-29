@@ -66,6 +66,11 @@ int Actor::getBlipId()
 	return m_blipId;
 }
 
+void Actor::changeActorPed(Ped newPed)
+{
+	m_ped = newPed;
+}
+
 void Actor::setHasWaypoint(bool hasWaypoint)
 {
 	m_hasWaypoint = hasWaypoint;

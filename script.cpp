@@ -187,6 +187,8 @@ DWORD nextWaitTicks = 0;
 
 int forceSlotIndexOverWrite = -1;
 
+//used to automatically switch over current actor over to new Ped in check_player_model
+Ped lastPlayerPed = 0;
 
 void set_status_text(std::string text)
 {
@@ -259,7 +261,15 @@ void give_basic_weapon(Player playerPed) {
 	WEAPON::GIVE_DELAYED_WEAPON_TO_PED(playerPed, GAMEPLAY::GET_HASH_KEY((char *)weaponNames[7]), 1000, 0);
 }
 
-
+Actor& get_actor_from_ped(Ped ped) {
+	for (auto &actor : actors) {
+		if (actor.isActorThisPed(ped)) {
+			return actor;
+		}
+	}
+	static Actor nullActor = Actor::nullActor();
+	return nullActor;
+}
 
 // player model control, switching on normal ped model when needed	
 void check_player_model()
@@ -267,6 +277,20 @@ void check_player_model()
 	// common variables
 	Player player = PLAYER::PLAYER_ID();
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
+
+	if (playerPed != lastPlayerPed && lastPlayerPed!=0) {
+		//assume that Player has swapped model through trainer if old ped does not exist
+		//swap Ped id for current actor if possible
+		if (!ENTITY::DOES_ENTITY_EXIST(lastPlayerPed)) {
+			Actor & actor = get_actor_from_ped(lastPlayerPed);
+			if (actor.isNullActor() == false) {
+				actor.changeActorPed(playerPed);
+				set_status_text("Update current actor after switching model");
+			}
+		}
+
+	}
+	lastPlayerPed = playerPed;
 
 	if (!ENTITY::DOES_ENTITY_EXIST(playerPed)) return;
 
@@ -310,15 +334,7 @@ void DRAW_TEXT(char* Text, float X, float Y, float S_X, float S_Y, int Font, boo
 	UI::_DRAW_TEXT(X, Y);
 }
 
-Actor& get_actor_from_ped(Ped ped) {
-	for (auto &actor : actors) {
-		if (actor.isActorThisPed(ped)) {
-			return actor;
-		}
-	}
-	static Actor nullActor = Actor::nullActor();
-	return nullActor;
-}
+
 
 
 void store_current_waypoint_for_actor(Ped ped) {
