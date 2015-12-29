@@ -5184,7 +5184,7 @@ void main()
 					should_display_hud = false;
 				}
 				else {
-					set_status_text("Scene director 2.01 by elsewhat");
+					set_status_text("Scene director 2.1 by elsewhat");
 					should_display_hud = true;
 				}
 			}
@@ -5312,7 +5312,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 2.01 by elsewhat");
+	set_status_text("Scene director 2.1 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 
