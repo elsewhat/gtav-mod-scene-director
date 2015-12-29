@@ -4120,7 +4120,7 @@ void action_copy_recording_to_other_actors(Actor actorCopyFrom) {
 		std::vector<std::shared_ptr<ActorRecordingItem>> recordingToCopy = actorCopyFrom.getRecording();
 
 		for (auto &actor : actors) {
-			if (!actor.isActorThisPed(actorCopyFromPed) && !actor.hasRecording()) {
+			if (!actor.isActorThisPed(actorCopyFromPed) && !actor.isNullActor() && !actor.hasRecording()) {
 				Ped actorPed = actor.getActorPed();
 				actor.setRecording(recordingToCopy);
 				actor.setHasRecording(true);

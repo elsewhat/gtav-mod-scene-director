@@ -69,7 +69,7 @@ float ActorOnFootMovementRecordingItem::getWalkSpeed()
 
 void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor)
 {
-	AI::TASK_GO_STRAIGHT_TO_COORD(m_actorPed, m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, 27.0f, 0.5f);
+	AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, 27.0f, 0.5f);
 }
 
 bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
@@ -311,12 +311,12 @@ std::string ActorVehicleEnterRecordingItem::toString()
 
 void ActorVehicleEnterRecordingItem::executeNativesForRecording(Actor actor)
 {
-	AI::TASK_ENTER_VEHICLE(m_actorPed, m_vehicle, -1, m_vehicleSeat, m_enterVehicleSpeed, 1, 0);
+	AI::TASK_ENTER_VEHICLE(actor.getActorPed(), m_vehicle, -1, m_vehicleSeat, m_enterVehicleSpeed, 1, 0);
 }
 
 bool ActorVehicleEnterRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
-	if (PED::IS_PED_SITTING_IN_VEHICLE(m_actorPed,m_vehicle)) {
+	if (PED::IS_PED_SITTING_IN_VEHICLE(actor.getActorPed(),m_vehicle)) {
 		return true;
 	}
 	else {
@@ -337,16 +337,16 @@ std::string ActorVehicleExitRecordingItem::toString()
 
 void ActorVehicleExitRecordingItem::executeNativesForRecording(Actor actor)
 {
-	AI::TASK_LEAVE_VEHICLE(m_actorPed, m_vehicle, 0);
+	AI::TASK_LEAVE_VEHICLE(actor.getActorPed(), m_vehicle, 0);
 }
 
 bool ActorVehicleExitRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
-	if (PED::IS_PED_SITTING_IN_VEHICLE(m_actorPed, m_vehicle)) {
+	if (PED::IS_PED_SITTING_IN_VEHICLE(actor.getActorPed(), m_vehicle)) {
 		return false;
 	}
 	else {//extra check in order to make sure they are not in the vehicle
-		if (PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0) && PED::GET_VEHICLE_PED_IS_USING(m_actorPed) == m_vehicle) {
+		if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0) && PED::GET_VEHICLE_PED_IS_USING(actor.getActorPed()) == m_vehicle) {
 			return false;
 		}
 		else {
@@ -373,7 +373,7 @@ std::string ActorStandingStillRecordingItem::toString()
 
 void ActorStandingStillRecordingItem::executeNativesForRecording(Actor actor)
 {
-	AI::CLEAR_PED_TASKS(m_actorPed);
+	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
 
 bool ActorStandingStillRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart,  DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
@@ -399,29 +399,29 @@ float ActorVehicleMovementRecordingItem::getSpeedInVehicle()
 
 void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor)
 {
-	if (PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0)) {
-		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(m_actorPed);
+	if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
+		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actor.getActorPed());
 
 		//we assume pedVehicle is the right vehicle
 
 		//check if player is the driver
 		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(pedVehicle, -1);
-		if (pedDriver != m_actorPed) {
-			log_to_file("ActorVehicleMovementRecordingItem: Actor (" + std::to_string(m_actorPed) + " is not driver (" + std::to_string(pedDriver) + ") Will do no action");
+		if (pedDriver != actor.getActorPed()) {
+			log_to_file("ActorVehicleMovementRecordingItem: Actor (" + std::to_string(actor.getActorPed()) + " is not driver (" + std::to_string(pedDriver) + ") Will do no action");
 			//set_status_text("Ped is not driver. Ignore waypoint");
 		}
 		else {
 
-			if (PED::IS_PED_IN_ANY_HELI(m_actorPed)) {
+			if (PED::IS_PED_IN_ANY_HELI(actor.getActorPed())) {
 				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, m_speedInVehicle, 1, ENTITY::GET_ENTITY_MODEL(pedVehicle), 1, -1.0, -1);
 				log_to_file("playback_recording_to_waypoint: Flying in heli with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
 			}
-			else if (PED::IS_PED_IN_ANY_PLANE(m_actorPed)) {
+			else if (PED::IS_PED_IN_ANY_PLANE(actor.getActorPed())) {
 				AI::TASK_PLANE_MISSION(pedDriver, pedVehicle, 0, 0, m_location.x, m_location.y, m_location.z, 4, 30.0, 50.0, -1, m_speedInVehicle, 50);
 				log_to_file("playback_recording_to_waypoint: Flying in plane with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
 
 			}
-			else if (PED::IS_PED_IN_ANY_BOAT(m_actorPed)) {
+			else if (PED::IS_PED_IN_ANY_BOAT(actor.getActorPed())) {
 				AI::TASK_BOAT_MISSION(pedDriver, pedVehicle, 0, 0, m_location.x, m_location.y, m_location.z, 4, m_speedInVehicle, 786469, -1.0, 7);
 				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(pedDriver, 1);
 				//AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, waypointCoord.x, waypointCoord.y, 0.0, 20.0, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), 786469, 5.0, 1071);
@@ -442,13 +442,13 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 {
 	if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded - 500)) {
 		//log_to_file("ticksNow - ticksStart = " + std::to_string(ticksNow - ticksStart) + " (m_ticksDeltaCheckCompletion / 2.0) = " + std::to_string((m_ticksDeltaWhenRecorded / 2.0)));
-		if (PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0)) {
-			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(m_actorPed);
+		if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
+			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actor.getActorPed());
 
-			bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(m_actorPed, 0);
-			bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(m_actorPed);
-			bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(m_actorPed);
-			bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(m_actorPed);
+			bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0);
+			bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(actor.getActorPed());
+			bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(actor.getActorPed());
+			bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(actor.getActorPed());
 
 			float minDistance = 4.0;
 
@@ -543,10 +543,10 @@ std::string ActorScenarioRecordingItem::toString()
 void ActorScenarioRecordingItem::executeNativesForRecording(Actor actor)
 {
 	if (m_scenario.hasEnterAnim) {
-		AI::TASK_START_SCENARIO_IN_PLACE(m_actorPed, m_scenario.name, -1, 1);
+		AI::TASK_START_SCENARIO_IN_PLACE(actor.getActorPed(), m_scenario.name, -1, 1);
 	}
 	else {
-		AI::TASK_START_SCENARIO_IN_PLACE(m_actorPed, m_scenario.name, -1, 0);
+		AI::TASK_START_SCENARIO_IN_PLACE(actor.getActorPed(), m_scenario.name, -1, 0);
 	}
 }
 
@@ -564,7 +564,7 @@ bool ActorScenarioRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorR
 void ActorScenarioRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 	log_to_file("ActorScenarioRecordingItem: executeNativesAfterRecording calling AI::CLEAR_PED_TASKS");
-	AI::CLEAR_PED_TASKS(m_actorPed);
+	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
 
 ActorAimAtRecordingItem::ActorAimAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity aimedAtEntity): ActorRecordingItem( ticksStart, ticksDeltaWhenRecorded, actor,  location)
@@ -586,7 +586,7 @@ std::string ActorAimAtRecordingItem::toString()
 
 void ActorAimAtRecordingItem::executeNativesForRecording(Actor actor)
 {
-	AI::TASK_AIM_GUN_AT_ENTITY(m_actorPed, m_aimedAtEntity, -1, 0);
+	AI::TASK_AIM_GUN_AT_ENTITY(actor.getActorPed(), m_aimedAtEntity, -1, 0);
 }
 
 bool ActorAimAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
@@ -623,7 +623,7 @@ std::string ActorShootAtRecordingItem::toString()
 
 void ActorShootAtRecordingItem::executeNativesForRecording(Actor actor)
 {
-	AI::TASK_SHOOT_AT_ENTITY(m_actorPed, m_shotAtEntity, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+	AI::TASK_SHOOT_AT_ENTITY(actor.getActorPed(), m_shotAtEntity, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
 }
 
 bool ActorShootAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
