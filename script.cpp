@@ -11,6 +11,7 @@
 #include "ActorRecording.h"
 #include "Animation.h"
 #include "ActorProp.h"
+#include "tinyxml2.h"
 
 #include <string>
 #include <ctime>
@@ -60,6 +61,7 @@ enum MENU_ITEM {
 	MENU_ITEM_WORLD = 120,
 	MENU_ITEM_ANIMATION = 121,
 	MENU_ITEM_BACK_TO_START = 121,
+	MENU_ITEM_SAVE_LOAD = 122,
 	SUBMENU_ITEM_RECORD_PLAYER = 140,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 141,
 	SUBMENU_ITEM_SPOT_LIGHT = 142,
@@ -86,6 +88,8 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_ANIMATION_SEQUENCE = 173,
 	SUBMENU_ITEM_ACTOR_PROP_SELECT = 180,
 	SUBMENU_ITEM_ACTOR_PROP_ADD = 181,
+	SUBMENU_ITEM_SAVE_ACTORS=190,
+	SUBMENU_ITEM_LOAD_ACTORS = 191,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_0 = 200,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_1 = 201,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_2 = 202,
@@ -186,6 +190,8 @@ DWORD mainTickLast=0;
 DWORD nextWaitTicks = 0;
 
 int forceSlotIndexOverWrite = -1;
+
+std::string saveFileName = "SceneDirector_save.xml";
 
 //used to automatically switch over current actor over to new Ped in check_player_model
 Ped lastPlayerPed = 0;
@@ -884,6 +890,43 @@ void draw_submenu_world(int drawIndex) {
 	submenu_max_index = submenu_index;
 
 }
+void draw_submenu_save_load(int drawIndex) {
+	int submenu_index = 0;
+
+	//colors for swapping from active to inactive... messy
+	int textColorR = 255, textColorG = 255, textColorB = 255;
+	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_SAVE_ACTORS;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Save actors", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_LOAD_ACTORS;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Load actors", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	submenu_max_index = submenu_index;
+
+}
+
 
 void draw_submenu_player(int drawIndex) {
 	int submenu_index = 0;
@@ -1266,6 +1309,33 @@ void draw_menu() {
 	else {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
+
+	//3b. Save / Load
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_SAVE_LOAD;
+		draw_submenu_save_load(drawIndex);
+		submenu_is_displayed = true;
+		if (submenu_active_index == -1) {
+			submenu_active_index = 0;
+		}
+		//dim the main menu selector if sub menu is active
+		if (submenu_is_active) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 180, bgColorG = 180, bgColorB = 180;
+		}
+
+	}
+	DRAW_TEXT("Save / Load", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
 
 	//4. World options
 	if (menu_active_index == drawIndex) {
@@ -2384,6 +2454,61 @@ void action_reset_scene_director() {
 		actor = Actor::nullActor();
 	}
 
+}
+
+void action_save_actors() {
+	log_to_file("action_save_actors");
+	tinyxml2::XMLDocument* doc = new tinyxml2::XMLDocument();
+	tinyxml2::XMLNode* rootElement = doc->InsertEndChild(doc->NewElement("SceneDirector"));
+
+	for (auto &actor : actors) {
+		if (!actor.isNullActor()) {
+			Ped actorPed = actor.getActorPed();
+
+			tinyxml2::XMLElement* actorElement = doc->NewElement("Actor");
+
+			Hash pedModelHash = ENTITY::GET_ENTITY_MODEL(actorPed);
+			actorElement->SetAttribute("pedModelHash", std::to_string(pedModelHash).c_str());
+
+			rootElement->InsertEndChild(actorElement);
+		}
+	}
+
+	log_to_file("action_save_actors: about to save");
+	
+	doc->SaveFile(saveFileName.c_str());
+	set_status_text("Saved actors to " + saveFileName);
+
+	delete doc;
+}
+
+void action_load_actors() {
+	log_to_file("action_load_actors");
+	
+	tinyxml2::XMLDocument doc = new tinyxml2::XMLDocument();
+	doc.LoadFile(saveFileName.c_str());
+	if (doc.Error()) {
+		set_status_text("Save file " + saveFileName + " could not be loaded. Error: "+ doc.ErrorName() );
+		return;
+	}
+	
+	log_to_file("action_load_actors2");
+	tinyxml2::XMLElement* sceneDirectorElement = doc.RootElement();
+	log_to_file("action_load_actors3");
+
+	for (tinyxml2::XMLElement* actorElement = sceneDirectorElement->FirstChildElement("Actor");
+		actorElement;
+		actorElement = actorElement->NextSiblingElement())
+	{
+		log_to_file("action_load_actors4");
+		const char* strPedModelHash = actorElement->Attribute("pedModelHash");
+		log_to_file("Actor strPedModelHash=" + std::string(strPedModelHash));
+		DWORD pedModelHash = atol((char*)(LPCTSTR)strPedModelHash);
+		log_to_file("Actor pedModelHash=" + std::to_string(pedModelHash));
+	}
+
+
+	set_status_text("Loaded actors from " + saveFileName);
 }
 
 void action_vehicle_chase() {
@@ -4650,6 +4775,14 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_ACTOR_PROP_ADD) {
 		action_add_prop_to_actor(actor, currentActorProp);
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_SAVE_ACTORS) {
+		action_save_actors();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_LOAD_ACTORS) {
+		action_load_actors();
+	}
+
+	
 
 }
 

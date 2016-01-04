@@ -19,6 +19,7 @@
     <ClCompile Include="relationship.cpp" />
     <ClCompile Include="scenario.cpp" />
     <ClCompile Include="script.cpp" />
+    <ClCompile Include="tinyxml2.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="weather.cpp" />
   </ItemGroup>
@@ -38,6 +39,7 @@
     <ClInclude Include="relationship.h" />
     <ClInclude Include="scenario.h" />
     <ClInclude Include="script.h" />
+    <ClInclude Include="tinyxml2.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="weather.h" />
   </ItemGroup>
