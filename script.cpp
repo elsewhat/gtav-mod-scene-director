@@ -2468,7 +2468,13 @@ void action_save_actors() {
 			tinyxml2::XMLElement* actorElement = doc->NewElement("Actor");
 
 			Hash pedModelHash = ENTITY::GET_ENTITY_MODEL(actorPed);
-			actorElement->SetAttribute("pedModelHash", std::to_string(pedModelHash).c_str());
+			
+			log_to_file("Actor pedModelHash=" + std::to_string(pedModelHash));
+
+			char strHash[10];
+			sprintf(strHash, "%lu", pedModelHash);
+			actorElement->SetAttribute("pedModelHash", strHash);
+			//actorElement->SetAttribute("pedModelHash", std::to_string(pedModelHash).c_str());
 
 			rootElement->InsertEndChild(actorElement);
 		}
@@ -2492,19 +2498,38 @@ void action_load_actors() {
 		return;
 	}
 	
-	log_to_file("action_load_actors2");
 	tinyxml2::XMLElement* sceneDirectorElement = doc.RootElement();
-	log_to_file("action_load_actors3");
-
+	int actorIndex = 0;
 	for (tinyxml2::XMLElement* actorElement = sceneDirectorElement->FirstChildElement("Actor");
 		actorElement;
 		actorElement = actorElement->NextSiblingElement())
 	{
-		log_to_file("action_load_actors4");
 		const char* strPedModelHash = actorElement->Attribute("pedModelHash");
 		log_to_file("Actor strPedModelHash=" + std::string(strPedModelHash));
-		DWORD pedModelHash = atol((char*)(LPCTSTR)strPedModelHash);
+		DWORD pedModelHash = strtoul(strPedModelHash, NULL, 0);
 		log_to_file("Actor pedModelHash=" + std::to_string(pedModelHash));
+
+		//DWORD pedModelHash = atol((char*)(LPCTSTR)strPedModelHash);
+
+
+		if (!actors[actorIndex].isNullActor()) {
+			STREAMING::REQUEST_MODEL(pedModelHash);
+			while (!STREAMING::HAS_MODEL_LOADED(pedModelHash)) {
+				WAIT(0);
+			}
+
+			Vector3 location = ENTITY::GET_ENTITY_COORDS(PLAYER::PLAYER_PED_ID(), true);
+			float startHeading = ENTITY::GET_ENTITY_HEADING(PLAYER::PLAYER_PED_ID());
+
+			Ped newActorPed = PED::CREATE_PED(4, pedModelHash, location.x, location.y, location.z, startHeading, false, true);
+
+			//PED::SET_PED_DEFAULT_COMPONENT_VARIATION(PLAYER::PLAYER_PED_ID());
+			STREAMING::SET_MODEL_AS_NO_LONGER_NEEDED(pedModelHash);
+		}
+
+
+
+		actorIndex++;
 	}
 
 
@@ -5294,8 +5319,7 @@ void main()
 
 	while (true)
 	{
-		//disable ALT key
-		CONTROLS::DISABLE_CONTROL_ACTION(0, 19, 1);
+
 
 		/* ACTIONS WHICH MAY NEED TO WAIT A FEW TICKS */
 		if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
@@ -5409,6 +5433,8 @@ void main()
 		if (should_display_app_hud()) {
 			draw_instructional_buttons();
 			draw_menu();
+			//disable ALT key
+			CONTROLS::DISABLE_CONTROL_ACTION(0, 19, 1);
 		}
 
 		draw_spot_lights();
