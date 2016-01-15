@@ -60,8 +60,8 @@ enum MENU_ITEM {
 	MENU_ITEM_POSSESS = 119,
 	MENU_ITEM_WORLD = 120,
 	MENU_ITEM_ANIMATION = 121,
-	MENU_ITEM_BACK_TO_START = 121,
-	MENU_ITEM_SAVE_LOAD = 122,
+	MENU_ITEM_BACK_TO_START = 122,
+	MENU_ITEM_SAVE_LOAD = 123,
 	SUBMENU_ITEM_RECORD_PLAYER = 140,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 141,
 	SUBMENU_ITEM_SPOT_LIGHT = 142,
@@ -637,42 +637,36 @@ void draw_instructional_buttons_animation_preview() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_C");
-		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Stop preview");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_N");
-		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Next");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_B");
-		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Previous");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(197);
-		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Rotate cam");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(196);
-		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Rotate cam");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_L");
-		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
@@ -2087,10 +2081,12 @@ void action_enter_nearest_vehicle_as_passenger() {
 	Vector3 coord = ENTITY::GET_ENTITY_COORDS(playerPed, true);
 
 	Vehicle vehicle = VEHICLE::GET_CLOSEST_VEHICLE(coord.x, coord.y, coord.z, 100.0, 0, 71);
-	log_to_file("Vehicle has " + std::to_string(VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle)) + " seats");
+	int nrOfSeats = VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle);
+
+	log_to_file("Vehicle has " + std::to_string(nrOfSeats) + " seats");
 
 	int seat = -2;
-	for (int i = 0; i < VEHICLE::GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle); i++) {
+	for (int i = 0; i < nrOfSeats; i++) {
 		if (VEHICLE::IS_VEHICLE_SEAT_FREE(vehicle, i)) {
 			seat = i;
 			break;
@@ -2098,7 +2094,12 @@ void action_enter_nearest_vehicle_as_passenger() {
 	}
 	log_to_file("Seat is " + std::to_string(seat));
 
-	AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, seat, 1.0, 1, 0);
+	if (seat == -2 && nrOfSeats==0 && (PED::IS_PED_IN_ANY_PLANE(playerPed) || PED::IS_PED_IN_ANY_HELI(playerPed))){
+		log_to_file("Teleporting ped to heli or plane since it has zero seats");
+		PED::SET_PED_INTO_VEHICLE(playerPed, vehicle, -2);
+	} else {
+		AI::TASK_ENTER_VEHICLE(playerPed, vehicle, -1, seat, 1.0, 1, 0);
+	}
 
 	nextWaitTicks = 200;
 }
@@ -2476,6 +2477,25 @@ void action_save_actors() {
 			actorElement->SetAttribute("pedModelHash", strHash);
 			//actorElement->SetAttribute("pedModelHash", std::to_string(pedModelHash).c_str());
 
+			for (int i = 0; i <= 11; i++) {
+				int drawableVar = PED::GET_PED_DRAWABLE_VARIATION(actorPed, i);
+				int textureVar = PED::GET_PED_TEXTURE_VARIATION(actorPed, i);
+				int paletteVar = PED::GET_PED_PALETTE_VARIATION(actorPed, i);
+
+				actorElement->SetAttribute(("drawableVariation"+std::to_string(i)).c_str(), drawableVar);
+				actorElement->SetAttribute(("textureVariation" +std::to_string(i)).c_str(), textureVar);
+				actorElement->SetAttribute(("paletteVariation" + std::to_string(i)).c_str(), paletteVar);
+
+			}	
+
+			for (int i = 0; i <= 2; i++) {
+				int propVar = PED::GET_PED_PROP_INDEX(actorPed, i);
+				int propTextureVar = PED::GET_PED_PROP_TEXTURE_INDEX(actorPed, i);
+
+				actorElement->SetAttribute(("propVariation" + std::to_string(i)).c_str(), propVar);
+				actorElement->SetAttribute(("propTextureVariation" + std::to_string(i)).c_str(), propTextureVar);
+			}
+
 			rootElement->InsertEndChild(actorElement);
 		}
 	}
@@ -2509,25 +2529,52 @@ void action_load_actors() {
 		DWORD pedModelHash = strtoul(strPedModelHash, NULL, 0);
 		log_to_file("Actor pedModelHash=" + std::to_string(pedModelHash));
 
-		//DWORD pedModelHash = atol((char*)(LPCTSTR)strPedModelHash);
 
 
-		if (!actors[actorIndex].isNullActor()) {
-			STREAMING::REQUEST_MODEL(pedModelHash);
-			while (!STREAMING::HAS_MODEL_LOADED(pedModelHash)) {
-				WAIT(0);
-			}
-
-			Vector3 location = ENTITY::GET_ENTITY_COORDS(PLAYER::PLAYER_PED_ID(), true);
-			float startHeading = ENTITY::GET_ENTITY_HEADING(PLAYER::PLAYER_PED_ID());
-
-			Ped newActorPed = PED::CREATE_PED(4, pedModelHash, location.x, location.y, location.z, startHeading, false, true);
-
-			//PED::SET_PED_DEFAULT_COMPONENT_VARIATION(PLAYER::PLAYER_PED_ID());
-			STREAMING::SET_MODEL_AS_NO_LONGER_NEEDED(pedModelHash);
+		STREAMING::REQUEST_MODEL(pedModelHash);
+		while (!STREAMING::HAS_MODEL_LOADED(pedModelHash)) {
+			WAIT(0);
 		}
 
+		Vector3 location = ENTITY::GET_ENTITY_COORDS(PLAYER::PLAYER_PED_ID(), true);
+		float startHeading = ENTITY::GET_ENTITY_HEADING(PLAYER::PLAYER_PED_ID());
 
+		Ped newActorPed = PED::CREATE_PED(4, pedModelHash, location.x, location.y, location.z, startHeading, false, true);
+
+		log_to_file("Setting ped variant");
+
+		//set variant of ped
+		for (int i = 0; i < 12; i++) {
+			const char* strDrawableVar = actorElement->Attribute(("drawableVariation" + std::to_string(i)).c_str());
+			const char* strTextureVar = actorElement->Attribute(("textureVariation" + std::to_string(i)).c_str());
+			const char* strPaletteVar = actorElement->Attribute(("paletteVariation" + std::to_string(i)).c_str());
+
+			int drawableVar = std::stoi(strDrawableVar);
+			int textureVar = std::stoi(strTextureVar);
+			int paletteVar = std::stoi(strPaletteVar);
+				
+			PED::SET_PED_COMPONENT_VARIATION(newActorPed, i, drawableVar, textureVar, paletteVar);
+		}
+
+		log_to_file("Setting ped props");
+		//get props
+		for (int i = 0; i <= 2; i++) {
+			const char* strPropVar = actorElement->Attribute(("propVariation" + std::to_string(i)).c_str());
+			const char* strPropTextureVar = actorElement->Attribute(("propTextureVariation" + std::to_string(i)).c_str());
+
+			int propVar = std::stoi(strPropVar);
+			int propTextureVar = std::stoi(strPropTextureVar);
+
+			PED::SET_PED_PROP_INDEX(newActorPed, i, propVar, propTextureVar, 2);
+		}
+
+		//to force overwrite of any existing actor in ad_ped_to_slot
+		forceSlotIndexOverWrite = actorIndex+1;
+		//assign actor
+		add_ped_to_slot(actorIndex+1, newActorPed);
+
+		//clear model from mem
+		STREAMING::SET_MODEL_AS_NO_LONGER_NEEDED(pedModelHash);
 
 		actorIndex++;
 	}
@@ -3438,18 +3485,18 @@ void action_animations_preview(){
 					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 255);
 
 					CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
-					if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {//stop preview
+					if (IsKeyDown(0x43)) {//stop preview
 						CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
 						return ;
 					}
-					else if (IsKeyDown(VK_MENU) && IsKeyDown(0x4E)) {//next animation
+					else if (IsKeyDown(0x4E)) {//next animation
 						break;
 					}
-					else if (IsKeyDown(VK_MENU) && IsKeyDown(0x42)) {//previous animation
+					else if (IsKeyDown(0x42)) {//previous animation
 						i = i - 2;
 						break;
 					}
-					else if (IsKeyDown(VK_MENU) && IsKeyDown(0x4C)) {//previous animation
+					else if (IsKeyDown(0x4C)) {//previous animation
 						
 						if (doLoop) {
 							set_status_text("Stopped looping");
@@ -3462,7 +3509,7 @@ void action_animations_preview(){
 						
 						WAIT(100);
 					}
-					else if (IsKeyDown(VK_MENU) && IsKeyDown(VK_LEFT)) {//previous animation
+					else if (IsKeyDown(VK_LEFT)) {//previous animation
 						currentCamHeading += 10.0;
 						if (currentCamHeading >= 359.9) {
 							currentCamHeading = 0.0;
@@ -3476,7 +3523,7 @@ void action_animations_preview(){
 							WAIT(100);
 						}
 					}
-					else if (IsKeyDown(VK_MENU) && IsKeyDown(VK_RIGHT)) {//previous animation
+					else if (IsKeyDown(VK_RIGHT)) {//previous animation
 						currentCamHeading -= 10.0;
 						if (currentCamHeading < 0.0) {
 							currentCamHeading += 360.0;
