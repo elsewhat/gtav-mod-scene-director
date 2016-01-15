@@ -75,6 +75,8 @@ public:
 
 	void changeActorPed(Ped newPed);
 
+	bool isActorInVehicle(Vehicle veh);
+
 	void setHasWaypoint(bool hasWaypoint); 
 	bool hasWaypoint();
 

@@ -2104,6 +2104,95 @@ void action_enter_nearest_vehicle_as_passenger() {
 	nextWaitTicks = 200;
 }
 
+void action_explode_nearby_vehicles() {
+	log_to_file("action_explode_nearby_vehicle");
+	
+	
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+
+	//GET_PED_NEARBY_VEHICLES is tricky, see http://gtaforums.com/topic/789788-function-args-to-pedget-ped-nearby-peds/?hl=get_ped_nearby_vehicles#entry1067383099
+	//Setup the array
+	const int numElements = 100;
+	const int arrSize = numElements * 2 + 2;
+	int veh[arrSize];
+	//0 index is the size of the array
+	veh[0] = numElements;
+
+	int countVehicles = PED::GET_PED_NEARBY_VEHICLES(playerPed, veh);
+
+	if (veh != NULL)
+	{
+		//Simple loop to go through results
+		for (int i = 0; i < countVehicles; i++)
+		{
+			int offsettedID = i * 2 + 2;
+			//Make sure it exists
+			if (veh[offsettedID] != NULL && ENTITY::DOES_ENTITY_EXIST(veh[offsettedID]))
+			{
+
+				log_to_file("Maybe exploding vehicle " + veh[offsettedID]);
+				bool actorsInVehicle = false;
+				for (auto &actor : actors) {
+					if (actor.isNullActor()==false && actor.isActorInVehicle(veh[offsettedID])== true ) {
+						actorsInVehicle = true;
+					}
+				}
+				if (actorsInVehicle) {
+					VEHICLE::EXPLODE_VEHICLE(veh[offsettedID], true, false);
+				}
+			}
+		}
+	}
+	
+	set_status_text("Exploding nearby vehicle");
+	nextWaitTicks = 200;
+}
+
+void action_out_of_control_nearby_vehicles() {
+	log_to_file("action_out_of_control_nearby_vehicles");
+
+
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+
+	//GET_PED_NEARBY_VEHICLES is tricky, see http://gtaforums.com/topic/789788-function-args-to-pedget-ped-nearby-peds/?hl=get_ped_nearby_vehicles#entry1067383099
+	//Setup the array
+	const int numElements = 100;
+	const int arrSize = numElements * 2 + 2;
+	int veh[arrSize];
+	//0 index is the size of the array
+	veh[0] = numElements;
+
+	int countVehicles = PED::GET_PED_NEARBY_VEHICLES(playerPed, veh);
+
+	if (veh != NULL)
+	{
+		//Simple loop to go through results
+		for (int i = 0; i < countVehicles; i++)
+		{
+			int offsettedID = i * 2 + 2;
+			//Make sure it exists
+			if (veh[offsettedID] != NULL && ENTITY::DOES_ENTITY_EXIST(veh[offsettedID]))
+			{
+
+				log_to_file("Maybe SET_VEHICLE_OUT_OF_CONTROL vehicle " + veh[offsettedID]);
+				bool actorsInVehicle = false;
+				for (auto &actor : actors) {
+					if (actor.isNullActor() == false && actor.isActorInVehicle(veh[offsettedID]) == true) {
+						actorsInVehicle = true;
+					}
+				}
+				if (actorsInVehicle) {
+					VEHICLE::SET_VEHICLE_OUT_OF_CONTROL(veh[offsettedID], true, true);
+				}
+				
+			}
+		}
+	}
+
+	set_status_text("Exploding nearby vehicle");
+	nextWaitTicks = 200;
+}
+
 void check_if_ped_is_passenger_and_has_waypoint(Ped ped) {
 	if (is_ped_actor_active(ped)) {
 
@@ -3201,6 +3290,10 @@ void action_next_relationshipgroup() {
 
 void action_animation_single() {
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor()) {
+		set_status_text("Switch to an actor before playing animation");
+		return;
+	}
 	Ped actorPed = actor.getActorPed();
 	/*
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
@@ -3254,6 +3347,10 @@ void action_animation_single() {
 
 void action_animation_sequence_play(AnimationSequence animSequence) {
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor()) {
+		set_status_text("Switch to an actor before performing an animation");
+		return;
+	}
 	Ped actorPed = actor.getActorPed();
 
 	//load animation dicts
@@ -3364,6 +3461,10 @@ void action_animation_sequence_add() {
 
 void action_animations_preview(){
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	if (actor.isNullActor()) {
+		set_status_text("Switch to an actor before starting preview");
+		return;
+	}
 	Ped actorPed = actor.getActorPed();
 
 	boolean customCamera = true; 
@@ -3753,6 +3854,15 @@ void check_if_actor_as_passenger_of_other_actor_key_pressed() {
 			//do nothing
 		}
 	}
+}
+
+void check_if_explode_or_outofcontrol_nearby_vehicle_key_pressed (){
+	if (IsKeyDown(VK_END) && IsKeyDown(VK_MENU)) {
+		action_out_of_control_nearby_vehicles();
+	}else if (IsKeyDown(VK_END)) {
+		action_explode_nearby_vehicles();
+	}
+
 }
 
 void action_add_prop_to_actor(Actor actor, ActorProp actorProp) {
@@ -5471,6 +5581,8 @@ void main()
 
 			check_if_actor_as_passenger_of_other_actor_key_pressed();
 
+			check_if_explode_or_outofcontrol_nearby_vehicle_key_pressed();
+
 			mainTickLast = GetTickCount();
 		}
 
@@ -5482,6 +5594,9 @@ void main()
 			draw_menu();
 			//disable ALT key
 			CONTROLS::DISABLE_CONTROL_ACTION(0, 19, 1);
+		}
+		else {
+			CONTROLS::ENABLE_CONTROL_ACTION(0, 19, 1);
 		}
 
 		draw_spot_lights();

@@ -71,6 +71,18 @@ void Actor::changeActorPed(Ped newPed)
 	m_ped = newPed;
 }
 
+bool Actor::isActorInVehicle(Vehicle veh)
+{
+	if (PED::IS_PED_IN_ANY_VEHICLE(m_ped, 0)) {
+		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(m_ped);
+
+		if (pedVehicle == veh) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void Actor::setHasWaypoint(bool hasWaypoint)
 {
 	m_hasWaypoint = hasWaypoint;
