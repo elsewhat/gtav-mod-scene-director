@@ -57,9 +57,10 @@ void ActorRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 }
 
-ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_walkSpeed = walkSpeed;
+	m_heading = headingAtEnd;
 }
 
 float ActorOnFootMovementRecordingItem::getWalkSpeed()
@@ -69,7 +70,7 @@ float ActorOnFootMovementRecordingItem::getWalkSpeed()
 
 void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor)
 {
-	AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, 27.0f, 0.5f);
+	AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, m_heading, 0.5f);
 }
 
 bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)

@@ -498,6 +498,7 @@ void draw_instructional_buttons() {
 		char* spaceControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 22, 1);
 		char* delControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 178, 1);
 		char* insControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 121, 1);
+		char* endControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 179, 1);
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
@@ -519,6 +520,15 @@ void draw_instructional_buttons() {
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Enter as passenger");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("END Explode nearby veh");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+
+
 
 		/* Clone moved to menu
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
@@ -546,7 +556,7 @@ void draw_instructional_buttons() {
 		*/
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_A");
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Autopilot");
@@ -554,7 +564,7 @@ void draw_instructional_buttons() {
 
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_C");
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Firing squad");
@@ -2104,92 +2114,77 @@ void action_enter_nearest_vehicle_as_passenger() {
 	nextWaitTicks = 200;
 }
 
-void action_explode_nearby_vehicles() {
+void action_explode_nearby_vehicles(boolean setOutOfControl) {
 	log_to_file("action_explode_nearby_vehicle");
 	
-	
 	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	Vector3 playerLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
+	Vector3 sphereCenter = ENTITY::GET_ENTITY_COORDS(playerPed, true);
 
-	//GET_PED_NEARBY_VEHICLES is tricky, see http://gtaforums.com/topic/789788-function-args-to-pedget-ped-nearby-peds/?hl=get_ped_nearby_vehicles#entry1067383099
-	//Setup the array
-	const int numElements = 100;
-	const int arrSize = numElements * 2 + 2;
-	int veh[arrSize];
-	//0 index is the size of the array
-	veh[0] = numElements;
-
-	int countVehicles = PED::GET_PED_NEARBY_VEHICLES(playerPed, veh);
-
-	if (veh != NULL)
-	{
-		//Simple loop to go through results
-		for (int i = 0; i < countVehicles; i++)
-		{
-			int offsettedID = i * 2 + 2;
-			//Make sure it exists
-			if (veh[offsettedID] != NULL && ENTITY::DOES_ENTITY_EXIST(veh[offsettedID]))
-			{
-
-				log_to_file("Maybe exploding vehicle " + veh[offsettedID]);
-				bool actorsInVehicle = false;
-				for (auto &actor : actors) {
-					if (actor.isNullActor()==false && actor.isActorInVehicle(veh[offsettedID])== true ) {
-						actorsInVehicle = true;
-					}
-				}
-				if (actorsInVehicle) {
-					VEHICLE::EXPLODE_VEHICLE(veh[offsettedID], true, false);
-				}
-			}
-		}
+	Vehicle pedVehicle = 0;
+	if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
 	}
-	
-	set_status_text("Exploding nearby vehicle");
-	nextWaitTicks = 200;
-}
 
-void action_out_of_control_nearby_vehicles() {
-	log_to_file("action_out_of_control_nearby_vehicles");
+	std::map <Vehicle, Vehicle> nearbyVehicles;
+	Vehicle nearbyVehicle; 
 
+	float startHeading = ENTITY::GET_ENTITY_HEADING(playerPed);
+	log_to_file("Start heading is " + std::to_string(startHeading));
 
-	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	for (int i = 0; i < 360; i+=20) {
+		float offsetX = (float)sin((i *PI / 180.0f))*15.0f;
+		float offsetY = (float)cos((i *PI / 180.0f))*15.0f;
 
-	//GET_PED_NEARBY_VEHICLES is tricky, see http://gtaforums.com/topic/789788-function-args-to-pedget-ped-nearby-peds/?hl=get_ped_nearby_vehicles#entry1067383099
-	//Setup the array
-	const int numElements = 100;
-	const int arrSize = numElements * 2 + 2;
-	int veh[arrSize];
-	//0 index is the size of the array
-	veh[0] = numElements;
+		//log_to_file("Offsetx " + std::to_string(offsetX));
+		//log_to_file("Offsety " + std::to_string(offsetY));
 
-	int countVehicles = PED::GET_PED_NEARBY_VEHICLES(playerPed, veh);
+		//nearbyVehicle = VEHICLE::GET_RANDOM_VEHICLE_IN_SPHERE(playerLocation.x+offsetX, playerLocation.y+offsetY, playerLocation.z, 20.0, 0, 0);
+		nearbyVehicle = VEHICLE::GET_CLOSEST_VEHICLE(playerLocation.x + offsetX, playerLocation.y + offsetY, playerLocation.z, 15.0, 0, 1|2|4|8|16|32|64|2048|65536);
 
-	if (veh != NULL)
-	{
-		//Simple loop to go through results
-		for (int i = 0; i < countVehicles; i++)
-		{
-			int offsettedID = i * 2 + 2;
-			//Make sure it exists
-			if (veh[offsettedID] != NULL && ENTITY::DOES_ENTITY_EXIST(veh[offsettedID]))
+		log_to_file("Random vehicle is " + std::to_string(nearbyVehicle));
+		if (nearbyVehicle == pedVehicle) {
+			continue;
+		}
+		else {
+			if (nearbyVehicles.find(nearbyVehicle) == nearbyVehicles.end())
 			{
-
-				log_to_file("Maybe SET_VEHICLE_OUT_OF_CONTROL vehicle " + veh[offsettedID]);
-				bool actorsInVehicle = false;
-				for (auto &actor : actors) {
-					if (actor.isNullActor() == false && actor.isActorInVehicle(veh[offsettedID]) == true) {
-						actorsInVehicle = true;
-					}
-				}
-				if (actorsInVehicle) {
-					VEHICLE::SET_VEHICLE_OUT_OF_CONTROL(veh[offsettedID], true, true);
-				}
-				
+				nearbyVehicles[nearbyVehicle] = nearbyVehicle;
 			}
 		}
 	}
 
-	set_status_text("Exploding nearby vehicle");
+
+	for (auto const &tupleNearbyVehicle : nearbyVehicles) {
+		Vehicle targetVehicle = tupleNearbyVehicle.first;
+		
+		bool actorsInVehicle = false;
+		log_to_file("Found vehicle " + std::to_string(targetVehicle));
+
+
+		if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+			Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(playerPed);
+
+			if (pedVehicle == targetVehicle) {
+				actorsInVehicle = true;
+			}
+		}
+
+		for (auto &actor : actors) {
+			if (actor.isNullActor() == false && actor.isActorInVehicle(targetVehicle) == true) {
+				actorsInVehicle = true;
+			}
+		}
+		if (!actorsInVehicle) {
+			if (setOutOfControl) {
+				VEHICLE::SET_VEHICLE_OUT_OF_CONTROL(targetVehicle, true, true);
+			}
+			else {
+				VEHICLE::EXPLODE_VEHICLE(targetVehicle, true, false);
+			}
+		}
+	}
+
 	nextWaitTicks = 200;
 }
 
@@ -2852,7 +2847,7 @@ void action_autopilot_for_player(bool suppressMessage) {
 		}
 	} else {
 		if (suppressMessage == false) {
-			set_status_text("Actor must be assigned a slot 1-9 before autopilot can be started");
+			set_status_text("Actor must be assigned a slot 1-9 and have a waypoint before autopilot can be started");
 		}
 	}
 }
@@ -2916,7 +2911,7 @@ void action_teleport_to_start_locations() {
 				haveDeadActors = true;
 				ENTITY::SET_ENTITY_HEALTH(actor.getActorPed(), ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
 				Vector3 location = actor.getStartLocation();
-				location.z = location.z + 1.0f;
+				location.z = location.z + 1.6f;
 				teleport_entity_to_location(entityToTeleport, location, true);
 
 				//see http://gtaforums.com/topic/801452-death-recording-no-more-wastedbusted-screen-automatic-radio-off/
@@ -3069,6 +3064,19 @@ void action_teleport_to_start_locations() {
 		VEHICLE::SET_VEHICLE_DOORS_SHUT(teleportedVehicle, true);
 	}
 
+	if (haveDeadActors) {
+		WAIT(1000);
+		for (auto &actor : actors) {
+			Ped actorPed = actor.getActorPed();
+			if (actor.isNullActor() == false && actor.hasStartLocation() && PED::IS_PED_FALLING(actorPed)) {
+				log_to_file(actorPed + " is falling after we had dead peds. Trying to teleport back to top");
+				ENTITY::SET_ENTITY_HEALTH(actorPed, ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
+				Vector3 location = actor.getStartLocation();
+				location.z = location.z + 2.5f;
+				teleport_entity_to_location(actorPed, location, true);
+			}
+		}
+	}
 }
 
 void action_timelapse_tick() {
@@ -3858,9 +3866,9 @@ void check_if_actor_as_passenger_of_other_actor_key_pressed() {
 
 void check_if_explode_or_outofcontrol_nearby_vehicle_key_pressed (){
 	if (IsKeyDown(VK_END) && IsKeyDown(VK_MENU)) {
-		action_out_of_control_nearby_vehicles();
+		action_explode_nearby_vehicles(true);
 	}else if (IsKeyDown(VK_END)) {
-		action_explode_nearby_vehicles();
+		action_explode_nearby_vehicles(false);
 	}
 
 }
@@ -4808,7 +4816,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 									walkSpeed = 2.0;
 								}
 
-								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed);
+								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
 								actorRecording.push_back(std::make_shared<ActorOnFootMovementRecordingItem>(recordingItem));
 
 								log_to_file(recordingItem.toString());
@@ -5007,7 +5015,7 @@ void action_menu_active_delete() {
 	log_to_file("action_menu_active_delete " + std::to_string(menu_active_action));
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 
-	if (menu_active_action >= 1 && menu_active_action <= 9) {
+	if (menu_active_action >= 1 && menu_active_action <= 100) {
 		int actorIndex = menu_active_action-1;
 		if (actorIndex >= 0 && actorIndex < actors.size()) {
 			actors[actorIndex] = Actor::nullActor();
@@ -5498,7 +5506,7 @@ void main()
 					should_display_hud = false;
 				}
 				else {
-					set_status_text("Scene director 2.1 by elsewhat");
+					set_status_text("Scene director 2.2.1 by elsewhat");
 					should_display_hud = true;
 				}
 			}
@@ -5633,7 +5641,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 2.1 by elsewhat");
+	set_status_text("Scene director 2.2.1 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 

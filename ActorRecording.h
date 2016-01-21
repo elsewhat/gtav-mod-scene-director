@@ -41,9 +41,11 @@ public:
 class ActorOnFootMovementRecordingItem : public ActorRecordingItem {
 protected:
 	float m_walkSpeed;
+	float m_heading;
 public:
-	ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed);
+	ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd);
 	float getWalkSpeed();
+	float getHeading();
 	virtual void executeNativesForRecording(Actor actor);
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location);
 	std::string toString() override;
