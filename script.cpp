@@ -4172,7 +4172,7 @@ void init_read_keys_from_ini() {
 	}
 
 	key_menu_right = str2key(std::string(key_menu_right_str));
-	if (key_menu_left == 0) {
+	if (key_menu_right == 0) {
 		log_to_file(std::string(key_menu_right_str) + " is not a valid key");
 		key_menu_right = str2key("NUM6");
 	}
@@ -4537,6 +4537,9 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		DWORD ticksCurrentAimAtStart;
 		std::shared_ptr<ActorAimAtRecordingItem> ongoingActorAimAtRecordingItem;
 
+		bool isEnteringCover = false;
+		std::shared_ptr<ActorCoverAtRecordingItem> ongoingActorCoverAtRecordingItem;
+		DWORD ticksCurrentCoverStart;
 
 		//1. Store start location
 		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
@@ -4728,16 +4731,52 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 							DELTA_TICKS = 500;
 							log_to_file("action_record_scene_for_actor: Ped is still using the same scenario");
 						}
+						else if (PED::IS_PED_GOING_INTO_COVER(actorPed)) {
+							if (!isEnteringCover) {
+								isEnteringCover = true;
+								ticksCurrentCoverStart = ticksNow;
+								log_to_file("IS_PED_GOING_INTO_COVER");
+
+								ActorCoverAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorLocation, actorLocation);
+								recordingItem.setTicksLength((DWORD)1000);
+								ongoingActorCoverAtRecordingItem = std::make_shared<ActorCoverAtRecordingItem>(recordingItem);
+								actorRecording.push_back(ongoingActorCoverAtRecordingItem);
+								log_to_file(recordingItem.toString());
+							}
+
+						}
 						else {
 							if (isActorUsingScenario) {//actor just stopped using scearion
 								isActorUsingScenario = false;
 								ongoingActorScenarioRecordingItem->setTicksLength(ticksNow - ticksCurrentScenarioStart);
 								currentScenario = Scenario();
 							}
+							if (isEnteringCover) {
+								isEnteringCover = false;
+								log_to_file("Stopped entering cover for ActorCoverAtRecordingItem");
+								ongoingActorCoverAtRecordingItem->setTicksLength(ticksNow - ticksCurrentCoverStart);
+								ongoingActorCoverAtRecordingItem->setCoverPosition(actorLocation);
+							}
 
 
+							if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
+								isFreeAiming = true;
+								DELTA_TICKS = 10;
+								Vector3 weaponImpactLocation;
+								if (WEAPON::GET_PED_LAST_WEAPON_IMPACT_COORD(actorPed, &weaponImpactLocation)) {
+									Hash weaponHash;
+									WEAPON::GET_CURRENT_PED_WEAPON(actorPed, &weaponHash, 1);
 
-
+									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, 1000, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+									actorRecording.push_back(std::make_shared<ActorShootAtByImpactRecordingItem>(recordingItem));
+									log_to_file(recordingItem.toString());
+									//log_to_file("GET_PED_LAST_WEAPON_IMPACT_COORD (" + std::to_string(weaponImpactLocation.x) + "," + std::to_string(weaponImpactLocation.y) + "," + std::to_string(weaponImpactLocation.z) + ")");
+								}
+							}
+							else if (isFreeAiming) {//finished free aiming. Stop recording
+								isFreeAiming = false;
+							}
+							/*
 							//Record aiming and shooting
 							if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
 								DELTA_TICKS = 10;
@@ -4750,13 +4789,13 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								if (PED::IS_PED_SHOOTING(actorPed) && playerIsAimingAtEntity) {
 									//add recording item for shooting at
 									if (isAimingAtEntity) {
-										log_to_file("Stopped aiming since we're shooting at target " + std::to_string(aimedAtEntity) + "  for ActorShootAtRecordingItem");
+										log_to_file("Stopped aiming since we're shooting at target " + std::to_string(aimedAtEntity) + "  for ActorShootAtEntityRecordingItem");
 										isAimingAtEntity = false;
 										ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
 									}
 
-									ActorShootAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, targetEntity);
-									actorRecording.push_back(std::make_shared<ActorShootAtRecordingItem>(recordingItem));
+									ActorShootAtEntityRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, targetEntity);
+									actorRecording.push_back(std::make_shared<ActorShootAtEntityRecordingItem>(recordingItem));
 									log_to_file(recordingItem.toString());
 
 								}
@@ -4796,6 +4835,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								else {
 									log_to_file("Unexpected ActorAimAtRecordingItem");
 								}
+								
 
 
 							}
@@ -4807,6 +4847,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								}
 
 							}
+							*/
 							else {
 								DELTA_TICKS = 1000;
 								//record movement on foot

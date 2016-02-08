@@ -605,34 +605,34 @@ void ActorAimAtRecordingItem::executeNativesAfterRecording(Actor actor)
 	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
 
-ActorShootAtRecordingItem::ActorShootAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity shotAtEntity) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor,location)
+ActorShootAtEntityRecordingItem::ActorShootAtEntityRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity shotAtEntity) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor,location)
 {
 	m_shotAtEntity = shotAtEntity;
 	//check for completion every 200 ticks (default 1000)
 	m_ticksDeltaCheckCompletion = 100;
 }
 
-Entity ActorShootAtRecordingItem::getShotAtEntity()
+Entity ActorShootAtEntityRecordingItem::getShotAtEntity()
 {
 	return m_shotAtEntity;
 }
 
-std::string ActorShootAtRecordingItem::toString()
+std::string ActorShootAtEntityRecordingItem::toString()
 {
-	return ActorRecordingItem::toString() + " ActorShootAtRecordingItem Entity " + std::to_string(m_shotAtEntity);
+	return ActorRecordingItem::toString() + " ActorShootAtEntityRecordingItem Entity " + std::to_string(m_shotAtEntity);
 }
 
-void ActorShootAtRecordingItem::executeNativesForRecording(Actor actor)
+void ActorShootAtEntityRecordingItem::executeNativesForRecording(Actor actor)
 {
 	AI::TASK_SHOOT_AT_ENTITY(actor.getActorPed(), m_shotAtEntity, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
 }
 
-bool ActorShootAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
+bool ActorShootAtEntityRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	return true;
 }
 
-void ActorShootAtRecordingItem::executeNativesAfterRecording(Actor actor)
+void ActorShootAtEntityRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
@@ -694,4 +694,77 @@ bool ActorAnimationSequenceRecordingItem::isRecordingItemCompleted(std::shared_p
 	
 	log_to_file("ActorAnimationSequenceRecordingItem::isRecordingItemCompleted " + std::to_string(progress));
 	return true;
+}
+
+ActorCoverAtRecordingItem::ActorCoverAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vector3 enterCoverPosition, Vector3 coverPosition) : ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+{
+	m_coverPosition = coverPosition;
+	m_enterCoverPosition = enterCoverPosition;
+
+	//delta check every 100ms (1000 is default)
+	m_ticksDeltaCheckCompletion = 100;
+}
+
+void ActorCoverAtRecordingItem::setCoverPosition(Vector3 coverPosition)
+{
+	m_coverPosition = coverPosition;
+}
+
+std::string ActorCoverAtRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorCoverAtRecordingItem location (" + std::to_string(m_coverPosition.x)+","+ std::to_string(m_coverPosition.y)+","+ std::to_string(m_coverPosition.z) +") Length: "+ std::to_string(m_ticksLength);
+}
+
+void ActorCoverAtRecordingItem::executeNativesForRecording(Actor actor)
+{
+	//AI::TASK_SEEK_COVER_FROM_POS (actor.getActorPed(), m_coverPosition.x,m_coverPosition.y,m_coverPosition.z, 5000, 1);
+	Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actor.getActorPed(), true);
+	//AI::TASK_SEEK_COVER_TO_COORDS(actor.getActorPed(), currentLocation.x, currentLocation.y, currentLocation.z, m_enterCoverPosition.x, m_enterCoverPosition.y, m_enterCoverPosition.z,  -1, 0);
+	AI::TASK_PUT_PED_DIRECTLY_INTO_COVER(actor.getActorPed(), m_enterCoverPosition.x, m_enterCoverPosition.y, m_enterCoverPosition.z, -1, 0, 0.0, 1, 1, 0, 0);
+}
+
+bool ActorCoverAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
+{
+	if (ticksNow - ticksStart >= m_ticksLength) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+ActorShootAtByImpactRecordingItem::ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+{
+	m_weapon = weapon;
+	m_weaponImpact = weaponImpact;
+	m_firingPattern = firingPattern;
+
+	m_ticksDeltaCheckCompletion = 1000;
+}
+
+std::string ActorShootAtByImpactRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorShootAtByImpactRecordingItem location (" + std::to_string(m_weaponImpact.x) + "," + std::to_string(m_weaponImpact.y) + "," + std::to_string(m_weaponImpact.z) + ")";
+}
+
+void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
+{
+	AI::TASK_SHOOT_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1000, m_firingPattern);
+}
+
+bool ActorShootAtByImpactRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
+{
+	//should not be necessary as the delta time should cause it to check less frequent.weird
+	if (ticksNow - ticksStart >= 1000) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void ActorShootAtByImpactRecordingItem::executeNativesAfterRecording(Actor actor)
+{
+	log_to_file("ActorShootAtByImpactRecordingItem: executeNativesAfterRecording calling AI::CLEAR_PED_TASKS");
+	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }

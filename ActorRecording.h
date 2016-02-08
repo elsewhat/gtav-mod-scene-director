@@ -76,16 +76,30 @@ public:
 	virtual void executeNativesAfterRecording(Actor actor) override;
 };
 
-class ActorShootAtRecordingItem : public ActorRecordingItem {
+class ActorShootAtEntityRecordingItem : public ActorRecordingItem {
 protected:
 	Entity m_shotAtEntity;
 public:
-	ActorShootAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity shotAtEntity);
+	ActorShootAtEntityRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity shotAtEntity);
 	Entity getShotAtEntity();
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	virtual void executeNativesAfterRecording(Actor actor) override;
+
+};
+
+class ActorShootAtByImpactRecordingItem : public ActorRecordingItem {
+protected:
+	Hash m_weapon;
+	Vector3 m_weaponImpact;
+	Hash m_firingPattern;
+public:
+	ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern);
+	std::string toString() override;
+	void executeNativesForRecording(Actor actor) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	void executeNativesAfterRecording(Actor actor) override;
 
 };
 
@@ -162,6 +176,18 @@ public:
 	void executeNativesForRecording(Actor actor) override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 
+};
+
+class ActorCoverAtRecordingItem : public ActorRecordingItem {
+protected:
+	Vector3 m_enterCoverPosition;
+	Vector3 m_coverPosition;
+public:
+	ActorCoverAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vector3 enterCoverPosition, Vector3 coverPosition);
+	void setCoverPosition(Vector3 coverPosition);
+	std::string toString() override;
+	void executeNativesForRecording(Actor actor) override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 };
 
 
