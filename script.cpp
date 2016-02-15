@@ -4109,7 +4109,7 @@ void update_tick_recording_replay(Actor & actor) {
 				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem->toString());
 				recordingItem->executeNativesForRecording(actor);
 				//try to avoid flee and other actions
-				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
+				//PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
 			}
 		}
 		else {
@@ -4767,7 +4767,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 									Hash weaponHash;
 									WEAPON::GET_CURRENT_PED_WEAPON(actorPed, &weaponHash, 1);
 
-									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, 1000, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
+									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, 1000, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
 									actorRecording.push_back(std::make_shared<ActorShootAtByImpactRecordingItem>(recordingItem));
 									log_to_file(recordingItem.toString());
 									//log_to_file("GET_PED_LAST_WEAPON_IMPACT_COORD (" + std::to_string(weaponImpactLocation.x) + "," + std::to_string(weaponImpactLocation.y) + "," + std::to_string(weaponImpactLocation.z) + ")");

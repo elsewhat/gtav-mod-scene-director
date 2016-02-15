@@ -725,7 +725,9 @@ void ActorCoverAtRecordingItem::executeNativesForRecording(Actor actor)
 
 bool ActorCoverAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
-	if (ticksNow - ticksStart >= m_ticksLength) {
+	if (PED::IS_PED_IN_COVER(actor.getActorPed(), 1)) {
+		return true;
+	}else if (ticksNow - ticksStart >= 5000) {
 		return true;
 	}
 	else {
@@ -749,13 +751,29 @@ std::string ActorShootAtByImpactRecordingItem::toString()
 
 void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
 {
-	AI::TASK_SHOOT_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1000, m_firingPattern);
+	//AI::TASK_SHOOT_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 3000, m_firingPattern);
+
+
+	//create task sequence
+	/*TaskSequence task_seq = 2;
+	AI::OPEN_SEQUENCE_TASK(&task_seq);
+
+	AI::TASK_SHOOT_AT_COORD(0, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 500, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
+	AI::TASK_SHOOT_AT_COORD(0, m_weaponImpact.x+0.5, m_weaponImpact.y, m_weaponImpact.z, 500, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
+	AI::TASK_SHOOT_AT_COORD(0, m_weaponImpact.x + 0.5, m_weaponImpact.y+0.5, m_weaponImpact.z, 500, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
+	AI::TASK_SHOOT_AT_COORD(0, m_weaponImpact.x + 0.5, m_weaponImpact.y+0.5, m_weaponImpact.z, 500, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
+
+	AI::CLOSE_SEQUENCE_TASK(task_seq);
+	AI::TASK_PERFORM_SEQUENCE(actor.getActorPed(), task_seq);
+	AI::CLEAR_SEQUENCE_TASK(&task_seq);
+	*/
+
 }
 
 bool ActorShootAtByImpactRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	//should not be necessary as the delta time should cause it to check less frequent.weird
-	if (ticksNow - ticksStart >= 1000) {
+	if (ticksNow - ticksStart >= 3000) {
 		return true;
 	}
 	else {
@@ -765,6 +783,6 @@ bool ActorShootAtByImpactRecordingItem::isRecordingItemCompleted(std::shared_ptr
 
 void ActorShootAtByImpactRecordingItem::executeNativesAfterRecording(Actor actor)
 {
-	log_to_file("ActorShootAtByImpactRecordingItem: executeNativesAfterRecording calling AI::CLEAR_PED_TASKS");
-	AI::CLEAR_PED_TASKS(actor.getActorPed());
+	//log_to_file("ActorShootAtByImpactRecordingItem: executeNativesAfterRecording calling AI::CLEAR_PED_TASKS");
+	//AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
