@@ -741,7 +741,7 @@ ActorShootAtByImpactRecordingItem::ActorShootAtByImpactRecordingItem(DWORD ticks
 	m_weaponImpact = weaponImpact;
 	m_firingPattern = firingPattern;
 
-	m_ticksDeltaCheckCompletion = 1000;
+	m_ticksDeltaCheckCompletion = ticksDeltaWhenRecorded;
 }
 
 std::string ActorShootAtByImpactRecordingItem::toString()
@@ -751,8 +751,20 @@ std::string ActorShootAtByImpactRecordingItem::toString()
 
 void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
 {
+	//disable "INPUTGROUP_LOOK" = 1
+	CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(1);
 	//AI::TASK_SHOOT_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 3000, m_firingPattern);
 
+	//load weapon
+	if (!WEAPON::HAS_WEAPON_ASSET_LOADED(m_weapon))
+	{
+		WEAPON::REQUEST_WEAPON_ASSET(m_weapon, 31, 0);
+		while (!WEAPON::HAS_WEAPON_ASSET_LOADED(m_weapon))
+			WAIT(0);
+	}
+	Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actor.getActorPed(), true);
+	//GAMEPLAY::SHOOT_SINGLE_BULLET_BETWEEN_COORDS(currentLocation.x, currentLocation.y, currentLocation.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 100, 1, m_weapon, actor.getActorPed(), 1, 1, 100.0);
+	PED::SET_PED_SHOOTS_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1);
 
 	//create task sequence
 	/*TaskSequence task_seq = 2;
@@ -772,13 +784,14 @@ void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
 
 bool ActorShootAtByImpactRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
+	return true;
 	//should not be necessary as the delta time should cause it to check less frequent.weird
-	if (ticksNow - ticksStart >= 3000) {
+	/*if (ticksNow - ticksStart >= 3000) {
 		return true;
 	}
 	else {
 		return false;
-	}
+	}*/
 }
 
 void ActorShootAtByImpactRecordingItem::executeNativesAfterRecording(Actor actor)

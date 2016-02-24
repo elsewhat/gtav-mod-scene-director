@@ -4084,7 +4084,8 @@ void update_tick_recording_replay(Actor & actor) {
 	//check for completion every recordingItem.getTicksDeltaCheckCompletion() ticks
 	if (ticksNow >= recordingPlayback.getTicksLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion()) {
 		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
-		log_to_file(std::to_string(ticksNow) + " checking for completion of item "+ recordingItem->toString() );
+		//log_to_file(std::to_string(ticksNow) + " checking for completion ticks "+std::to_string(recordingPlayback.getTicksLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion())+ " getticksdelta " + std::to_string(recordingItem->getTicksDeltaCheckCompletion()));
+		log_to_file(std::to_string(ticksNow) + " checking for completion of item " + recordingItem->toString());
 
 
 		std::shared_ptr<ActorRecordingItem> nextRecordingItem;
@@ -4108,6 +4109,7 @@ void update_tick_recording_replay(Actor & actor) {
 				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
 				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem->toString());
 				recordingItem->executeNativesForRecording(actor);
+
 				//try to avoid flee and other actions
 				//PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
 			}
@@ -4541,6 +4543,8 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		std::shared_ptr<ActorCoverAtRecordingItem> ongoingActorCoverAtRecordingItem;
 		DWORD ticksCurrentCoverStart;
 
+		DWORD lastBulletRecorded = 0;
+
 		//1. Store start location
 		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
 		actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
@@ -4767,9 +4771,23 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 									Hash weaponHash;
 									WEAPON::GET_CURRENT_PED_WEAPON(actorPed, &weaponHash, 1);
 
-									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, 1000, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
+									DWORD deltaCheckRecordingTicks = 300;
+									if (lastBulletRecorded != 0) {
+										deltaCheckRecordingTicks = ticksNow - lastBulletRecorded;
+										if (deltaCheckRecordingTicks > 1000) {
+											deltaCheckRecordingTicks = 300;
+										}
+									}
+
+									//"FIRING_PATTERN_FULL_AUTO" FIRING_PATTERN_BURST_FIRE
+									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, deltaCheckRecordingTicks, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_FULL_AUTO"));
 									actorRecording.push_back(std::make_shared<ActorShootAtByImpactRecordingItem>(recordingItem));
 									log_to_file(recordingItem.toString());
+
+
+									lastBulletRecorded = ticksNow;
+									//set accuracy to 100 for this ped
+									PED::SET_PED_ACCURACY(actorPed, 100);
 									//log_to_file("GET_PED_LAST_WEAPON_IMPACT_COORD (" + std::to_string(weaponImpactLocation.x) + "," + std::to_string(weaponImpactLocation.y) + "," + std::to_string(weaponImpactLocation.z) + ")");
 								}
 							}
