@@ -228,8 +228,8 @@ void log_to_file(std::string message, bool bAppend) {
 			logfile.open(filename, std::ios_base::app);
 		else
 			logfile.open(filename);
-		logfile << currentDateTime() << " " << message + "\n";
-		//logfile << message + "\n";
+		//logfile << currentDateTime() << " " << message + "\n";
+		logfile << message + "\n";
 
 
 		logfile.close();
@@ -3539,6 +3539,51 @@ void action_animations_preview(){
 	bool doLoop = false;
 
 	float currentCamHeading = startHeading;
+	/*Code for calculating length of animations 
+	log_to_file("--------- Start anim length determination  -------");
+	int animNewCounter = animation.shortcutIndex;
+	for (int i = animation.shortcutIndex; i < animations.size(); i++) {
+		Animation animation = animations[i];
+
+		STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+		DWORD ticksStart = GetTickCount();
+		bool hasLoaded = true;
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
+		{
+
+			WAIT(0);
+			if (GetTickCount() > ticksStart + 1000) {
+				log_to_file("Failed STREAMING::HAS_ANIM_DICT_LOADED for " + std::string(animation.animLibrary));
+				hasLoaded = false;
+				break;
+			}
+
+		}
+
+		if (hasLoaded) {
+			int duration = 500;
+			AI::TASK_PLAY_ANIM(actorPed, animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, true, 8.0f, 0, 0, 0);
+			ticksStart = GetTickCount();
+			while (!ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
+				WAIT(0);
+				if (GetTickCount() > ticksStart + 1000) {
+					//duration will be 0 if it's not loaded
+					//log_to_file("Ticks overflow2");
+					break;
+				}
+			}
+
+			int animDuration = (int)ENTITY::GET_ENTITY_ANIM_TOTAL_TIME((Entity)actorPed, animation.animLibrary, animation.animName);
+			if (animDuration != 0) {
+				log_to_file(std::to_string(animNewCounter) + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(animDuration));
+				animNewCounter++;
+			}
+		}
+		//animNewCounter++;
+	}
+	log_to_file("--------- End anim length determination  -------");
+	*/
+
 
 	for (int i = animation.shortcutIndex; i < animations.size();i++) {
 		Animation animation = animations[i];
@@ -3658,6 +3703,9 @@ void action_animations_preview(){
 					}
 
 				}
+
+
+
 				ENTITY::SET_ENTITY_COORDS_NO_OFFSET(actorPed, startLocation.x, startLocation.y, startLocation.z, 0, 0, 1);
 				ENTITY::SET_ENTITY_HEADING(actorPed, startHeading);
 			}

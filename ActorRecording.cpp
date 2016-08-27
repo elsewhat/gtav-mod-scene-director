@@ -764,7 +764,17 @@ void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
 	}
 	Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actor.getActorPed(), true);
 	//GAMEPLAY::SHOOT_SINGLE_BULLET_BETWEEN_COORDS(currentLocation.x, currentLocation.y, currentLocation.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 100, 1, m_weapon, actor.getActorPed(), 1, 1, 100.0);
-	PED::SET_PED_SHOOTS_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1);
+	
+
+	if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
+		//WEAPON::SET_CURRENT_PED_VEHICLE_WEAPON(actor.getActorPed(), m_weapon);
+		//WEAPON::SET_CURRENT_PED_WEAPON(actor.getActorPed(), m_weapon, 1);
+		PED::SET_PED_SHOOTS_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1);
+		AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1000, 1, 1);
+	}
+	else {
+		PED::SET_PED_SHOOTS_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1);
+	}
 
 	//create task sequence
 	/*TaskSequence task_seq = 2;
