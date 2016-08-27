@@ -4827,8 +4827,22 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 										}
 									}
 
+									//check if there is movement whilst shooting
+									float walkSpeed = 0.0;
+									if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
+										walkSpeed = 1.6;
+									}
+									else if (AI::IS_PED_WALKING(actorPed)) {
+										walkSpeed =0.8;
+									}
+									else if (AI::IS_PED_STRAFING(actorPed)) {
+										walkSpeed = 0.0;
+									}
+
+									float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+
 									//"FIRING_PATTERN_FULL_AUTO" FIRING_PATTERN_BURST_FIRE
-									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, deltaCheckRecordingTicks, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_FULL_AUTO"));
+									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, deltaCheckRecordingTicks, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_FULL_AUTO"), walkSpeed, actorHeading);
 									actorRecording.push_back(std::make_shared<ActorShootAtByImpactRecordingItem>(recordingItem));
 									log_to_file(recordingItem.toString());
 

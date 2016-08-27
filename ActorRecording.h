@@ -94,8 +94,10 @@ protected:
 	Hash m_weapon;
 	Vector3 m_weaponImpact;
 	Hash m_firingPattern;
+	float m_walkSpeed;
+	float m_heading;
 public:
-	ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern);
+	ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern, float walkSpeed, float heading);
 	std::string toString() override;
 	void executeNativesForRecording(Actor actor) override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;

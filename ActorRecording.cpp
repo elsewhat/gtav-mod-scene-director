@@ -81,14 +81,22 @@ bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<
 			minDistance = 7.0;
 		}
 
-		//special handling if next recording is an animation
+		//special handling if next recording is an animation or shooting
 		if (nextRecordingItem) {
 			std::shared_ptr<ActorAnimationSequenceRecordingItem> animationRecording = std::dynamic_pointer_cast<ActorAnimationSequenceRecordingItem>(nextRecordingItem);
 
 			if (animationRecording) {
-				log_to_file("Special handling since next recording is an animation");
+				log_to_file("Special handling since next recording is an ActorAnimationSequenceRecordingItem");
 				minDistance = 0.5;
 			}
+
+			std::shared_ptr<ActorShootAtByImpactRecordingItem> shootingRecording = std::dynamic_pointer_cast<ActorShootAtByImpactRecordingItem>(nextRecordingItem);
+
+			if (shootingRecording) {
+				log_to_file("Special handling since next recording is an ActorShootAtByImpactRecordingItem");
+				minDistance = 0.5;
+			}
+
 		}
 
 
@@ -735,18 +743,20 @@ bool ActorCoverAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRe
 	}
 }
 
-ActorShootAtByImpactRecordingItem::ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorShootAtByImpactRecordingItem::ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern, float walkSpeed, float heading):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_weapon = weapon;
 	m_weaponImpact = weaponImpact;
 	m_firingPattern = firingPattern;
+	m_walkSpeed = walkSpeed;
+	m_heading = heading;
 
 	m_ticksDeltaCheckCompletion = ticksDeltaWhenRecorded;
 }
 
 std::string ActorShootAtByImpactRecordingItem::toString()
 {
-	return ActorRecordingItem::toString() + " ActorShootAtByImpactRecordingItem location (" + std::to_string(m_weaponImpact.x) + "," + std::to_string(m_weaponImpact.y) + "," + std::to_string(m_weaponImpact.z) + ")";
+	return ActorRecordingItem::toString() + " ActorShootAtByImpactRecordingItem location (" + std::to_string(m_weaponImpact.x) + "," + std::to_string(m_weaponImpact.y) + "," + std::to_string(m_weaponImpact.z) + ")" + " walkspeed " + std::to_string(m_walkSpeed) + " heading " + std::to_string(m_heading);
 }
 
 void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
@@ -773,35 +783,74 @@ void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
 		AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1000, 1, 1);
 	}
 	else {
+		//AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 400, 1, 1);
+
+
+		//TODO: Check m_heading alternatives (swap with 2.0f)
+
+		if (m_walkSpeed > 0) {
+			AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, 2.0f, m_heading, true, 0, 0, m_firingPattern);
+		}
+		else {
+			//AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 250, 1, 1);
+			AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, 2.0f, m_heading, true, 0, 0, m_firingPattern);
+		}
+
 		PED::SET_PED_SHOOTS_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1);
+
+		//AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, 1, -1, 0, 0.5f);
+
+
 	}
 
-	//create task sequence
-	/*TaskSequence task_seq = 2;
-	AI::OPEN_SEQUENCE_TASK(&task_seq);
-
-	AI::TASK_SHOOT_AT_COORD(0, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 500, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
-	AI::TASK_SHOOT_AT_COORD(0, m_weaponImpact.x+0.5, m_weaponImpact.y, m_weaponImpact.z, 500, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
-	AI::TASK_SHOOT_AT_COORD(0, m_weaponImpact.x + 0.5, m_weaponImpact.y+0.5, m_weaponImpact.z, 500, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
-	AI::TASK_SHOOT_AT_COORD(0, m_weaponImpact.x + 0.5, m_weaponImpact.y+0.5, m_weaponImpact.z, 500, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_BURST_FIRE"));
-
-	AI::CLOSE_SEQUENCE_TASK(task_seq);
-	AI::TASK_PERFORM_SEQUENCE(actor.getActorPed(), task_seq);
-	AI::CLEAR_SEQUENCE_TASK(&task_seq);
-	*/
 
 }
 
 bool ActorShootAtByImpactRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
-	return true;
-	//should not be necessary as the delta time should cause it to check less frequent.weird
-	/*if (ticksNow - ticksStart >= 3000) {
+
+	//if walkspeed is zero, recording is complete immediately. If not perform calculation on actual location
+	if (m_walkSpeed <= 0) {
 		return true;
+	}else if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded / 2.0)) {
+		float minDistance = 4.0;
+		if (m_walkSpeed > 1.0) {
+			minDistance = 7.0;
+		}
+
+		//special handling if next recording is an animation
+		if (nextRecordingItem) {
+			std::shared_ptr<ActorAnimationSequenceRecordingItem> animationRecording = std::dynamic_pointer_cast<ActorAnimationSequenceRecordingItem>(nextRecordingItem);
+
+			if (animationRecording) {
+				log_to_file("Special handling since next recording is an animation");
+				minDistance = 0.5;
+			}
+		}
+
+
+		float distanceToTarget = SYSTEM::VDIST(m_location.x, m_location.y, m_location.z, location.x, location.y, location.z);
+		log_to_file("ActorShootAtByImpactRecordingItem: Distance to target: " + std::to_string(distanceToTarget) + " Min distance: " + std::to_string(minDistance));
+
+		if (distanceToTarget < minDistance) {
+			log_to_file("ActorShootAtByImpactRecordingItem: Close enough to target for ActorRecordingItem");
+			return true;
+		}
+		else {
+			if (nrOfChecksForCompletion > 10) {
+				log_to_file("Giving up after " + std::to_string(nrOfChecksForCompletion) + " attempts");
+				return true;
+			}
+			else {
+				return false;
+			}
+
+		}
 	}
 	else {
+		log_to_file("Need to wait " + std::to_string((m_ticksDeltaWhenRecorded / 2.0)) + " before checking distance to target for completion");
 		return false;
-	}*/
+	}
 }
 
 void ActorShootAtByImpactRecordingItem::executeNativesAfterRecording(Actor actor)
