@@ -2351,6 +2351,7 @@ void add_ped_to_slot(int slotIndex, Ped ped) {
 	}
 	actors.at(slotIndex - 1) = Actor(ped);
 
+	//TODO: Disable default assignment to a rel group
 	assign_actor_to_relationship_group(ped, getDefaultRelationshipGroup());
 
 	int blipId = UI::ADD_BLIP_FOR_ENTITY(ped);
@@ -4074,6 +4075,15 @@ void update_tick_recording_replay(Actor & actor) {
 	ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
 
 	std::shared_ptr<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+	std::shared_ptr<ActorRecordingItem> nextRecordingItem;
+	if (!recordingPlayback.isCurrentRecordedItemLast()) {
+		nextRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex() + 1);
+	}
+	std::shared_ptr<ActorRecordingItem> previousRecordingItem;
+	if (recordingPlayback.getRecordedItemIndex()>=1) {
+		previousRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex() -1);
+	}
+
 
 	if (!recordingPlayback.hasTeleportedToStartLocation()) {
 		/*Entity entityToTeleport = actorPed;
@@ -4118,7 +4128,7 @@ void update_tick_recording_replay(Actor & actor) {
 				recordingPlayback.setTicksLastCheckOfCurrentItem(ticksNow);
 				log_to_file("Starting first recording item");
 
-				recordingItem->executeNativesForRecording(actor);
+				recordingItem->executeNativesForRecording(actor, nextRecordingItem, previousRecordingItem);
 				
 				//try to avoid flee and other actions
 				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
@@ -4136,10 +4146,7 @@ void update_tick_recording_replay(Actor & actor) {
 		log_to_file(std::to_string(ticksNow) + " checking for completion of item " + recordingItem->toString());
 
 
-		std::shared_ptr<ActorRecordingItem> nextRecordingItem;
-		if (!recordingPlayback.isCurrentRecordedItemLast()) {
-			nextRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex()+1);
-		}
+
 
 
 
@@ -4156,7 +4163,7 @@ void update_tick_recording_replay(Actor & actor) {
 				recordingPlayback.nextRecordingItemIndex(GetTickCount());
 				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
 				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex())+ " : " + recordingItem->toString());
-				recordingItem->executeNativesForRecording(actor);
+				recordingItem->executeNativesForRecording(actor, nextRecordingItem, previousRecordingItem);
 
 				//try to avoid flee and other actions
 				//PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
@@ -4167,6 +4174,14 @@ void update_tick_recording_replay(Actor & actor) {
 			recordingPlayback.incrementAttempstCheckedCompletion();
 		}
 	}
+
+	//Logic for checking if current recording is ActorShootAtByImpactRecordingItem
+	//std::shared_ptr<ActorShootAtByImpactRecordingItem> checkIfCurrentShootingRecordingItem = std::dynamic_pointer_cast<ActorShootAtByImpactRecordingItem>(recordingItem);
+	//if (checkIfCurrentShootingRecordingItem) {
+	//	log_to_file("Blocking mouse movements during ActorShootAtByImpactRecordingItem");
+	//	CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(1);
+	//}
+
 }
 
 
@@ -5008,8 +5023,17 @@ void action_submenu_active_selected() {
 		else {
 			recordingPlayback.nextRecordingItemIndex(GetTickCount());
 			std::shared_ptr<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+			std::shared_ptr<ActorRecordingItem> nextRecordingItem;
+			if (!recordingPlayback.isCurrentRecordedItemLast()) {
+				nextRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex() + 1);
+			}
+			std::shared_ptr<ActorRecordingItem> previousRecordingItem;
+			if (recordingPlayback.getRecordedItemIndex() >= 1) {
+				previousRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex() - 1);
+			}
+
 			log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex()) + " : " + recordingItem->toString());
-			recordingItem->executeNativesForRecording(actor);
+			recordingItem->executeNativesForRecording(actor, nextRecordingItem, previousRecordingItem);
 		}
 
 	}

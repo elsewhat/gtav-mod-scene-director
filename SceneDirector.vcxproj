@@ -90,6 +90,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalOptions>..\..\lib\ScriptHookV.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "C:\dev\ScriptHookV_SDK\samples\gtav-mod-scene-director\bin\Release\*.asi" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy to GTA folder</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

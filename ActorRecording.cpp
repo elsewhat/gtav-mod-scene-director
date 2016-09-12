@@ -68,7 +68,7 @@ float ActorOnFootMovementRecordingItem::getWalkSpeed()
 	return m_walkSpeed;
 }
 
-void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor)
+void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, m_heading, 0.5f);
 }
@@ -318,7 +318,7 @@ std::string ActorVehicleEnterRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorVehicleEnterRecordingItem Vehicle " + std::to_string(m_vehicle) + " Seat : " + std::to_string(m_vehicleSeat) + " Speed:" + std::to_string(m_enterVehicleSpeed);
 }
 
-void ActorVehicleEnterRecordingItem::executeNativesForRecording(Actor actor)
+void ActorVehicleEnterRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	AI::TASK_ENTER_VEHICLE(actor.getActorPed(), m_vehicle, -1, m_vehicleSeat, m_enterVehicleSpeed, 1, 0);
 }
@@ -344,7 +344,7 @@ std::string ActorVehicleExitRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorVehicleExitRecordingItem Vehicle " + std::to_string(m_vehicle);
 }
 
-void ActorVehicleExitRecordingItem::executeNativesForRecording(Actor actor)
+void ActorVehicleExitRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	AI::TASK_LEAVE_VEHICLE(actor.getActorPed(), m_vehicle, 0);
 }
@@ -380,7 +380,7 @@ std::string ActorStandingStillRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorStandingStillRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Heading " + std::to_string(m_heading);
 }
 
-void ActorStandingStillRecordingItem::executeNativesForRecording(Actor actor)
+void ActorStandingStillRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
@@ -406,7 +406,7 @@ float ActorVehicleMovementRecordingItem::getSpeedInVehicle()
 	return m_speedInVehicle;
 }
 
-void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor)
+void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	if (PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
 		Vehicle pedVehicle = PED::GET_VEHICLE_PED_IS_USING(actor.getActorPed());
@@ -549,7 +549,7 @@ std::string ActorScenarioRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorScenarioRecordingItem Scenario: " +m_scenario.name + " Length: " + std::to_string(m_ticksLength);
 }
 
-void ActorScenarioRecordingItem::executeNativesForRecording(Actor actor)
+void ActorScenarioRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	if (m_scenario.hasEnterAnim) {
 		AI::TASK_START_SCENARIO_IN_PLACE(actor.getActorPed(), m_scenario.name, -1, 1);
@@ -593,7 +593,7 @@ std::string ActorAimAtRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorAimAtRecordingItem Entity " + std::to_string(m_aimedAtEntity) ;
 }
 
-void ActorAimAtRecordingItem::executeNativesForRecording(Actor actor)
+void ActorAimAtRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	AI::TASK_AIM_GUN_AT_ENTITY(actor.getActorPed(), m_aimedAtEntity, -1, 0);
 }
@@ -630,7 +630,7 @@ std::string ActorShootAtEntityRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorShootAtEntityRecordingItem Entity " + std::to_string(m_shotAtEntity);
 }
 
-void ActorShootAtEntityRecordingItem::executeNativesForRecording(Actor actor)
+void ActorShootAtEntityRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	AI::TASK_SHOOT_AT_ENTITY(actor.getActorPed(), m_shotAtEntity, -1, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_SINGLE_SHOT"));
 }
@@ -662,7 +662,7 @@ std::string ActorAnimationSequenceRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorAnimationSequenceRecordingItem: " + m_animationSequence.toString();
 }
 
-void ActorAnimationSequenceRecordingItem::executeNativesForRecording(Actor actor)
+void ActorAnimationSequenceRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	//load animation dicts
 	for (auto &animation : m_animationSequence.animationsInSequence) {
@@ -723,7 +723,7 @@ std::string ActorCoverAtRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorCoverAtRecordingItem location (" + std::to_string(m_coverPosition.x)+","+ std::to_string(m_coverPosition.y)+","+ std::to_string(m_coverPosition.z) +") Length: "+ std::to_string(m_ticksLength);
 }
 
-void ActorCoverAtRecordingItem::executeNativesForRecording(Actor actor)
+void ActorCoverAtRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	//AI::TASK_SEEK_COVER_FROM_POS (actor.getActorPed(), m_coverPosition.x,m_coverPosition.y,m_coverPosition.z, 5000, 1);
 	Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actor.getActorPed(), true);
@@ -759,11 +759,11 @@ std::string ActorShootAtByImpactRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorShootAtByImpactRecordingItem location (" + std::to_string(m_weaponImpact.x) + "," + std::to_string(m_weaponImpact.y) + "," + std::to_string(m_weaponImpact.z) + ")" + " walkspeed " + std::to_string(m_walkSpeed) + " heading " + std::to_string(m_heading);
 }
 
-void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
+void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	//disable "INPUTGROUP_LOOK" = 1
-	CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(1);
-	//AI::TASK_SHOOT_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 3000, m_firingPattern);
+	//CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(1);
+	//CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
 
 	//load weapon
 	if (!WEAPON::HAS_WEAPON_ASSET_LOADED(m_weapon))
@@ -783,22 +783,44 @@ void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor)
 		AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1000, 1, 1);
 	}
 	else {
-		//AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 400, 1, 1);
-
 
 		//TODO: Check m_heading alternatives (swap with 2.0f)
 
 		if (m_walkSpeed > 0) {
-			AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, 2.0f, m_heading, true, 0, 0, m_firingPattern);
+			AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, m_walkSpeed, m_heading, true, 0, 0, m_firingPattern);
 		}
 		else {
-			//AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 250, 1, 1);
-			AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, 2.0f, m_heading, true, 0, 0, m_firingPattern);
+
+			
+			AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, -1, 0, 0);
+			PED::SET_PED_DESIRED_HEADING(actor.getActorPed(), m_heading);
+			/*
+			TaskSequence task_seq = 1;
+			AI::OPEN_SEQUENCE_TASK(&task_seq);
+			//AI::TASK_ACHIEVE_HEADING(0, m_heading, 100);
+			AI::TASK_AIM_GUN_AT_COORD(0, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, -1, 0, 0);
+			AI::CLOSE_SEQUENCE_TASK(task_seq);
+			AI::TASK_PERFORM_SEQUENCE(actor.getActorPed(), task_seq);
+			AI::CLEAR_SEQUENCE_TASK(&task_seq);
+			*/
+			//AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, m_walkSpeed, m_heading, true, 0, 0, m_firingPattern);
+			
+			/*Logic for checking if previous recording was ActorShootAtByImpactRecordingItem
+			std::shared_ptr<ActorShootAtByImpactRecordingItem> checkIfFirstShootingRecordingItem = std::dynamic_pointer_cast<ActorShootAtByImpactRecordingItem>(previousRecordingItem);
+			if (!checkIfFirstShootingRecordingItem) {
+				log_to_file("First ActorShootAtByImpactRecordingItem. FORCE_PED_MOTION_STATE ");
+				//PED::FORCE_PED_MOTION_STATE(actor.getActorPed(), 0x3f67c6af, 0, 0, 0);
+				PED::FORCE_PED_MOTION_STATE(actor.getActorPed(), GAMEPLAY::GET_HASH_KEY("motionstate_run"), 1, 1, 0);
+			}*/
+			
+
+			//AI::TASK_ACHIEVE_HEADING(actor.getActorPed(), m_heading, 0);
+			//AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, 2.0f, m_heading, true, 0, 0, m_firingPattern);
+			//ENTITY::SET_ENTITY_HEADING(actor.getActorPed(), m_heading);
 		}
 
 		PED::SET_PED_SHOOTS_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1);
 
-		//AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, 1, -1, 0, 0.5f);
 
 
 	}
