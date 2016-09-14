@@ -772,6 +772,14 @@ void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor, 
 		while (!WEAPON::HAS_WEAPON_ASSET_LOADED(m_weapon))
 			WAIT(0);
 	}
+
+	//check the weapon of the actor
+	Hash currentWeapon;
+	WEAPON::GET_CURRENT_PED_WEAPON(actor.getActorPed(), &currentWeapon, 1);
+	if (currentWeapon != m_weapon) {
+		WEAPON::GIVE_WEAPON_TO_PED(actor.getActorPed(), m_weapon, 1000, 1, 1);
+	}
+
 	Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actor.getActorPed(), true);
 	//GAMEPLAY::SHOOT_SINGLE_BULLET_BETWEEN_COORDS(currentLocation.x, currentLocation.y, currentLocation.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 100, 1, m_weapon, actor.getActorPed(), 1, 1, 100.0);
 	
@@ -784,45 +792,15 @@ void ActorShootAtByImpactRecordingItem::executeNativesForRecording(Actor actor, 
 	}
 	else {
 
-		//TODO: Check m_heading alternatives (swap with 2.0f)
-
 		if (m_walkSpeed > 0) {
 			AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, m_walkSpeed, m_heading, true, 0, 0, m_firingPattern);
 		}
 		else {
-
-			
-			AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, -1, 0, 0);
+			AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1000, 0, 0);
 			PED::SET_PED_DESIRED_HEADING(actor.getActorPed(), m_heading);
-			/*
-			TaskSequence task_seq = 1;
-			AI::OPEN_SEQUENCE_TASK(&task_seq);
-			//AI::TASK_ACHIEVE_HEADING(0, m_heading, 100);
-			AI::TASK_AIM_GUN_AT_COORD(0, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, -1, 0, 0);
-			AI::CLOSE_SEQUENCE_TASK(task_seq);
-			AI::TASK_PERFORM_SEQUENCE(actor.getActorPed(), task_seq);
-			AI::CLEAR_SEQUENCE_TASK(&task_seq);
-			*/
-			//AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, m_walkSpeed, m_heading, true, 0, 0, m_firingPattern);
-			
-			/*Logic for checking if previous recording was ActorShootAtByImpactRecordingItem
-			std::shared_ptr<ActorShootAtByImpactRecordingItem> checkIfFirstShootingRecordingItem = std::dynamic_pointer_cast<ActorShootAtByImpactRecordingItem>(previousRecordingItem);
-			if (!checkIfFirstShootingRecordingItem) {
-				log_to_file("First ActorShootAtByImpactRecordingItem. FORCE_PED_MOTION_STATE ");
-				//PED::FORCE_PED_MOTION_STATE(actor.getActorPed(), 0x3f67c6af, 0, 0, 0);
-				PED::FORCE_PED_MOTION_STATE(actor.getActorPed(), GAMEPLAY::GET_HASH_KEY("motionstate_run"), 1, 1, 0);
-			}*/
-			
-
-			//AI::TASK_ACHIEVE_HEADING(actor.getActorPed(), m_heading, 0);
-			//AI::TASK_GO_TO_COORD_WHILE_AIMING_AT_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1, false, 2.0f, m_heading, true, 0, 0, m_firingPattern);
-			//ENTITY::SET_ENTITY_HEADING(actor.getActorPed(), m_heading);
 		}
 
 		PED::SET_PED_SHOOTS_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1);
-
-
-
 	}
 
 
@@ -879,4 +857,28 @@ void ActorShootAtByImpactRecordingItem::executeNativesAfterRecording(Actor actor
 {
 	//log_to_file("ActorShootAtByImpactRecordingItem: executeNativesAfterRecording calling AI::CLEAR_PED_TASKS");
 	//AI::CLEAR_PED_TASKS(actor.getActorPed());
+}
+
+ActorJumpingRecordingItem::ActorJumpingRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, walkSpeed, headingAtEnd)
+{
+	//TODO
+	
+}
+
+
+
+void ActorJumpingRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
+{
+	AI::TASK_JUMP(actor.getActorPed(), 0);
+}
+
+bool ActorJumpingRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
+{
+	return true;
+}
+
+
+std::string ActorJumpingRecordingItem::toString()
+{
+	return ActorOnFootMovementRecordingItem::toString() + " ActorJumpingRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Speed " + std::to_string(m_walkSpeed);
 }

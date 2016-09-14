@@ -53,6 +53,7 @@ private:
 	std::vector<std::shared_ptr<ActorRecordingItem>> m_actorRecordingItems;
 	bool m_replayRecordingInProgress = false;
 	ActorRecordingPlayback m_actorRecordingPlayback;
+	bool m_hasRecordingWithGunFire = false;
 
 	DWORD m_recordingDelay;
 
@@ -121,6 +122,9 @@ public:
 
 	void setHasRecording(bool hasRecording);
 	bool hasRecording();
+
+	void setHasRecordingWithGunFire(bool hasRecordingWithGunFire);
+	bool hasRecordingWithGunFire();
 
 	void setRecordingDelay(DWORD ticks);
 	DWORD getRecordingDelay();

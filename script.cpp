@@ -468,7 +468,7 @@ void create_relationship_groups() {
 void assign_actor_to_relationship_group(Ped ped, RelationshipGroup relationshipGroup) {
 	log_to_file("Adding actor to relationship group . Existing hash is " +std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped))+ " new has should be is " + std::to_string(GAMEPLAY::GET_HASH_KEY(relationshipGroup.id)));
 	
-	 
+	/* TODO: Temporarily disabling rel groups
 	if(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped) == relationshipGroup.actorHash) {
 		log_to_file("Ped already belongs to actor relationship group");
 	}else {
@@ -476,6 +476,7 @@ void assign_actor_to_relationship_group(Ped ped, RelationshipGroup relationshipG
 		//PED::SET_PED_RELATIONSHIP_GROUP_DEFAULT_HASH(ped, relationshipGroup.actorHash);
 	}
 	log_to_file("Relationship group after add " + std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped)));
+	*/
 }
 
 void draw_instructional_buttons() {
@@ -3959,7 +3960,7 @@ void action_toggle_scene_mode() {
 		create_relationship_groups();
 	}
 
-
+	
 
 	//trigger the action for all actors in slots
 	for (auto &actor: actors){
@@ -3989,6 +3990,7 @@ void action_toggle_scene_mode() {
 
 			if (actor.hasRecording()) {
 				actor.startReplayRecording(GetTickCount());
+
 			}
 			else if (actor.hasWaypoint() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID()) == false) { //move the actor if he has a waypoint and if he's not the player
 			   //first if he's a driver
@@ -4106,6 +4108,10 @@ void update_tick_recording_replay(Actor & actor) {
 			if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
 				ActorRecordingPlayback & otherActorRecordingPlayback = actor.getRecordingPlayback();
 				otherActorRecordingPlayback.setHasTeleportedToStartLocation(ticksNow);
+
+				if (actor.hasRecordingWithGunFire() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID())) {
+					set_status_text("Switch actor in order for gun fire recording to be playbacked correctly!");
+				}
 			}
 		}
 
@@ -4546,6 +4552,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		//the actual recording
 		std::vector<std::shared_ptr<ActorRecordingItem>> actorRecording;
 		actorRecording.reserve(1000);
+		bool hasRecordingWithGunFire = false;
 
 		//start other actors
 		if (replayOtherActors) {
@@ -4812,6 +4819,16 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 							}
 
 						}
+						else if (PED::IS_PED_JUMPING(actorPed)) {
+							float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+							float walkSpeed = 1.0;
+							if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
+								walkSpeed = 2.0;
+							}
+
+							ActorJumpingRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
+							actorRecording.push_back(std::make_shared<ActorJumpingRecordingItem>(recordingItem));
+						}
 						else {
 							if (isActorUsingScenario) {//actor just stopped using scearion
 								isActorUsingScenario = false;
@@ -4860,7 +4877,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, deltaCheckRecordingTicks, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_FULL_AUTO"), walkSpeed, actorHeading);
 									actorRecording.push_back(std::make_shared<ActorShootAtByImpactRecordingItem>(recordingItem));
 									log_to_file(recordingItem.toString());
-
+									hasRecordingWithGunFire = true;
 
 									lastBulletRecorded = ticksNow;
 									//set accuracy to 100 for this ped
@@ -4982,6 +4999,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		if (actorRecording.size() > 0) {
 			actor.setRecording(actorRecording);
 			actor.setHasRecording(true);
+			actor.setHasRecordingWithGunFire(hasRecordingWithGunFire);
 		}
 
 

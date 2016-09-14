@@ -272,6 +272,16 @@ bool Actor::hasRecording()
 	return m_hasRecording;
 }
 
+void Actor::setHasRecordingWithGunFire(bool hasRecordingWithGunFire)
+{
+	m_hasRecordingWithGunFire = hasRecordingWithGunFire;
+}
+
+bool Actor::hasRecordingWithGunFire()
+{
+	return m_hasRecordingWithGunFire;
+}
+
 void Actor::setRecordingDelay(DWORD ticks)
 {
 	m_recordingDelay = ticks;
