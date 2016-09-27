@@ -166,7 +166,7 @@ bool is_timlapse_active = false;
 int timelapse_delta_seconds = 0;
 int timelapse_delta_minutes = 2;
 DWORD timelapseLastTick = 0;
-DWORD timelapseDeltaTicks = 1000;
+DWORD timelapseDeltaTicks = 100;
 
 std::vector<Weather> gtaWeatherTypes;
 int index_weather = -1;
@@ -3070,8 +3070,8 @@ void action_teleport_to_start_locations() {
 		WAIT(1000);
 		for (auto &actor : actors) {
 			Ped actorPed = actor.getActorPed();
-			if (actor.isNullActor() == false && actor.hasStartLocation() && PED::IS_PED_FALLING(actorPed)) {
-				log_to_file(actorPed + " is falling after we had dead peds. Trying to teleport back to top");
+			if (actor.isNullActor() == false && actor.hasStartLocation() && PED::IS_PED_FALLING(actorPed) ) {
+				log_to_file(actorPed + " is falling or dead after we had dead peds. Trying to teleport back to top");
 				ENTITY::SET_ENTITY_HEALTH(actorPed, ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
 				Vector3 location = actor.getStartLocation();
 				location.z = location.z + 2.5f;
@@ -3083,7 +3083,7 @@ void action_teleport_to_start_locations() {
 
 void action_timelapse_tick() {
 	TIME::ADD_TO_CLOCK_TIME(0, timelapse_delta_minutes, timelapse_delta_seconds);
-	//log_to_file("Clock after timelapse: " + std::to_string(TIME::GET_CLOCK_HOURS()) + ":" + std::to_string(TIME::GET_CLOCK_MINUTES()) + ":" + std::to_string(TIME::GET_CLOCK_SECONDS()));
+	log_to_file("Clock after timelapse: " + std::to_string(TIME::GET_CLOCK_HOURS()) + ":" + std::to_string(TIME::GET_CLOCK_MINUTES()) + ":" + std::to_string(TIME::GET_CLOCK_SECONDS()));
 }
 
 void action_toggle_timelapse() {
@@ -4160,11 +4160,11 @@ void update_tick_recording_replay(Actor & actor) {
 			//execute any post actions (normally empty)
 			recordingItem->executeNativesAfterRecording(actor);
 
-			//skip to next or end if this is the last 
-			if (recordingPlayback.isCurrentRecordedItemLast()) {
+			//skip to next normally. But if last or ped is dead, skip to last
+			if (recordingPlayback.isCurrentRecordedItemLast() || ENTITY::IS_ENTITY_DEAD(actorPed)) {
 				recordingPlayback.setPlaybackCompleted();
 				actor.stopReplayRecording();
-			}
+			} 
 			else {
 				recordingPlayback.nextRecordingItemIndex(GetTickCount());
 				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());

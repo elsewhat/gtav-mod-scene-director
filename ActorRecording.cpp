@@ -471,8 +471,16 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 				minDistance = 60.0;
 			}
 			else if (isInVehicle) {
-				minDistance = 10.0;
+				//TODO: Tweak based on heading changes
+				if (m_speedInVehicle > 30.0) {
+					minDistance = 17.0;
+				}
+				else {
+					minDistance = 10.0;
+				}
 			}
+
+	
 
 			//check if next is not a vehicle movement (will often be exit vehicle) Then the threshold should be much less
 			std::shared_ptr<ActorVehicleMovementRecordingItem> nextVehicleMovement = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(nextRecordingItem);
