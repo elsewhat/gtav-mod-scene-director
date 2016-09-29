@@ -115,6 +115,19 @@ public:
 
 };
 
+class ActorReloadRecordingItem : public ActorRecordingItem {
+protected:
+	Hash m_weapon;
+	bool m_doAim;
+	Vector3 m_weaponImpact;
+public:
+	ActorReloadRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, bool doAim, Vector3 weaponImpact);
+	std::string toString() override;
+	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+
+};
+
 class ActorScenarioRecordingItem : public ActorRecordingItem {
 protected:
 	Scenario m_scenario;

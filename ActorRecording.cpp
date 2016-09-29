@@ -890,3 +890,39 @@ std::string ActorJumpingRecordingItem::toString()
 {
 	return ActorOnFootMovementRecordingItem::toString() + " ActorJumpingRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Speed " + std::to_string(m_walkSpeed);
 }
+
+ActorReloadRecordingItem::ActorReloadRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, bool doAim, Vector3 weaponImpact):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+{
+	m_weapon = weapon;
+	m_doAim = doAim;
+	m_weaponImpact = weaponImpact;
+	setTicksDeltaCheckCompletion(50);
+}
+
+void ActorReloadRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
+{
+
+	AI::TASK_RELOAD_WEAPON(actor.getActorPed(), 1);
+}
+
+bool ActorReloadRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
+{
+	//hard check on 1500 ticks as natives does not return false quickly enough
+	if (PED::IS_PED_RELOADING(actor.getActorPed()) && ticksNow-ticksStart<1200) {
+		return false;
+	}
+	else {
+		//could not get task sequence to work with reload, so do this here
+		if (m_doAim) {
+			AI::TASK_AIM_GUN_AT_COORD(actor.getActorPed(), m_weaponImpact.x, m_weaponImpact.y, m_weaponImpact.z, 1000, 0, 0);
+		}
+		log_to_file("Used " + std::to_string(ticksNow - ticksStart) + " ticks to reload");
+		return true;
+	}
+}
+
+
+std::string ActorReloadRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorReloadRecordingItem ";
+}

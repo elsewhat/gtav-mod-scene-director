@@ -2913,7 +2913,7 @@ void action_teleport_to_start_locations() {
 				haveDeadActors = true;
 				ENTITY::SET_ENTITY_HEALTH(actor.getActorPed(), ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
 				Vector3 location = actor.getStartLocation();
-				location.z = location.z + 1.6f;
+				location.z = location.z + 1.8f;
 				teleport_entity_to_location(entityToTeleport, location, true);
 
 				//see http://gtaforums.com/topic/801452-death-recording-no-more-wastedbusted-screen-automatic-radio-off/
@@ -3071,11 +3071,26 @@ void action_teleport_to_start_locations() {
 		for (auto &actor : actors) {
 			Ped actorPed = actor.getActorPed();
 			if (actor.isNullActor() == false && actor.hasStartLocation() && PED::IS_PED_FALLING(actorPed) ) {
-				log_to_file(actorPed + " is falling or dead after we had dead peds. Trying to teleport back to top");
+				log_to_file(std::to_string(actorPed) + " is falling or dead after we had dead peds. Trying to teleport back to top");
 				ENTITY::SET_ENTITY_HEALTH(actorPed, ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
 				Vector3 location = actor.getStartLocation();
 				location.z = location.z + 2.5f;
 				teleport_entity_to_location(actorPed, location, true);
+			}
+			else if (actor.isNullActor() == false && actor.hasStartLocation() && (ENTITY::IS_ENTITY_DEAD(actorPed) || PED::_IS_PED_DEAD(actorPed, true))) {
+				log_to_file(std::to_string(actorPed) + " is still dead. Real desparte attempts at reviving");
+
+				ENTITY::SET_ENTITY_HEALTH(actorPed, ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
+				Vector3 location = actor.getStartLocation();
+				location.z = location.z + 2.2f;
+				int ressurectTries = 0;
+				while (ressurectTries < 2){
+					PED::SET_PED_CAN_RAGDOLL(actorPed, true);
+					AI::CLEAR_PED_TASKS_IMMEDIATELY(actorPed);
+					teleport_entity_to_location(actorPed, location, true);
+					ressurectTries++;
+					WAIT(ressurectTries * 400);
+				}
 			}
 		}
 	}
@@ -3923,6 +3938,14 @@ void check_if_explode_or_outofcontrol_nearby_vehicle_key_pressed (){
 
 }
 
+void reset_ignore_player() {
+	log_to_file("Setting PLAYER::SET_EVERYONE_IGNORE_PLAYER and PLAYER::SET_POLICE_IGNORE_PLAYER to false");
+	
+	PLAYER::SET_POLICE_IGNORE_PLAYER(PLAYER::PLAYER_PED_ID(), false);
+	PLAYER::SET_EVERYONE_IGNORE_PLAYER(PLAYER::PLAYER_PED_ID(), false);
+
+}
+
 void action_add_prop_to_actor(Actor actor, ActorProp actorProp) {
 	Ped actorPed = actor.getActorPed();
 
@@ -4613,6 +4636,8 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		std::shared_ptr<ActorCoverAtRecordingItem> ongoingActorCoverAtRecordingItem;
 		DWORD ticksCurrentCoverStart;
 
+		bool isReloading = false;
+
 		DWORD lastBulletRecorded = 0;
 
 		//1. Store start location
@@ -4842,8 +4867,27 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								ongoingActorCoverAtRecordingItem->setCoverPosition(actorLocation);
 							}
 
+							if (PED::IS_PED_RELOADING(actorPed)) {
+								if (isReloading == false) {//only record one reloading item pr reload
+									isReloading = true;
+									Hash weaponHash;
+									WEAPON::GET_CURRENT_PED_WEAPON(actorPed, &weaponHash, 1);
+									Vector3 weaponImpactLocation;
+									bool doAim = false;
+									if (WEAPON::GET_PED_LAST_WEAPON_IMPACT_COORD(actorPed, &weaponImpactLocation)) {
+										doAim = true;
+									}
 
-							if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
+									ActorReloadRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, weaponHash, doAim, weaponImpactLocation);
+									actorRecording.push_back(std::make_shared<ActorReloadRecordingItem>(recordingItem));
+									log_to_file(recordingItem.toString());
+								}
+							}
+							else {
+								isReloading = false;
+							}
+							
+							if (isReloading==false && PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
 								isFreeAiming = true;
 								DELTA_TICKS = 10;
 								Vector3 weaponImpactLocation;
@@ -5804,7 +5848,7 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 2.2.1 by elsewhat");
+	set_status_text("Scene director 3.0.1 by elsewhat");
 	set_status_text("Scene is setup mode");
 	init_read_keys_from_ini();
 
@@ -5828,6 +5872,9 @@ void ScriptMain()
 
 	create_relationship_groups();
 	log_to_file("Screen Director initialized");
+
+	//make sure police and everyone do not ignore player
+	reset_ignore_player();
 
 	main();
 }
