@@ -468,7 +468,6 @@ void create_relationship_groups() {
 void assign_actor_to_relationship_group(Ped ped, RelationshipGroup relationshipGroup) {
 	log_to_file("Adding actor to relationship group . Existing hash is " +std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped))+ " new has should be is " + std::to_string(GAMEPLAY::GET_HASH_KEY(relationshipGroup.id)));
 	
-	/* TODO: Temporarily disabling rel groups
 	if(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped) == relationshipGroup.actorHash) {
 		log_to_file("Ped already belongs to actor relationship group");
 	}else {
@@ -476,7 +475,6 @@ void assign_actor_to_relationship_group(Ped ped, RelationshipGroup relationshipG
 		//PED::SET_PED_RELATIONSHIP_GROUP_DEFAULT_HASH(ped, relationshipGroup.actorHash);
 	}
 	log_to_file("Relationship group after add " + std::to_string(PED::GET_PED_RELATIONSHIP_GROUP_HASH(ped)));
-	*/
 }
 
 void draw_instructional_buttons() {
@@ -620,6 +618,12 @@ void draw_instructional_buttons_player_recording() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F");
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Enter as passenger");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_J");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Speak (hold)");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
@@ -2009,7 +2013,8 @@ void action_clone_player() {
 	}
 
 	PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(clonedPed, true);
-	assign_actor_to_relationship_group(clonedPed,getDefaultRelationshipGroup());
+	//no longer assign to default rel group
+	//assign_actor_to_relationship_group(clonedPed,getDefaultRelationshipGroup());
 
 	set_status_text("Cloned player");
 	menu_active_index = 0;
@@ -2352,8 +2357,8 @@ void add_ped_to_slot(int slotIndex, Ped ped) {
 	}
 	actors.at(slotIndex - 1) = Actor(ped);
 
-	//TODO: Disable default assignment to a rel group
-	assign_actor_to_relationship_group(ped, getDefaultRelationshipGroup());
+	//Disable default assignment to a rel group
+	//assign_actor_to_relationship_group(ped, getDefaultRelationshipGroup());
 
 	int blipId = UI::ADD_BLIP_FOR_ENTITY(ped);
 	actors[slotIndex - 1].setBlipId(blipId);
@@ -3313,6 +3318,22 @@ void action_next_relationshipgroup() {
 	}
 }
 
+void action_animation_lipmovement_start() {
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	STREAMING::REQUEST_ANIM_DICT("mp_facial");
+	while (!STREAMING::HAS_ANIM_DICT_LOADED("mp_facial"))
+	{
+		WAIT(0);
+	}
+
+	//Animation flags are type "Facial"
+	AI::TASK_PLAY_ANIM(actor.getActorPed(), "mp_facial", "mic_chatter", 8.0f, -8.0f, -1, ANIMATION_LOOP_FLAG1 | ANIMATION_ALLOW_MOVEMENT_FLAG6, 8.0f, 0, 0, 0);
+}
+void action_animation_lipmovement_stop() {
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+	AI::STOP_ANIM_TASK(actor.getActorPed(), "mp_facial", "mic_chatter", -4.0);
+}
+
 void action_animation_single() {
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor()) {
@@ -4026,7 +4047,8 @@ void action_toggle_scene_mode() {
 		else {
 			actor.stopReplayRecording();
 
-			assign_actor_to_relationship_group(actorPed, getDefaultRelationshipGroup());
+			//Disable default rel group
+			//assign_actor_to_relationship_group(actorPed, getDefaultRelationshipGroup());
 			//move the actor if he has a waypoint and if he's not the player
 			PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actorPed, true);
 			//AI::TASK_STAND_STILL(actorShortcut[i], -1);
@@ -4049,6 +4071,17 @@ bool record_scene_for_actor_key_press() {
 		return false;
 	}
 }
+
+bool record_lipmovement_for_actor_key_press() {
+	//J
+	if (IsKeyDown(0x4A)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 void action_stop_all_recording_replays() {
 	for (auto & actor : actors) {
 		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
@@ -4637,6 +4670,8 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 		DWORD ticksCurrentCoverStart;
 
 		bool isReloading = false;
+		bool isSpeaking = false;
+		DWORD ticksStoppedSpeaking = 0;
 
 		DWORD lastBulletRecorded = 0;
 
@@ -5033,6 +5068,20 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 			if (record_scene_for_actor_key_press()) {
 				bRecording = false;
 			}
+			else if (isSpeaking== false && record_lipmovement_for_actor_key_press() && ticksNow > ticksStoppedSpeaking+200) {
+				isSpeaking = true;
+				log_to_file("action_animation_lipmovement_start");
+				action_animation_lipmovement_start();
+			}
+			else if (isSpeaking && record_lipmovement_for_actor_key_press() == false) {
+				isSpeaking = false;
+				log_to_file("action_animation_lipmovement_stop");
+				action_animation_lipmovement_stop();
+				ticksStoppedSpeaking = ticksNow;
+			}
+
+			
+
 			WAIT(0);
 		}
 		log_to_file("Here are the recordings made for this actor:");
