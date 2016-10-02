@@ -4671,7 +4671,9 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 		bool isReloading = false;
 		bool isSpeaking = false;
+		DWORD ticksStartedSpeaking = 0;
 		DWORD ticksStoppedSpeaking = 0;
+		
 
 		DWORD lastBulletRecorded = 0;
 
@@ -5070,6 +5072,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 			}
 			else if (isSpeaking== false && record_lipmovement_for_actor_key_press() && ticksNow > ticksStoppedSpeaking+200) {
 				isSpeaking = true;
+				ticksStartedSpeaking = ticksNow;
 				log_to_file("action_animation_lipmovement_start");
 				action_animation_lipmovement_start();
 			}
@@ -5078,6 +5081,24 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 				log_to_file("action_animation_lipmovement_stop");
 				action_animation_lipmovement_stop();
 				ticksStoppedSpeaking = ticksNow;
+
+				//record movement while speaking
+				float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+				bool isWalkingWhileSpeaking = false;
+
+				float walkSpeed = 0.0;
+				if (AI::IS_PED_WALKING) {
+					walkSpeed = 1.0;
+					isWalkingWhileSpeaking = true;
+				}else if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
+					walkSpeed = 2.0;
+					isWalkingWhileSpeaking = true;
+				}
+
+				ActorSpeakRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading, isWalkingWhileSpeaking);
+				recordingItem.setTicksLength(ticksStoppedSpeaking - ticksStartedSpeaking);
+				actorRecording.push_back(std::make_shared<ActorSpeakRecordingItem>(recordingItem));
+				log_to_file(recordingItem.toString());
 			}
 
 			

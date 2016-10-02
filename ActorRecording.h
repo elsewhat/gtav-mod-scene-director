@@ -52,6 +52,17 @@ public:
 
 };
 
+class ActorSpeakRecordingItem : public ActorOnFootMovementRecordingItem {
+protected:
+	bool m_isMovingWhileSpeaking;
+public:
+	ActorSpeakRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isMovingWhileSpeaking);
+	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
+	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location);
+	std::string toString() override;
+	virtual void executeNativesAfterRecording(Actor actor) override;
+};
+
 class ActorJumpingRecordingItem : public ActorOnFootMovementRecordingItem {
 protected:
 public:

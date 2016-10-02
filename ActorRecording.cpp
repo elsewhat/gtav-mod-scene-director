@@ -926,3 +926,39 @@ std::string ActorReloadRecordingItem::toString()
 {
 	return ActorRecordingItem::toString() + " ActorReloadRecordingItem ";
 }
+
+ActorSpeakRecordingItem::ActorSpeakRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isMovingWhileSpeaking):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, walkSpeed, headingAtEnd)
+{
+	m_isMovingWhileSpeaking = isMovingWhileSpeaking;
+	setTicksDeltaCheckCompletion(50);
+}
+void ActorSpeakRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem) {
+	STREAMING::REQUEST_ANIM_DICT("mp_facial");
+	while (!STREAMING::HAS_ANIM_DICT_LOADED("mp_facial"))
+	{
+		WAIT(0);
+	}
+
+	//Animation flags are type "Facial"
+	AI::TASK_PLAY_ANIM(actor.getActorPed(), "mp_facial", "mic_chatter", 8.0f, -8.0f, -1, ANIMATION_LOOP_FLAG1 | ANIMATION_ALLOW_MOVEMENT_FLAG6, 8.0f, 0, 0, 0);
+
+	if (m_isMovingWhileSpeaking) {
+		AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, m_heading, 0.5f);
+	}
+}
+bool ActorSpeakRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) {
+	if ((ticksNow - ticksStart) > getTicksLength()) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+std::string ActorSpeakRecordingItem::toString() {
+	return "ActorSpeakRecordingItem Length:" + std::to_string(getTicksLength()) +" "+ ActorOnFootMovementRecordingItem::toString();
+}
+
+void ActorSpeakRecordingItem::executeNativesAfterRecording(Actor actor)
+{
+	AI::STOP_ANIM_TASK(actor.getActorPed(), "mp_facial", "mic_chatter", -4.0);
+}
