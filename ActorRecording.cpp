@@ -437,7 +437,20 @@ void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor, 
 				log_to_file("playback_recording_to_waypoint: In boat : " + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
 			}
 			else {
-				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, m_speedInVehicle, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actor.getDrivingMode().value, 2.0, -1);
+				//adjust speed based on previous and next recording item
+				std::shared_ptr<ActorVehicleMovementRecordingItem> nextVehicleMovementRecording = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(nextRecordingItem);
+				std::shared_ptr<ActorVehicleMovementRecordingItem> prevVehicleMovementRecording = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(previousRecordingItem);
+
+				float speedForPlayback = m_speedInVehicle;
+				//only take action if both previous and next recordings are in car
+				if (nextVehicleMovementRecording && prevVehicleMovementRecording) {
+					float nextHeading = nextVehicleMovementRecording->getVehicleHeading();
+					float previousHeading = prevVehicleMovementRecording->getVehicleHeading();
+
+					log_to_file("Heading " + std::to_string(m_vehicleHeading) + " prev:" + std::to_string(m_vehicleHeading) + " next" + std::to_string(previousHeading));
+				}
+				
+				AI::TASK_VEHICLE_DRIVE_TO_COORD(pedDriver, pedVehicle, m_location.x, m_location.y, m_location.z, speedForPlayback, 0, ENTITY::GET_ENTITY_MODEL(pedVehicle), actor.getDrivingMode().value, 2.0, -1);
 				log_to_file("playback_recording_to_waypoint: Driving with vehicle:" + std::to_string(pedVehicle) + " with max speed:" + std::to_string(m_speedInVehicle));
 
 			}

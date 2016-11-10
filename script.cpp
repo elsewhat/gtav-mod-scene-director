@@ -11,6 +11,7 @@
 #include "ActorRecording.h"
 #include "Animation.h"
 #include "ActorProp.h"
+#include "BirdsEyeMode.h"
 #include "tinyxml2.h"
 
 #include <string>
@@ -21,7 +22,7 @@
 #include <bitset> 
 #include <map>
 
-#define PI 3.14159265
+
 
 //bool isBitSet = IntBits(value).test(position);
 
@@ -62,6 +63,7 @@ enum MENU_ITEM {
 	MENU_ITEM_ANIMATION = 121,
 	MENU_ITEM_BACK_TO_START = 122,
 	MENU_ITEM_SAVE_LOAD = 123,
+	MENU_ITEM_BIRDS_EYE_MODE = 124,
 	SUBMENU_ITEM_RECORD_PLAYER = 140,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 141,
 	SUBMENU_ITEM_SPOT_LIGHT = 142,
@@ -82,6 +84,7 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_TIMELAPSE = 161,
 	SUBMENU_ITEM_WEATHER = 162,
 	SUBMENU_ITEM_WIND = 163,
+	SUBMENU_ITEM_RECORD_RELOAD=164,
 	SUBMENU_ITEM_ANIMATION_SINGLE = 170,
 	SUBMENU_ITEM_ANIMATION_PREVIEW = 171,
 	SUBMENU_ITEM_ANIMATION_FLAG = 172,
@@ -116,6 +119,13 @@ enum MENU_ITEM {
 
 
 };
+
+enum SCENE_DIRECTOR_MODES {
+	MODE_STANDARD=1,
+	MODE_BIRDS_EYE_VIEW = 2,
+};
+
+SCENE_DIRECTOR_MODES activeMode = MODE_STANDARD;
 
 bool should_display_hud = false;
 
@@ -172,6 +182,8 @@ std::vector<Weather> gtaWeatherTypes;
 int index_weather = -1;
 bool is_wind_active = false;
 
+bool do_record_reload = false;
+
 
 std::vector<RelationshipGroup> modRelationshipGroups;
 
@@ -195,6 +207,8 @@ std::string saveFileName = "SceneDirector_save.xml";
 
 //used to automatically switch over current actor over to new Ped in check_player_model
 Ped lastPlayerPed = 0;
+
+BirdsEyeMode birdsEyeController;
 
 void set_status_text(std::string text)
 {
@@ -235,6 +249,13 @@ void log_to_file(std::string message, bool bAppend) {
 		logfile.close();
 	}
 	return;
+}
+
+
+void action_show_info_on_start(){
+	set_status_text("Scene director 3.1 by elsewhat");
+	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
+	set_status_text("Scene is setup mode");
 }
 
 // Config file - test
@@ -819,10 +840,30 @@ void draw_submenu_animation(int drawIndex) {
 
 void draw_submenu_world(int drawIndex) {
 	int submenu_index = 0;
-
+	
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_RECORD_RELOAD;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	char* recordReloadText = "Record reload: No";
+	if (do_record_reload) {
+		recordReloadText = "Record reload: Yes";
+	}
+	DRAW_TEXT(recordReloadText, 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_BLACKOUT;
@@ -895,6 +936,8 @@ void draw_submenu_world(int drawIndex) {
 	}
 	DRAW_TEXT(windText, 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
 
 	submenu_max_index = submenu_index;
 
@@ -1360,7 +1403,7 @@ void draw_menu() {
 		}
 
 	}
-	DRAW_TEXT("World", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("World / Options", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
@@ -1392,6 +1435,22 @@ void draw_menu() {
 	if (menu_active_index == drawIndex) {
 		menu_active_action = MENU_ITEM_ANIMATION;
 	}
+
+	drawIndex++;
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	//show birds eye view
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_BIRDS_EYE_MODE;
+
+	}
+	DRAW_TEXT("Birds eye mode", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
 	if (menu_active_index == drawIndex) {
@@ -4904,7 +4963,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								ongoingActorCoverAtRecordingItem->setCoverPosition(actorLocation);
 							}
 
-							if (PED::IS_PED_RELOADING(actorPed)) {
+							if (do_record_reload && PED::IS_PED_RELOADING(actorPed)) {
 								if (isReloading == false) {//only record one reloading item pr reload
 									isReloading = true;
 									Hash weaponHash;
@@ -5194,6 +5253,9 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_WIND) {
 		action_toggle_wind();
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_RECORD_RELOAD) {
+		do_record_reload = !do_record_reload;
+	}
 	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT) {
 		action_next_spot_light();
 	}
@@ -5321,6 +5383,11 @@ void action_menu_active_selected() {
 	}
 	else if (menu_active_action == MENU_ITEM_ESCORT) {
 		action_vehicle_escort();
+	}
+	else if (menu_active_action == MENU_ITEM_BIRDS_EYE_MODE) {
+		log_to_file("Switching to Birds eye mode");
+		activeMode = MODE_BIRDS_EYE_VIEW;
+		birdsEyeController.onEnterMode();
 	}
 	else if (menu_active_action == MENU_ITEM_SCENE_MODE) {
 		action_toggle_scene_mode();
@@ -5762,149 +5829,147 @@ void main()
 	while (true)
 	{
 
+		if (activeMode == MODE_STANDARD) {
 
-		/* ACTIONS WHICH MAY NEED TO WAIT A FEW TICKS */
-		if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
-			//nextWaitTicks will be set by action methods in order to define how long before next input can be processed
-			nextWaitTicks = 0;
+			//TODO: Refactor standard mode into separate class in same way as BirdsEyeMode
 
-			if (scene_teleport_to_start_locations_key_pressed()) {
-				action_stop_all_recording_replays();
-				action_teleport_to_start_locations();
-			}
+			/* ACTIONS WHICH MAY NEED TO WAIT A FEW TICKS */
+			if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
+				//nextWaitTicks will be set by action methods in order to define how long before next input can be processed
+				nextWaitTicks = 0;
 
-
-			if (set_same_waypoint_for_all_actors_key_pressed()) {
-				action_set_same_waypoint_for_all_actors();
-			}
-
-			if (hud_toggle_key_pressed()) {
-				if (should_display_hud == true) {
-					should_display_hud = false;
+				if (scene_teleport_to_start_locations_key_pressed()) {
+					action_stop_all_recording_replays();
+					action_teleport_to_start_locations();
 				}
-				else {
-					set_status_text("Scene director 2.2.1 by elsewhat");
-					should_display_hud = true;
+
+
+				if (set_same_waypoint_for_all_actors_key_pressed()) {
+					action_set_same_waypoint_for_all_actors();
 				}
+
+				if (hud_toggle_key_pressed()) {
+					if (should_display_hud == true) {
+						should_display_hud = false;
+					}
+					else {
+						action_show_info_on_start();
+						should_display_hud = true;
+					}
+				}
+
+
+				if (autopilot_for_player_key_pressed()) {
+					action_autopilot_for_player(false);
+				}
+
+				if (vehicle_chase_key_pressed()) {
+					action_vehicle_chase();
+				}
+
+				if (vehicle_escort_key_pressed()) {
+					action_vehicle_escort();
+				}
+
+				if (reset_scene_director_key_pressed()) {
+					action_reset_scene_director();
+				}
+
+				if (copy_player_actions_key_pressed()) {
+					action_copy_player_actions();
+				}
+
+				if (enter_nearest_vehicle_as_passenger_key_pressed()) {
+					action_enter_nearest_vehicle_as_passenger();
+				}
+
+				if (teleport_player_key_pressed()) {
+					teleport_player_to_waypoint();
+				}
+
+				if (should_display_app_hud()) {
+					if (menu_up_key_pressed()) {
+						menu_action_up();
+					}
+					else if (menu_down_key_pressed()) {
+						menu_action_down();
+					}
+					else if (menu_left_key_pressed()) {
+						menu_action_left();
+					}
+					else if (menu_right_key_pressed()) {
+						menu_action_right();
+					}
+					else if (menu_select_key_pressed()) {
+						menu_action_select();
+					}
+					else if (menu_delete_key_pressed()) {
+						menu_action_delete();
+					}
+				}
+
+
+				action_if_ped_assign_shortcut_key_pressed();
+
+				action_if_ped_execute_shortcut_key_pressed();
+
+				action_if_animation_sequence_shortcut_key_pressed(false);
+
+				check_if_player_is_passenger_and_has_waypoint();
+
+				check_if_actor_as_passenger_of_other_actor_key_pressed();
+
+				check_if_explode_or_outofcontrol_nearby_vehicle_key_pressed();
+
+				mainTickLast = GetTickCount();
 			}
 
+			/* ACTIONS WHICH ARE PERFORMED EVERY TICK */
 
-			if (autopilot_for_player_key_pressed()) {
-				action_autopilot_for_player(false);
-			}
-
-			if (vehicle_chase_key_pressed()) {
-				action_vehicle_chase();
-			}
-
-			if (vehicle_escort_key_pressed()) {
-				action_vehicle_escort();
-			}
-
-			if (reset_scene_director_key_pressed()) {
-				action_reset_scene_director();
-			}
-
-			if (copy_player_actions_key_pressed()) {
-				action_copy_player_actions();
-			}
-
-			/*
-			if (increase_aggressiveness_key_pressed()) {
-				action_increase_aggressiveness(PLAYER::PLAYER_PED_ID(), false);
-			}
-
-			if (decrease_aggressiveness_key_pressed()) {
-				action_decrease_aggressiveness(PLAYER::PLAYER_PED_ID(),false);
-			}
-
-			if (increase_aggressiveness_for_all_actors_key_pressed()) {
-				action_increase_aggressiveness_for_all_actors();
-			}
-
-			if (decrease_aggressiveness_for_all_actors_key_pressed()) {
-				action_decrease_aggressiveness_for_all_actors();
-			}*/
-
-
-			if (enter_nearest_vehicle_as_passenger_key_pressed()) {
-				action_enter_nearest_vehicle_as_passenger();
-			}
-
-			if (teleport_player_key_pressed()) {
-				teleport_player_to_waypoint();
-			}
-
+			//Display HUD for app
 			if (should_display_app_hud()) {
-				if (menu_up_key_pressed()) {
-					menu_action_up();
-				} else if (menu_down_key_pressed()) {
-					menu_action_down();
-				}
-				else if (menu_left_key_pressed()) {
-					menu_action_left();
-				}
-				else if (menu_right_key_pressed()) {
-					menu_action_right();
-				}
-				else if (menu_select_key_pressed()) {
-					menu_action_select();
-				}
-				else if (menu_delete_key_pressed()) {
-					menu_action_delete();
+				draw_instructional_buttons();
+				draw_menu();
+				//disable ALT key
+				CONTROLS::DISABLE_CONTROL_ACTION(0, 19, 1);
+			}
+			else {
+				CONTROLS::ENABLE_CONTROL_ACTION(0, 19, 1);
+			}
+
+			draw_spot_lights();
+
+
+
+			if (is_timlapse_active && GetTickCount() - timelapseLastTick > timelapseDeltaTicks) {
+				action_timelapse_tick();
+			}
+
+			//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
+			check_player_model();
+
+			//check if any recordings should be played
+			for (auto & actor : actors) {
+				if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
+					update_tick_recording_replay(actor);
 				}
 			}
 
+			//Wait for next tick
+			WAIT(0);
+		}else if (activeMode == MODE_BIRDS_EYE_VIEW) {
 
-			action_if_ped_assign_shortcut_key_pressed();
-
-			action_if_ped_execute_shortcut_key_pressed();
-
-			action_if_animation_sequence_shortcut_key_pressed(false);
-
-			check_if_player_is_passenger_and_has_waypoint();
-
-			check_if_actor_as_passenger_of_other_actor_key_pressed();
-
-			check_if_explode_or_outofcontrol_nearby_vehicle_key_pressed();
-
-			mainTickLast = GetTickCount();
-		}
-
-		/* ACTIONS WHICH ARE PERFORMED EVERY TICK */
-
-		//Display HUD for app
-		if (should_display_app_hud()) {
-			draw_instructional_buttons();
-			draw_menu();
-			//disable ALT key
-			CONTROLS::DISABLE_CONTROL_ACTION(0, 19, 1);
-		}
-		else {
-			CONTROLS::ENABLE_CONTROL_ACTION(0, 19, 1);
-		}
-
-		draw_spot_lights();
-
-
-
-		if (is_timlapse_active && GetTickCount() - timelapseLastTick > timelapseDeltaTicks) {
-			action_timelapse_tick();
-		}
-
-		//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
-		check_player_model();
-
-		//check if any recordings should be played
-		for (auto & actor  : actors) {
-			if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
-				update_tick_recording_replay(actor);
+			bool exitMode = birdsEyeController.actionOnTick(GetTickCount());
+			if (exitMode) {
+				log_to_file("Exiting birds eye mode");
+				activeMode = MODE_STANDARD;
+				birdsEyeController.onExitMode();
 			}
+			//Wait for next tick
+			WAIT(0);
 		}
-
-		//Wait for next tick
-		WAIT(0);
 	}
+
 }
 
 void ScriptMain()
@@ -5918,8 +5983,8 @@ void ScriptMain()
 	}
 	log_to_file("instructional_buttons have loaded");
 
-	set_status_text("Scene director 3.0.1 by elsewhat");
-	set_status_text("Scene is setup mode");
+	action_show_info_on_start();
+
 	init_read_keys_from_ini();
 
 	gtaScenarios = getAllGTAScenarios();

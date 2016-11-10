@@ -11,6 +11,7 @@
     <ClCompile Include="ActorProp.cpp" />
     <ClCompile Include="ActorRecording.cpp" />
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="BirdsEyeMode.cpp" />
     <ClCompile Include="clipset_movement.cpp" />
     <ClCompile Include="driving_mode.cpp" />
     <ClCompile Include="keyboard.cpp" />
@@ -32,6 +33,7 @@
     <ClInclude Include="ActorProp.h" />
     <ClInclude Include="ActorRecording.h" />
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="BirdsEyeMode.h" />
     <ClInclude Include="clipset_movement.h" />
     <ClInclude Include="driving_mode.h" />
     <ClInclude Include="keyboard.h" />

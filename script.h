@@ -12,6 +12,8 @@
 #include "..\..\inc\main.h"
 #include <string>
 
+#define PI 3.14159265
+
 void ScriptMain();
 
 enum SCENE_MODE {
