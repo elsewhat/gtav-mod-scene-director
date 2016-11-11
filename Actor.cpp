@@ -348,3 +348,101 @@ std::shared_ptr<ActorRecordingItem> Actor::getRecordingAt(int index)
 	return m_actorRecordingItems[index];
 }
 
+void Actor::update_tick_recording_replay(Actor & actor) {
+	Ped actorPed = actor.getActorPed();
+	DWORD ticksNow = GetTickCount();
+
+	//get the recording playback controller. Remember that this is by value and must be updated back to the actor
+	ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
+
+	std::shared_ptr<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+	std::shared_ptr<ActorRecordingItem> nextRecordingItem;
+	if (!recordingPlayback.isCurrentRecordedItemLast()) {
+		nextRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex() + 1);
+	}
+	std::shared_ptr<ActorRecordingItem> previousRecordingItem;
+	if (recordingPlayback.getRecordedItemIndex() >= 1) {
+		previousRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex() - 1);
+	}
+
+
+	if (!recordingPlayback.hasTeleportedToStartLocation()) {
+		log_to_file("update_tick_recording_replay - Initiate telport to start location for all actors");
+		action_teleport_to_start_locations();
+
+		recordingPlayback.setHasTeleportedToStartLocation(ticksNow);
+		return;
+	}
+
+	//special handling for the first item. Wait untill we start it
+	if (!recordingPlayback.getHasFirstItemPlayback()) {
+
+		if (ticksNow >= recordingPlayback.getTicksTeleportedToStartLocation() + 2000) {
+			DWORD ticksPlaybackStart = recordingPlayback.getTicksPlaybackStarted();
+			DWORD ticksDeltaStartFirst = recordingItem->getTicksAfterRecordStart();
+
+			if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst + actor.getRecordingDelay()) {
+				return;
+			}
+			else {
+				recordingPlayback.setHasFirstItemPlayback(true);
+				recordingPlayback.setTicksLastCheckOfCurrentItem(ticksNow);
+				log_to_file("Starting first recording item");
+
+				recordingItem->executeNativesForRecording(actor, nextRecordingItem, previousRecordingItem);
+
+				//try to avoid flee and other actions
+				PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
+			}
+		}
+		else {
+			return;
+		}
+	}
+
+	//check for completion every recordingItem.getTicksDeltaCheckCompletion() ticks
+	if (ticksNow >= recordingPlayback.getTicksLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion()) {
+		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
+		//log_to_file(std::to_string(ticksNow) + " checking for completion ticks "+std::to_string(recordingPlayback.getTicksLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion())+ " getticksdelta " + std::to_string(recordingItem->getTicksDeltaCheckCompletion()));
+		log_to_file(std::to_string(ticksNow) + " checking for completion of item " + recordingItem->toString());
+
+
+
+
+
+
+		if (recordingItem->isRecordingItemCompleted(nextRecordingItem, recordingPlayback.getTicksStartCurrentItem(), ticksNow, recordingPlayback.getAttemptsCheckedCompletion(), actor, currentLocation)) {
+			//execute any post actions (normally empty)
+			recordingItem->executeNativesAfterRecording(actor);
+
+			//skip to next normally. But if last or ped is dead, skip to last
+			if (recordingPlayback.isCurrentRecordedItemLast() || ENTITY::IS_ENTITY_DEAD(actorPed)) {
+				recordingPlayback.setPlaybackCompleted();
+				actor.stopReplayRecording();
+			}
+			else {
+				recordingPlayback.nextRecordingItemIndex(GetTickCount());
+				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex()) + " : " + recordingItem->toString());
+				recordingItem->executeNativesForRecording(actor, nextRecordingItem, previousRecordingItem);
+
+				//try to avoid flee and other actions
+				//PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
+			}
+		}
+		else {
+			recordingPlayback.setTicksLastCheckOfCurrentItem(ticksNow);
+			recordingPlayback.incrementAttempstCheckedCompletion();
+		}
+	}
+
+	//Logic for checking if current recording is ActorShootAtByImpactRecordingItem
+	//std::shared_ptr<ActorShootAtByImpactRecordingItem> checkIfCurrentShootingRecordingItem = std::dynamic_pointer_cast<ActorShootAtByImpactRecordingItem>(recordingItem);
+	//if (checkIfCurrentShootingRecordingItem) {
+	//	log_to_file("Blocking mouse movements during ActorShootAtByImpactRecordingItem");
+	//	CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(1);
+	//}
+
+}
+
+

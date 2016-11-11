@@ -6,14 +6,15 @@
 #include "relationship.h"
 #include "driving_mode.h"
 #include "script.h"
+//forward declaration
+class ActorRecordingPlayback;
+class ActorRecordingItem;
 #include "ActorRecording.h"
 
 #include <functional>
 #include <memory>
 
-//forward declaration
-class ActorRecordingPlayback;
-class ActorRecordingItem;
+
 
 class Actor
 {
@@ -64,6 +65,8 @@ public:
 	Ped getActorPed();
 
 	static Actor nullActor();
+
+	static void update_tick_recording_replay(Actor & actor);
 
 	bool isNullActor();
 	bool isActorThisPed(Ped ped);

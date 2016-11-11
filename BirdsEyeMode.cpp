@@ -24,17 +24,17 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> actors)
 
 
 	//actions to be used during active scene
-	//draw_spot_lights();
+	draw_spot_lights();
 
 	//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
 	//check_player_model();
 
 	//check if any recordings should be played
-//	for (auto & actor : actors) {
-//		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
-//			update_tick_recording_replay(actor);
-//		}
-//	}
+	for (auto & actor : actors) {
+		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
+			Actor::update_tick_recording_replay(actor);
+		}
+	}
 
 	return shouldExitMode;
 }

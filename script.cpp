@@ -3160,6 +3160,18 @@ void action_teleport_to_start_locations() {
 			}
 		}
 	}
+
+	//update setting for all actors
+	for (auto & actor : actors) {
+		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
+			ActorRecordingPlayback & otherActorRecordingPlayback = actor.getRecordingPlayback();
+			otherActorRecordingPlayback.setHasTeleportedToStartLocation(GetTickCount());
+
+			if (actor.hasRecordingWithGunFire() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID())) {
+				set_status_text("Switch actor in order for gun fire recording to be playbacked correctly!");
+			}
+		}
+	}
 }
 
 void action_timelapse_tick() {
@@ -4185,7 +4197,7 @@ void action_set_recording_delay(Actor & actor) {
 }
 
 
-
+/*Moved to Actor class
 void update_tick_recording_replay(Actor actor) {
 	Ped actorPed = actor.getActorPed();
 	DWORD ticksNow = GetTickCount();
@@ -4205,18 +4217,6 @@ void update_tick_recording_replay(Actor actor) {
 
 
 	if (!recordingPlayback.hasTeleportedToStartLocation()) {
-		/*Entity entityToTeleport = actorPed;
-		if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
-			entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
-		}
-		else if (ENTITY::DOES_ENTITY_EXIST(actor.getStartLocationVehicle())) {
-			entityToTeleport = actor.getStartLocationVehicle();
-			PED::SET_PED_INTO_VEHICLE(actorPed, entityToTeleport, actor.getStartLocationVehicleSeat());
-			
-		}
-
-		teleport_entity_to_location(entityToTeleport, actor.getStartLocation(), true);
-		ENTITY::SET_ENTITY_HEADING(entityToTeleport, actor.getStartLocationHeading());*/
 		log_to_file("update_tick_recording_replay - Initiate telport to start location for all actors");
 		action_teleport_to_start_locations();
 		
@@ -4305,7 +4305,7 @@ void update_tick_recording_replay(Actor actor) {
 	//	CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(1);
 	//}
 
-}
+}*/
 
 
 
@@ -4807,7 +4807,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 			if (replayOtherActors) {
 				for (auto & actor : actors) {
 					if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
-						update_tick_recording_replay(actor);
+						Actor::update_tick_recording_replay(actor);
 					}
 				}
 			}
@@ -5953,7 +5953,7 @@ void main()
 			//check if any recordings should be played
 			for (auto & actor : actors) {
 				if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
-					update_tick_recording_replay(actor);
+					Actor::update_tick_recording_replay(actor);
 				}
 			}
 
