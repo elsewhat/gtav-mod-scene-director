@@ -41,86 +41,7 @@ char key_hud_str[256];
 
 
 
-enum MENU_ITEM {
-	MENU_ITEM_ACTOR_1 = 1,
-	MENU_ITEM_ACTOR_2 = 2,
-	MENU_ITEM_ACTOR_3 = 3,
-	MENU_ITEM_ACTOR_4 = 4,
-	MENU_ITEM_ACTOR_5 = 5,
-	MENU_ITEM_ACTOR_6 = 6,
-	MENU_ITEM_ACTOR_7 = 7,
-	MENU_ITEM_ACTOR_8 = 8,
-	MENU_ITEM_ACTOR_9 = 9,
-	MENU_ITEM_SCENE_MODE = 110,
-	MENU_ITEM_AUTOPILOT = 111,
-	MENU_ITEM_ESCORT = 112,
-	MENU_ITEM_CHASE = 113,
-	MENU_ITEM_FIRING_SQUAD = 114,
-	MENU_ITEM_ADD_TO_SLOT = 115,
-	MENU_ITEM_ADD_CLONE_TO_SLOT = 116,
-	MENU_ITEM_CLONE = 117,
-	MENU_ITEM_CLONE_WITH_VEHICLE = 118,
-	MENU_ITEM_POSSESS = 119,
-	MENU_ITEM_WORLD = 120,
-	MENU_ITEM_ANIMATION = 121,
-	MENU_ITEM_BACK_TO_START = 122,
-	MENU_ITEM_SAVE_LOAD = 123,
-	MENU_ITEM_BIRDS_EYE_MODE = 124,
-	SUBMENU_ITEM_RECORD_PLAYER = 140,
-	SUBMENU_ITEM_REMOVE_FROM_SLOT = 141,
-	SUBMENU_ITEM_SPOT_LIGHT = 142,
-	SUBMENU_ITEM_SPOT_LIGHT_COLOR = 143,
-	SUBMENU_ITEM_WALK = 144,
-	SUBMENU_ITEM_RELATIONSHIP = 145,
-	SUBMENU_ITEM_HEALTH = 146,
-	SUBMENU_ITEM_VEHICLE_COSMETIC = 147,
-	SUBMENU_ITEM_WALK_SPEED = 148,
-	SUBMENU_ITEM_DRIVING_MODE = 149,
-	SUBMENU_ITEM_TEST_RECORDING = 150,
-	SUBMENU_ITEM_IS_PLAYING_RECORDING = 151,
-	SUBMENU_ITEM_RECORD_PLAYER_WOTHERS = 152,
-	SUBMENU_ITEM_DELETE_RECORDING = 153,
-	SUBMENU_ITEM_RECORDING_DELAY = 154,
-	SUBMENU_ITEM_COPY_REC_TO_OTHERS = 155,
-	SUBMENU_ITEM_BLACKOUT = 160,
-	SUBMENU_ITEM_TIMELAPSE = 161,
-	SUBMENU_ITEM_WEATHER = 162,
-	SUBMENU_ITEM_WIND = 163,
-	SUBMENU_ITEM_RECORD_RELOAD=164,
-	SUBMENU_ITEM_ANIMATION_SINGLE = 170,
-	SUBMENU_ITEM_ANIMATION_PREVIEW = 171,
-	SUBMENU_ITEM_ANIMATION_FLAG = 172,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE = 173,
-	SUBMENU_ITEM_ACTOR_PROP_SELECT = 180,
-	SUBMENU_ITEM_ACTOR_PROP_ADD = 181,
-	SUBMENU_ITEM_SAVE_ACTORS=190,
-	SUBMENU_ITEM_LOAD_ACTORS = 191,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_0 = 200,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_1 = 201,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_2 = 202,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_3 = 203,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_4 = 204,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_5 = 205,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_6 = 206,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_7 = 207,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_8 = 208,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_9 = 209,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_10 = 210,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_11 = 211,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_12 = 212,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_13 = 213,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_14= 214,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_15 = 215,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_16 = 216,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_17 = 217,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_18 = 218,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_19 = 219,
-	SUBMENU_ITEM_ANIMATION_SEQUENCE_20 = 220,
 
-
-
-
-};
 
 enum SCENE_DIRECTOR_MODES {
 	MODE_STANDARD=1,
@@ -1382,7 +1303,22 @@ void draw_menu() {
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
 
+	//show birds eye view
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_BIRDS_EYE_MODE;
+
+	}
+	DRAW_TEXT("Birds eye mode (BETA)", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
 	if (menu_active_index == drawIndex) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	}
@@ -1409,7 +1345,6 @@ void draw_menu() {
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
-
 	if (menu_active_index == drawIndex) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	}
@@ -1437,22 +1372,6 @@ void draw_menu() {
 	if (menu_active_index == drawIndex) {
 		menu_active_action = MENU_ITEM_ANIMATION;
 	}
-
-	drawIndex++;
-	if (menu_active_index == drawIndex) {
-		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-	}
-	else {
-		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-	}
-
-	//show birds eye view
-	if (menu_active_index == drawIndex) {
-		menu_active_action = MENU_ITEM_BIRDS_EYE_MODE;
-
-	}
-	DRAW_TEXT("Birds eye mode", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
 	if (menu_active_index == drawIndex) {
@@ -5389,7 +5308,7 @@ void action_menu_active_selected() {
 	else if (menu_active_action == MENU_ITEM_BIRDS_EYE_MODE) {
 		log_to_file("Switching to Birds eye mode");
 		activeMode = MODE_BIRDS_EYE_VIEW;
-		birdsEyeController.onEnterMode();
+		birdsEyeController.onEnterMode(sceneMode);
 	}
 	else if (menu_active_action == MENU_ITEM_SCENE_MODE) {
 		action_toggle_scene_mode();

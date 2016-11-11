@@ -3,31 +3,58 @@
 #include "BirdsEyeMode.h"
 #include "keyboard.h"
 #include "utils.h"
+#include <vector>
 
 
 
 BirdsEyeMode::BirdsEyeMode()
 {
 	shouldExitMode = false;
+	shouldDrawMenu = true;
 	cameraSpeedFactor = 0.1;
 }
 /**
 * Main loop which is called for each tick from script.cpp
 * Returns false if BirdsEyeMode is finished
 */
-bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> actors)
+bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 {
-	shouldExitMode = false;
-	drawInstructions();
+	disableControls();
+
+	/* ACTIONS WHICH MAY NEED TO WAIT A FEW TICKS */
+	if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
+		nextWaitTicks = 0;
+		shouldExitMode = false;
+		if (shouldDrawMenu) {
+			drawInstructions();
+
+			if (menu_up_key_pressed()) {
+				menu_active_index++;
+				nextWaitTicks = 200;
+			}
+			else if (menu_down_key_pressed()) {
+				menu_active_index--;
+				nextWaitTicks = 200;
+			}
+			else if (menu_select_key_pressed()) {
+				actionMenuSelected();
+			}
+		}
+
+		mainTickLast = GetTickCount();
+
+	}
+
+	drawMenu();
+
 	checkInputMovement();
 	checkInputRotation();
-
 
 	//actions to be used during active scene
 	draw_spot_lights();
 
 	//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
-	//check_player_model();
+	check_player_model();
 
 	//check if any recordings should be played
 	for (auto & actor : actors) {
@@ -39,8 +66,9 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> actors)
 	return shouldExitMode;
 }
 
-void BirdsEyeMode::onEnterMode()
+void BirdsEyeMode::onEnterMode(SCENE_MODE aSceneMode)
 {
+	sceneMode = aSceneMode;
 	scaleForm = GRAPHICS::_REQUEST_SCALEFORM_MOVIE2("instructional_buttons");
 
 	CAM::DO_SCREEN_FADE_OUT(1000);
@@ -87,6 +115,83 @@ void BirdsEyeMode::onExitMode()
 }
 
 
+void BirdsEyeMode::drawMenu() {
+	if (menu_active_index > menu_max_index) {
+		menu_active_index = 0;
+	}
+	if (menu_active_index < 0) {
+		menu_active_index = menu_max_index;
+	}
+
+	int drawIndex = 0;
+	//colors for swapping from active to inactive... messy
+	int textColorR = 255, textColorG = 255, textColorB = 255;
+	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	//3. Scene mode
+	if (sceneMode == SCENE_MODE_ACTIVE) {
+		DRAW_TEXT("Scene mode: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+	else {
+		DRAW_TEXT("Scene mode: Setup", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_SCENE_MODE;
+	}
+	drawIndex++;
+
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Exit mode", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_EXIT_BIRDS_EYE_MODE;
+	}
+
+	drawIndex++;
+
+	if (menu_active_index == -1) {
+		menu_active_index = 0;
+	}
+
+	menu_max_index = drawIndex - 1;
+	if (menu_active_index > menu_max_index) {
+		menu_active_index = menu_max_index;
+	}
+}
+
+void BirdsEyeMode::actionMenuSelected() {
+	
+	if (menu_active_action == MENU_ITEM_SCENE_MODE) {
+		nextWaitTicks = 200;
+		if (sceneMode == SCENE_MODE_ACTIVE) {
+			sceneMode = SCENE_MODE_SETUP;
+		}
+		else {
+			sceneMode = SCENE_MODE_ACTIVE;
+		}
+		action_toggle_scene_mode();
+	}
+	else if (menu_active_action == MENU_ITEM_EXIT_BIRDS_EYE_MODE) {
+		nextWaitTicks = 200;
+		shouldExitMode = true;
+	}
+}
 
 
 void BirdsEyeMode::drawInstructions() {
@@ -164,12 +269,6 @@ void BirdsEyeMode::checkInputRotation()
 
 void BirdsEyeMode::checkInputMovement()
 {
-	//disable MoveLeftRight and MoveUpDown https://github.com/crosire/scripthookvdotnet/blob/dev_v3/source/scripting/Controls.cs
-	//CONTROLS::DISABLE_CONTROL_ACTION(0, 30, 1);
-	//CONTROLS::DISABLE_CONTROL_ACTION(0, 31, 1);
-
-	//disable all controls
-	CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
 
 	Vector3 camDelta = {};
 
@@ -242,6 +341,61 @@ void BirdsEyeMode::checkInputMovement()
 		}
 
 	}
+
+}
+
+void BirdsEyeMode::disableControls() {
+	std::vector<int> disabledControls = {
+		0,2,3,4,5,6,16,17,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,44,45,156,243,257,261,262,263,264,267,268,269,270,271,272,273
+	};
+
+	for (auto & controlCode : disabledControls) {
+		CONTROLS::DISABLE_CONTROL_ACTION(0, controlCode, 1);
+	}
+	//INPUT_NEXT_CAMERA = 0,
+	//INPUT_LOOK_UD = 2,
+	//INPUT_LOOK_UP_ONLY = 3,
+	//INPUT_LOOK_DOWN_ONLY = 4,
+	//INPUT_LOOK_LEFT_ONLY = 5,
+	//INPUT_LOOK_RIGHT_ONLY = 6,
+	//INPUT_SELECT_NEXT_WEAPON = 16,
+	//INPUT_SELECT_PREV_WEAPON = 17,
+	//INPUT_CHARACTER_WHEEL = 19,
+	//INPUT_MULTIPLAYER_INFO = 20,
+	//INPUT_SPRINT = 21,
+	//INPUT_JUMP = 22,
+	//INPUT_ENTER = 23,
+	//INPUT_ATTACK = 24,
+	//INPUT_AIM = 25,
+	//INPUT_LOOK_BEHIND = 26,
+	//INPUT_PHONE = 27,
+	//INPUT_SPECIAL_ABILITY = 28,
+	//INPUT_SPECIAL_ABILITY_SECONDARY = 29,
+	//INPUT_MOVE_LR = 30,
+	//INPUT_MOVE_UD = 31,
+	//INPUT_MOVE_UP_ONLY = 32,
+	//INPUT_MOVE_DOWN_ONLY = 33,
+	//INPUT_MOVE_LEFT_ONLY = 34,
+	//INPUT_MOVE_RIGHT_ONLY = 35,
+	//INPUT_DUCK = 36,
+	//INPUT_SELECT_WEAPON = 37,
+	//INPUT_COVER = 44,
+	//INPUT_RELOAD = 45,
+	//INPUT_MAP = 156,
+	//INPUT_ENTER_CHEAT_CODE = 243,
+	//INPUT_ATTACK2 = 257,
+	//INPUT_PREV_WEAPON = 261,
+	//INPUT_NEXT_WEAPON = 262,
+	//INPUT_MELEE_ATTACK1 = 263,
+	//INPUT_MELEE_ATTACK2 = 264,
+	//INPUT_MOVE_LEFT = 266,
+	//INPUT_MOVE_RIGHT = 267,
+	//INPUT_MOVE_UP = 268,
+	//INPUT_MOVE_DOWN = 269,
+	//INPUT_LOOK_LEFT = 270,
+	//INPUT_LOOK_RIGHT = 271,
+	//INPUT_LOOK_UP = 272,
+	//INPUT_LOOK_DOWN = 273,
 
 }
 
