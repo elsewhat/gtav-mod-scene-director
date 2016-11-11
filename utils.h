@@ -7,6 +7,14 @@
 #pragma once
 
 #include <string>
+#include "..\..\inc\types.h"
 
 // returns module load path with trailing slash
 std::string GetCurrentModulePath();
+
+
+class MathUtils {
+public:
+	static Vector3 rotationToDirection(Vector3 rotation);
+	static Vector3 crossProduct(Vector3 a, Vector3 b);
+};

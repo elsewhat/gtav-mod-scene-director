@@ -1,3 +1,5 @@
+#pragma once
+
 #include "script.h"
 #include "keyboard.h"
 #include "utils.h"
@@ -7,8 +9,8 @@
 #include "lighting.h"
 #include "relationship.h"
 #include "driving_mode.h"
-#include "Actor.h"
 #include "ActorRecording.h"
+#include "Actor.h"
 #include "Animation.h"
 #include "ActorProp.h"
 #include "BirdsEyeMode.h"
@@ -4184,7 +4186,7 @@ void action_set_recording_delay(Actor & actor) {
 
 
 
-void update_tick_recording_replay(Actor & actor) {
+void update_tick_recording_replay(Actor actor) {
 	Ped actorPed = actor.getActorPed();
 	DWORD ticksNow = GetTickCount();
 
@@ -5959,7 +5961,7 @@ void main()
 			WAIT(0);
 		}else if (activeMode == MODE_BIRDS_EYE_VIEW) {
 
-			bool exitMode = birdsEyeController.actionOnTick(GetTickCount());
+			bool exitMode = birdsEyeController.actionOnTick(GetTickCount(), actors);
 			if (exitMode) {
 				log_to_file("Exiting birds eye mode");
 				activeMode = MODE_STANDARD;

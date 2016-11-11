@@ -1,9 +1,42 @@
+#pragma once
+
 #include "BirdsEyeMode.h"
 #include "keyboard.h"
+#include "utils.h"
+
+
 
 BirdsEyeMode::BirdsEyeMode()
 {
 	shouldExitMode = false;
+	cameraSpeedFactor = 0.1;
+}
+/**
+* Main loop which is called for each tick from script.cpp
+* Returns false if BirdsEyeMode is finished
+*/
+bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> actors)
+{
+	shouldExitMode = false;
+	drawInstructions();
+	checkInputMovement();
+	checkInputRotation();
+
+
+	//actions to be used during active scene
+	//draw_spot_lights();
+
+	//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
+	//check_player_model();
+
+	//check if any recordings should be played
+//	for (auto & actor : actors) {
+//		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
+//			update_tick_recording_replay(actor);
+//		}
+//	}
+
+	return shouldExitMode;
 }
 
 void BirdsEyeMode::onEnterMode()
@@ -51,18 +84,9 @@ void BirdsEyeMode::onExitMode()
 	CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
 	WAIT(100);
 	CAM::DO_SCREEN_FADE_IN(1000);
-
 }
 
-bool BirdsEyeMode::actionOnTick(DWORD tick)
-{
-	shouldExitMode = false;
-	drawInstructions();
-	checkInputMovement();
-	checkInputRotation();
 
-	return shouldExitMode;
-}
 
 
 void BirdsEyeMode::drawInstructions() {
@@ -103,22 +127,16 @@ void BirdsEyeMode::checkInputRotation()
 	UI::_SHOW_CURSOR_THIS_FRAME();
 	//Obtaining cursor X/Y data to control camera
 	//GTA.Control.CursorX == 239  GTA.Control.CursorY ==240
-	float mouseX = CONTROLS::GET_CONTROL_NORMAL(0, 239);
-	float mouseY = CONTROLS::GET_CONTROL_NORMAL(0, 240);
-	//log_to_file("Rotating1 mouseY" + std::to_string(mouseY) + " mouseX " + std::to_string(mouseX));
+	float mouseX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
+	float mouseY = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
 
 	if (mouseX >= 0.99 || mouseX <= 0.01) {
-
 		CONTROLS::_0xE8A25867FBA3B05E(0, 239, 0.5);
-
-		mouseX = CONTROLS::GET_CONTROL_NORMAL(0, 239);
-		//log_to_file("Overflow. Resettin back mousex" + std::to_string(mouseX));
+		mouseX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
 	}
 	if (mouseY >= 0.99 || mouseY <= 0.01) {
 		CONTROLS::_0xE8A25867FBA3B05E(0, 240, 0.5);
-
-		mouseX = CONTROLS::GET_CONTROL_NORMAL(0, 240);
-		//log_to_file("Overflow. Resettin back mousey " + std::to_string(mouseX));
+		mouseX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
 	}
 
 	// Left/Right camera pan limit (Based on screen's width)
@@ -127,11 +145,10 @@ void BirdsEyeMode::checkInputRotation()
 	// Up/Down camera tilt limit (This prevents the camera from tilting up into the plane)
 	mouseY *= -720;
 
-
 	//Is Mouse Being Used?
 	//GTA.Control.LookUpDown== 2  GTA.Control.LookLeftRight ==1
-	bool mouseUD = CONTROLS::GET_CONTROL_NORMAL(0, 2);
-	bool mouseLR = CONTROLS::GET_CONTROL_NORMAL(0, 1);
+	bool mouseUD = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 2);
+	bool mouseLR = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 1);
 
 	if (mouseUD || mouseLR) {
 		//Rotate Camera based on Cursor X and Y position
@@ -140,20 +157,21 @@ void BirdsEyeMode::checkInputRotation()
 		Vector3 camRot = { 0.0, 0.0, 0.0 };
 		camRot = CAM::GET_CAM_ROT(cameraHandle, 2);
 		Vector3 direction = { 0.0, 0.0, 0.0 };
-		direction = rotationToDirection(camRot);
-
+		direction = MathUtils::rotationToDirection(camRot);
 	}
-
 }
 
 
 void BirdsEyeMode::checkInputMovement()
 {
 	//disable MoveLeftRight and MoveUpDown https://github.com/crosire/scripthookvdotnet/blob/dev_v3/source/scripting/Controls.cs
-	CONTROLS::DISABLE_CONTROL_ACTION(0, 30, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, 31, 1);
+	//CONTROLS::DISABLE_CONTROL_ACTION(0, 30, 1);
+	//CONTROLS::DISABLE_CONTROL_ACTION(0, 31, 1);
 
-	Vector3 camDelta = { 0.0,0.0,0.0 };
+	//disable all controls
+	CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
+
+	Vector3 camDelta = {};
 
 	if (is_key_pressed_for_exit_mode()) {
 		shouldExitMode = true;
@@ -161,21 +179,27 @@ void BirdsEyeMode::checkInputMovement()
 	else {
 		bool isMovement = false;
 		if (is_key_pressed_for_forward()) {
-			camDelta.x = 0.1;
-			camDelta.z = 0.1;
+			camDelta.x = 1.0;
 			isMovement = true;
 		}
 		if (is_key_pressed_for_backward()) {
-			camDelta.x = -0.1;
-			camDelta.z = -0.1;
+			camDelta.x = -1.0;
 			isMovement = true;
 		}
 		if (is_key_pressed_for_left()) {
-			camDelta.y = -0.1;
+			camDelta.y = -1.0;
 			isMovement = true;
 		}
 		if (is_key_pressed_for_right()) {
-			camDelta.y = 0.1;
+			camDelta.y = 1.0;
+			isMovement = true;
+		}
+		if (CONTROLS::IS_DISABLED_CONTROL_PRESSED(2, 329)) {//LMouseBtn
+			camDelta.z = 0.3;
+			isMovement = true;
+		}
+		if (CONTROLS::IS_DISABLED_CONTROL_PRESSED(2, 330) ){//RMouseBtn
+			camDelta.z = -0.3;
 			isMovement = true;
 		}
 		if (isMovement) {
@@ -185,28 +209,33 @@ void BirdsEyeMode::checkInputMovement()
 			//camera rotation is not as expected. .x value is rotation in the z-plane (view up/down) and third paramter is the rotation in the x,y plane.
 
 			Vector3 direction = {};
-			direction = rotationToDirection(camRot);
-			log_to_file("Vector direction (" + std::to_string(direction.x) + ", " + std::to_string(direction.y) + ", " + std::to_string(direction.z) + ")");
-			
-			Vector3 sideWays = { 0.0, 0.0, 0.0 };
+			direction = MathUtils::rotationToDirection(camRot);
+			//log_to_file("Vector direction (" + std::to_string(direction.x) + ", " + std::to_string(direction.y) + ", " + std::to_string(direction.z) + ")");
 
 			//forward motion
 			if (camDelta.x != 0.0) {
-				camPos.x += direction.x*camDelta.x;
-				camPos.y += direction.y*camDelta.x;
-				camPos.z += direction.z*camDelta.z;
+				camPos.x += direction.x * camDelta.x * cameraSpeedFactor;
+				camPos.y += direction.y * camDelta.x * cameraSpeedFactor;
+				camPos.z += direction.z * camDelta.x * cameraSpeedFactor;
 			}
-			//Sideways motion
+
+			//sideways motion
 			if (camDelta.y != 0.0 ) {
 				//straight up
 				Vector3 b = { };
 				b.z = 1.0;
 
-				sideWays = crossProduct(direction, b);
-				log_to_file("Vector sideways  (" + std::to_string(sideWays.x) + ", " + std::to_string(sideWays.y) + ", " + std::to_string(sideWays.z) + ")");
+				Vector3 sideWays = {};
+				sideWays = MathUtils::crossProduct(direction, b);
+				//log_to_file("Vector sideways  (" + std::to_string(sideWays.x) + ", " + std::to_string(sideWays.y) + ", " + std::to_string(sideWays.z) + ")");
 				
-				camPos.x += sideWays.x*camDelta.y;
-				camPos.y += sideWays.y*camDelta.y;
+				camPos.x += sideWays.x * camDelta.y * cameraSpeedFactor;
+				camPos.y += sideWays.y * camDelta.y * cameraSpeedFactor;
+			}
+
+			//up/down
+			if (camDelta.z != 0.0) {
+				camPos.z += camDelta.z * cameraSpeedFactor;
 			}
 
 			CAM::SET_CAM_COORD(cameraHandle, camPos.x, camPos.y, camPos.z);
@@ -263,24 +292,4 @@ bool BirdsEyeMode::is_key_pressed_for_right() {
 	}
 }
 
-Vector3 BirdsEyeMode::rotationToDirection(Vector3 rotation)
-{
-	float retZ = rotation.z * 0.01745329f;
-	float retX = rotation.x * 0.01745329f;
-	float absX = abs(cos(retX));
-	Vector3 retVector = { 0.0,0.0,0.0 };
-	retVector.x = (float)-(sin(retZ) * absX);
-	retVector.y = (float)cos(retZ) * absX;
-	retVector.z = (float)sin(retX);
-	return retVector;
-}
 
-Vector3 BirdsEyeMode::crossProduct(Vector3 a, Vector3 b)
-{
-	//http://onlinemschool.com/math/assistance/vector/multiply1/
-	Vector3 retVector = { 0.0,0.0,0.0 };
-	retVector.x = a.y*b.z - a.z*b.y;
-	retVector.y = a.z*b.x - a.x*b.z;
-	retVector.z = a.x*b.y - a.y*b.x;
-	return retVector;
-}
