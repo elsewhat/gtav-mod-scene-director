@@ -57,6 +57,17 @@ void ActorRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 }
 
+void ActorRecordingItem::drawMarkerForRecording(bool isCurrent)
+{
+	if (isCurrent) {
+		GRAPHICS::DRAW_MARKER(2, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, 204, 204, 0, 100, false, true, 2, false, false, false, false);
+	}
+	else {
+		GRAPHICS::DRAW_MARKER(1, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, 204, 204, 0, 100, false, true, 2, false, false, false, false);
+	}
+
+}
+
 ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_walkSpeed = walkSpeed;

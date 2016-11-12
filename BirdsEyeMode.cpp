@@ -61,6 +61,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
 			Actor::update_tick_recording_replay(actor);
 		}
+		actor.drawMarkersForRecording();
 	}
 
 	return shouldExitMode;
@@ -231,38 +232,31 @@ void BirdsEyeMode::checkInputRotation()
 {
 	UI::_SHOW_CURSOR_THIS_FRAME();
 	//Obtaining cursor X/Y data to control camera
-	//GTA.Control.CursorX == 239  GTA.Control.CursorY ==240
-	float mouseX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
-	float mouseY = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
+	float cursorX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
+	float cursorY = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
 
-	if (mouseX >= 0.99 || mouseX <= 0.01) {
-		CONTROLS::_0xE8A25867FBA3B05E(0, 239, 0.5);
-		mouseX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
+	//Attempt at handling edge case
+	//Does not work
+	if (cursorX >= 0.99 || cursorX <= 0.01) {
+		CONTROLS::_0xE8A25867FBA3B05E(2, 239, 0.5);
+		cursorX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
 	}
-	if (mouseY >= 0.99 || mouseY <= 0.01) {
-		CONTROLS::_0xE8A25867FBA3B05E(0, 240, 0.5);
-		mouseX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
+	if (cursorY >= 0.99 || cursorY <= 0.01) {
+		CONTROLS::_0xE8A25867FBA3B05E(2, 240, 0.5);
+		cursorY = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
 	}
 
-	// Left/Right camera pan limit (Based on screen's width)
-	mouseX *= -720;
+	//Left/Right camera pan limit
+	cursorX *= -720;
+	// Up/Down camera tilt limit
+	cursorY *= -720;
 
-	// Up/Down camera tilt limit (This prevents the camera from tilting up into the plane)
-	mouseY *= -720;
-
-	//Is Mouse Being Used?
-	//GTA.Control.LookUpDown== 2  GTA.Control.LookLeftRight ==1
-	bool mouseUD = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 2);
-	bool mouseLR = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 1);
-
-	if (mouseUD || mouseLR) {
+	if (lastCursorX != cursorX || lastCursorY != cursorY) {
 		//Rotate Camera based on Cursor X and Y position
-		CAM::SET_CAM_ROT(cameraHandle, mouseY,0.0, mouseX,2);
+		CAM::SET_CAM_ROT(cameraHandle, cursorY,0.0, cursorX,2);
 		
-		Vector3 camRot = { 0.0, 0.0, 0.0 };
-		camRot = CAM::GET_CAM_ROT(cameraHandle, 2);
-		Vector3 direction = { 0.0, 0.0, 0.0 };
-		direction = MathUtils::rotationToDirection(camRot);
+		lastCursorX = cursorX;
+		lastCursorY = cursorY;
 	}
 }
 
@@ -302,6 +296,12 @@ void BirdsEyeMode::checkInputMovement()
 			isMovement = true;
 		}
 		if (isMovement) {
+			if (is_key_pressed_for_run()) {
+				camDelta.x *= 3; 
+				camDelta.y *= 3;
+				camDelta.z *= 3;
+			}
+
 			Vector3 camPos = CAM::GET_CAM_COORD(cameraHandle);
 			Vector3 camRot = {};
 			camRot= CAM::GET_CAM_ROT(cameraHandle, 2);
@@ -439,6 +439,16 @@ bool BirdsEyeMode::is_key_pressed_for_left() {
 bool BirdsEyeMode::is_key_pressed_for_right() {
 	//D
 	if (IsKeyDown(0x44)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_run() {
+	//D
+	if (IsKeyDown(VK_SHIFT)) {
 		return true;
 	}
 	else {

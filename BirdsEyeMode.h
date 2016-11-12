@@ -19,6 +19,8 @@ private:
 	SCENE_MODE sceneMode = SCENE_MODE_SETUP;
 	DWORD nextWaitTicks = 0;
 	DWORD mainTickLast = 0;
+	float lastCursorX = 0.0;
+	float lastCursorY = 0.0;
 	void drawInstructions();
 	void drawMenu();
 	void disableControls();
@@ -30,6 +32,7 @@ private:
 	bool is_key_pressed_for_backward();
 	bool is_key_pressed_for_left();
 	bool is_key_pressed_for_right();
+	bool is_key_pressed_for_run();
 public:
 	BirdsEyeMode();
 	void onEnterMode(SCENE_MODE aSceneMode);

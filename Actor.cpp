@@ -267,6 +267,23 @@ void Actor::setRecordingPlayback(ActorRecordingPlayback recordingPlayback)
 	m_actorRecordingPlayback = recordingPlayback;
 }
 
+void Actor::drawMarkersForRecording()
+{
+	if (hasRecording()) {
+		int i = 0;
+		for (std::shared_ptr<ActorRecordingItem> &recording_item : m_actorRecordingItems) {
+			bool isCurrent = false;
+			if (getRecordingPlayback().getRecordedItemIndex() == i) {
+				isCurrent = true;
+			}
+			if (i >= getRecordingPlayback().getRecordedItemIndex()) {
+				recording_item->drawMarkerForRecording(isCurrent);
+			}
+			i++;
+		}
+	}
+}
+
 bool Actor::hasRecording()
 {
 	return m_hasRecording;

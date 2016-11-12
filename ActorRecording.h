@@ -36,6 +36,7 @@ public:
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem,DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)=0;
 	virtual std::string toString();
 	virtual void executeNativesAfterRecording(Actor actor);
+	virtual void drawMarkerForRecording(bool isCurrent);
 };
 
 class ActorOnFootMovementRecordingItem : public ActorRecordingItem {

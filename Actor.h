@@ -155,4 +155,6 @@ public:
 
 	ActorRecordingPlayback& getRecordingPlayback();
 	void setRecordingPlayback(ActorRecordingPlayback recordingPlayback);
+
+	void drawMarkersForRecording();
 };
