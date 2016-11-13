@@ -13,6 +13,7 @@ private:
 	float cameraSpeedFactor = 0.1;
 	bool shouldExitMode = false;
 	bool shouldDrawMenu = true;
+	bool shouldDrawRecordingMarkers = true;
 	int menu_active_index = 0;
 	int menu_max_index = 0;
 	MENU_ITEM menu_active_action = MENU_ITEM_SCENE_MODE;

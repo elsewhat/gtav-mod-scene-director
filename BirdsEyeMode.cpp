@@ -11,6 +11,7 @@ BirdsEyeMode::BirdsEyeMode()
 {
 	shouldExitMode = false;
 	shouldDrawMenu = true;
+	shouldDrawRecordingMarkers = true;
 	cameraSpeedFactor = 0.1;
 }
 /**
@@ -26,8 +27,6 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 		nextWaitTicks = 0;
 		shouldExitMode = false;
 		if (shouldDrawMenu) {
-			drawInstructions();
-
 			if (menu_up_key_pressed()) {
 				menu_active_index++;
 				nextWaitTicks = 200;
@@ -44,8 +43,11 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 		mainTickLast = GetTickCount();
 
 	}
+	if (shouldDrawMenu) {
+		drawMenu();
+		drawInstructions();
+	}
 
-	drawMenu();
 
 	checkInputMovement();
 	checkInputRotation();
@@ -61,7 +63,9 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
 			Actor::update_tick_recording_replay(actor);
 		}
-		actor.drawMarkersForRecording();
+		if (shouldDrawRecordingMarkers) {
+			actor.drawMarkersForRecording();
+		}
 	}
 
 	return shouldExitMode;
@@ -135,21 +139,6 @@ void BirdsEyeMode::drawMenu() {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-	//3. Scene mode
-	if (sceneMode == SCENE_MODE_ACTIVE) {
-		DRAW_TEXT("Scene mode: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-	}
-	else {
-		DRAW_TEXT("Scene mode: Setup", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-	}
-
-	if (menu_active_index == drawIndex) {
-		menu_active_action = MENU_ITEM_SCENE_MODE;
-	}
-	drawIndex++;
-
 	if (menu_active_index == drawIndex) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 	}
@@ -165,6 +154,37 @@ void BirdsEyeMode::drawMenu() {
 	}
 
 	drawIndex++;
+
+	//Scene mode
+	if (sceneMode == SCENE_MODE_ACTIVE) {
+		DRAW_TEXT("Scene mode: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+	else {
+		DRAW_TEXT("Scene mode: Setup", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_SCENE_MODE;
+	}
+	drawIndex++;
+
+	if (shouldDrawRecordingMarkers) {
+		DRAW_TEXT("Rec. markers: Show", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+	else {
+		DRAW_TEXT("Rec. markers: Hide", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_SHOW_REC_MARKERS;
+	}
+
+	drawIndex++;
+
 
 	if (menu_active_index == -1) {
 		menu_active_index = 0;
@@ -192,6 +212,10 @@ void BirdsEyeMode::actionMenuSelected() {
 		nextWaitTicks = 200;
 		shouldExitMode = true;
 	}
+	else if (menu_active_action == MENU_ITEM_SHOW_REC_MARKERS) {
+		nextWaitTicks = 200;
+		shouldDrawRecordingMarkers = !shouldDrawRecordingMarkers;
+	}
 }
 
 
@@ -213,8 +237,19 @@ void BirdsEyeMode::drawInstructions() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_A");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_S");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_W");
-		
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Move camera");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Shift: Faster");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Left/Right mouse btn: Up/Down");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
