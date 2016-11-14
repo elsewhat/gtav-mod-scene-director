@@ -135,7 +135,6 @@ BirdsEyeMode birdsEyeController;
 
 void set_status_text(std::string text)
 {
-
 	UI::_SET_NOTIFICATION_TEXT_ENTRY("STRING");
 	UI::_ADD_TEXT_COMPONENT_STRING((LPSTR)text.c_str());
 	UI::_DRAW_NOTIFICATION(1, 1);
@@ -176,7 +175,7 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.1 by elsewhat");
+	set_status_text("Scene director 3.2 beta1 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
 	set_status_text("Scene is setup mode");
 }
@@ -424,7 +423,7 @@ void assign_actor_to_relationship_group(Ped ped, RelationshipGroup relationshipG
 void draw_instructional_buttons() {
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
 		//_instructionalButtonsScaleform.CallFunction("CLEAR_ALL");
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CLEAR_ALL");
 
 		//_instructionalButtonsScaleform.CallFunction("TOGGLE_MOUSE_BUTTONS", 0);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
@@ -433,15 +432,15 @@ void draw_instructional_buttons() {
 
 		//_instructionalButtonsScaleform.CallFunction("CREATE_CONTAINER");
 		//not used in scripts, not sure if required
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CREATE_CONTAINER");
 
 		//_instructionalButtonsScaleform.CallFunction("SET_DATA_SLOT", 0, Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int)Control.PhoneSelect, 0), "Select");
 
-		char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
-		char* spaceControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 22, 1);
-		char* delControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 178, 1);
-		char* insControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 121, 1);
-		char* endControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 179, 1);
+		char* altControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 19, 1);
+		char* spaceControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 22, 1);
+		char* delControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 178, 1);
+		char* insControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 121, 1);
+		char* endControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 179, 1);
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
@@ -531,7 +530,7 @@ void draw_instructional_buttons() {
 
 		//causes the stability bug in NativeUI
 		//invoke<Void>(0xCF537FDE4FBD4CE5, scaleForm, 255, 255, 255, 255);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_RGBA(scaleForm, 255, 255, 255, 255);
+		GRAPHICS::DRAW_SCALEFORM_MOVIE_FULLSCREEN(scaleForm, 255, 255, 255, 255,1);
 	}
 	else {
 		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
@@ -540,15 +539,15 @@ void draw_instructional_buttons() {
 
 void draw_instructional_buttons_player_recording() {
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CLEAR_ALL");
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CREATE_CONTAINER");
 
-		char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
+		char* altControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 19, 1);
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
@@ -574,7 +573,7 @@ void draw_instructional_buttons_player_recording() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_RGBA(scaleForm, 255, 255, 255, 255);
+		GRAPHICS::DRAW_SCALEFORM_MOVIE_FULLSCREEN(scaleForm, 255, 255, 255, 255,1);
 	}
 	else {
 		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
@@ -583,15 +582,15 @@ void draw_instructional_buttons_player_recording() {
 
 void draw_instructional_buttons_animation_preview() {
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CLEAR_ALL");
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CREATE_CONTAINER");
 
-		char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
+		char* altControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 19, 1);
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
@@ -633,7 +632,7 @@ void draw_instructional_buttons_animation_preview() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_RGBA(scaleForm, 255, 255, 255, 255);
+		GRAPHICS::DRAW_SCALEFORM_MOVIE_FULLSCREEN(scaleForm, 255, 255, 255, 255,1);
 	}
 	else {
 		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
@@ -1801,7 +1800,7 @@ void teleport_entity_to_location(Entity entityToTeleport, Vector3 location, bool
 		{
 			ENTITY::SET_ENTITY_COORDS_NO_OFFSET(entityToTeleport, location.x, location.y, groundCheckHeight[i], 0, 0, 1);
 			WAIT(100);
-			if (GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(location.x, location.y, groundCheckHeight[i], &location.z))
+			if (GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(location.x, location.y, groundCheckHeight[i], &location.z,0))
 			{
 				groundFound = true;
 				location.z += 3.0;
@@ -1823,7 +1822,7 @@ void teleport_entity_to_location(Entity entityToTeleport, Vector3 location, bool
 		//AI::CLEAR_PED_TASKS(entityToTeleport);
 	}
 	else if (ENTITY::IS_ENTITY_A_VEHICLE(entityToTeleport)) {
-		VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
+		VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true,false);
 		Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(entityToTeleport, -1);
 		if (pedDriver >= 1) {
 			//AI::CLEAR_PED_TASKS(pedDriver);
@@ -1922,7 +1921,7 @@ void action_possess_ped() {
 	//If player is aiming at a ped, control that
 	if (PLAYER::IS_PLAYER_FREE_AIMING(player)) {
 		Entity targetEntity;
-		PLAYER::_GET_AIMED_ENTITY(player, &targetEntity);
+		PLAYER::GET_ENTITY_PLAYER_IS_FREE_AIMING_AT(player, &targetEntity);
 
 		if (ENTITY::DOES_ENTITY_EXIST(targetEntity) && ENTITY::IS_ENTITY_A_PED(targetEntity)) {
 
@@ -2922,7 +2921,7 @@ void action_teleport_to_start_locations() {
 						PED::SET_PED_INTO_VEHICLE(actorPed, entityToTeleport, actor.getStartLocationVehicleSeat());
 					}
 
-					VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
+					VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true,false);
 					VEHICLE::SET_VEHICLE_UNDRIVEABLE(entityToTeleport, true);
 
 					log_to_file("Before vehicleFirstRecorded");
@@ -2942,7 +2941,7 @@ void action_teleport_to_start_locations() {
 			else {
 				if (PED::IS_PED_IN_ANY_VEHICLE(entityToTeleport, 0)) {
 					entityToTeleport = PED::GET_VEHICLE_PED_IS_USING(entityToTeleport);
-					VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true);
+					VEHICLE::SET_VEHICLE_ENGINE_ON(entityToTeleport, false, true,false);
 					VEHICLE::SET_VEHICLE_UNDRIVEABLE(entityToTeleport, true);
 				}
 			}
@@ -3062,7 +3061,7 @@ void action_teleport_to_start_locations() {
 				location.z = location.z + 2.5f;
 				teleport_entity_to_location(actorPed, location, true);
 			}
-			else if (actor.isNullActor() == false && actor.hasStartLocation() && (ENTITY::IS_ENTITY_DEAD(actorPed) || PED::_IS_PED_DEAD(actorPed, true))) {
+			else if (actor.isNullActor() == false && actor.hasStartLocation() && (ENTITY::IS_ENTITY_DEAD(actorPed) || PED::IS_PED_DEAD_OR_DYING(actorPed, true))) {
 				log_to_file(std::to_string(actorPed) + " is still dead. Real desparte attempts at reviving");
 
 				ENTITY::SET_ENTITY_HEALTH(actorPed, ENTITY::GET_ENTITY_MAX_HEALTH(actorPed));
@@ -5535,7 +5534,7 @@ void action_copy_player_actions() {
 				if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
 					isFreeAiming = true;
 					Entity targetEntity;
-					bool playerIsAimingAtEntity = PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
+					bool playerIsAimingAtEntity = PLAYER::GET_ENTITY_PLAYER_IS_FREE_AIMING_AT(PLAYER::PLAYER_ID(), &targetEntity);
 					log_to_file("Player aiming at " + std::to_string(targetEntity));
 					//if new target which exist, make all actors aim at it
 					if (playerIsAimingAtEntity && targetEntity != currentTarget) {
@@ -5660,7 +5659,7 @@ void action_copy_player_actions() {
 					else {//isSkydiving = true;
 						Vector3 playerLocation = ENTITY::GET_ENTITY_COORDS(playerPed, true);
 						float zGroundLevel;
-						GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(playerLocation.x, playerLocation.y, playerLocation.z, &zGroundLevel);
+						GAMEPLAY::GET_GROUND_Z_FOR_3D_COORD(playerLocation.x, playerLocation.y, playerLocation.z, &zGroundLevel,0);
 
 						//log_to_file("Ground level to parachute to is " +std::to_string(zGroundLevel));
 
@@ -5897,7 +5896,7 @@ void ScriptMain()
 {
 	GRAPHICS::REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
 
-	scaleForm = GRAPHICS::_REQUEST_SCALEFORM_MOVIE2("instructional_buttons");
+	scaleForm = GRAPHICS::REQUEST_SCALEFORM_MOVIE_INSTANCE("instructional_buttons");
 	log_to_file("Waiting for instructional_buttons to load");
 	while (!GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
 		WAIT(0);

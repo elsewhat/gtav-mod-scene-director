@@ -74,7 +74,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 void BirdsEyeMode::onEnterMode(SCENE_MODE aSceneMode)
 {
 	sceneMode = aSceneMode;
-	scaleForm = GRAPHICS::_REQUEST_SCALEFORM_MOVIE2("instructional_buttons");
+	scaleForm = GRAPHICS::REQUEST_SCALEFORM_MOVIE("instructional_buttons");
 
 	CAM::DO_SCREEN_FADE_OUT(1000);
 	WAIT(1000);
@@ -132,12 +132,7 @@ void BirdsEyeMode::drawMenu() {
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
-	if (menu_active_index == drawIndex) {
-		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-	}
-	else {
-		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-	}
+	
 
 	if (menu_active_index == drawIndex) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
@@ -155,6 +150,13 @@ void BirdsEyeMode::drawMenu() {
 
 	drawIndex++;
 
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
 	//Scene mode
 	if (sceneMode == SCENE_MODE_ACTIVE) {
 		DRAW_TEXT("Scene mode: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
@@ -169,6 +171,13 @@ void BirdsEyeMode::drawMenu() {
 		menu_active_action = MENU_ITEM_SCENE_MODE;
 	}
 	drawIndex++;
+
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
 
 	if (shouldDrawRecordingMarkers) {
 		DRAW_TEXT("Rec. markers: Show", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
@@ -221,15 +230,15 @@ void BirdsEyeMode::actionMenuSelected() {
 
 void BirdsEyeMode::drawInstructions() {
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CLEAR_ALL");
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CLEAR_ALL");
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-		GRAPHICS::_CALL_SCALEFORM_MOVIE_FUNCTION_VOID(scaleForm, "CREATE_CONTAINER");
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CREATE_CONTAINER");
 
-		char* altControlKey = CONTROLS::_0x0499D7B09FC9B407(2, 19, 1);
+		char* altControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 19, 1);
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
@@ -256,7 +265,7 @@ void BirdsEyeMode::drawInstructions() {
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_RGBA(scaleForm, 255, 255, 255, 255);
+		GRAPHICS::DRAW_SCALEFORM_MOVIE_FULLSCREEN(scaleForm, 255, 255, 255, 255,1);
 	}
 	else {
 		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
@@ -273,11 +282,11 @@ void BirdsEyeMode::checkInputRotation()
 	//Attempt at handling edge case
 	//Does not work
 	if (cursorX >= 0.99 || cursorX <= 0.01) {
-		CONTROLS::_0xE8A25867FBA3B05E(2, 239, 0.5);
+		CONTROLS::_SET_CONTROL_NORMAL(2, 239, 0.5);
 		cursorX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
 	}
 	if (cursorY >= 0.99 || cursorY <= 0.01) {
-		CONTROLS::_0xE8A25867FBA3B05E(2, 240, 0.5);
+		CONTROLS::_SET_CONTROL_NORMAL(2, 240, 0.5);
 		cursorY = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
 	}
 
