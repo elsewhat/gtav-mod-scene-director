@@ -274,33 +274,16 @@ void BirdsEyeMode::drawInstructions() {
 
 void BirdsEyeMode::checkInputRotation()
 {
-	UI::_SHOW_CURSOR_THIS_FRAME();
-	//Obtaining cursor X/Y data to control camera
-	float cursorX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
-	float cursorY = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
 
-	//Attempt at handling edge case
-	//Does not work
-	if (cursorX >= 0.99 || cursorX <= 0.01) {
-		CONTROLS::_SET_CONTROL_NORMAL(2, 239, 0.5);
-		cursorX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 239);
-	}
-	if (cursorY >= 0.99 || cursorY <= 0.01) {
-		CONTROLS::_SET_CONTROL_NORMAL(2, 240, 0.5);
-		cursorY = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 240);
-	}
+	float rightAxisX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 220);
+	float rightAxisY = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 221);
 
-	//Left/Right camera pan limit
-	cursorX *= -720;
-	// Up/Down camera tilt limit
-	cursorY *= -720;
-
-	if (lastCursorX != cursorX || lastCursorY != cursorY) {
-		//Rotate Camera based on Cursor X and Y position
-		CAM::SET_CAM_ROT(cameraHandle, cursorY,0.0, cursorX,2);
-		
-		lastCursorX = cursorX;
-		lastCursorY = cursorY;
+	if (rightAxisX != 0.0 || rightAxisY != 0.0) {
+		//Rotate camera - Multiply by sensitivity settings
+		Vector3 currentRotation = CAM::GET_CAM_ROT(cameraHandle, 2);
+		currentRotation.z += rightAxisX*-10.0f;
+		currentRotation.x += rightAxisY*-5.0f;
+		CAM::SET_CAM_ROT(cameraHandle, currentRotation.x, currentRotation.y, currentRotation.z,2);
 	}
 }
 
