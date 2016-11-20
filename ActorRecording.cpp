@@ -25,6 +25,11 @@ Vector3 ActorRecordingItem::getLocation()
 	return m_location;
 }
 
+void ActorRecordingItem::setLocation(Vector3 location)
+{
+	m_location = location;
+}
+
 
 
 
@@ -59,13 +64,37 @@ void ActorRecordingItem::executeNativesAfterRecording(Actor actor)
 
 void ActorRecordingItem::drawMarkerForRecording(bool isCurrent)
 {
-	if (isCurrent) {
-		GRAPHICS::DRAW_MARKER(2, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, 204, 204, 0, 100, false, true, 2, false, false, false, false);
+	int colorR = 204;
+	int colorG = 204; 
+	int colorB = 0;
+	if (m_markerType == MARKER_TYPE_HIGHLIGHTED) {
+		colorR = 135;
+		colorG = 206;
+		colorB = 250;
 	}
-	else {
-		GRAPHICS::DRAW_MARKER(1, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, 204, 204, 0, 100, false, true, 2, false, false, false, false);
+	else if (m_markerType == MARKER_TYPE_SELECTED) {
+		colorR = 255;
+		colorG = 130;
+		colorB = 130;
 	}
 
+	if (isCurrent) {
+		GRAPHICS::DRAW_MARKER(2, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, colorR, colorG, colorB, 100, false, true, 2, false, false, false, false);
+	}
+	else {
+		GRAPHICS::DRAW_MARKER(1, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, colorR, colorG, colorB, 100, false, true, 2, false, false, false, false);
+	}
+
+}
+
+void ActorRecordingItem::setMarkerType(MARKER_TYPE markerType)
+{
+	m_markerType = markerType;
+}
+
+MARKER_TYPE ActorRecordingItem::getMarkerType()
+{
+	return m_markerType;
 }
 
 ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)

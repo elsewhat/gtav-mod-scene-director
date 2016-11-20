@@ -267,6 +267,7 @@ void Actor::setRecordingPlayback(ActorRecordingPlayback recordingPlayback)
 	m_actorRecordingPlayback = recordingPlayback;
 }
 
+
 void Actor::drawMarkersForRecording()
 {
 	if (hasRecording()) {
@@ -282,6 +283,45 @@ void Actor::drawMarkersForRecording()
 			i++;
 		}
 	}
+}
+
+float Actor::distanceToNearestLocation(Vector3 startingPoint)
+{
+	float minDistance = FLT_MAX;
+	if (hasRecording()) {
+
+		for (std::shared_ptr<ActorRecordingItem> &recording_item : m_actorRecordingItems) {
+			Vector3 recordingLocation = recording_item->getLocation();
+			float recDistance = SYSTEM::VDIST(startingPoint.x, startingPoint.y, startingPoint.z, recordingLocation.x, recordingLocation.y, recordingLocation.z);
+			if (recDistance < minDistance) {
+				minDistance = recDistance;
+			}
+		}
+	}
+	return minDistance;
+}
+
+std::shared_ptr<ActorRecordingItem> Actor::getNearestRecording(Vector3 startingPoint)
+{
+	if (hasRecording()) {
+		float nearestDistance = FLT_MAX;
+		std::shared_ptr<ActorRecordingItem> nearestRecording;
+		for (std::shared_ptr<ActorRecordingItem> &recording_item : m_actorRecordingItems) {
+			recording_item->setMarkerType(MARKER_TYPE_NORMAL);
+			Vector3 recordingLocation = recording_item->getLocation();
+			float recDistance = SYSTEM::VDIST(startingPoint.x, startingPoint.y, startingPoint.z, recordingLocation.x, recordingLocation.y, recordingLocation.z);
+			if (recDistance < nearestDistance) {
+				nearestRecording = recording_item;
+				nearestDistance = recDistance;
+			}
+		}
+		return nearestRecording;
+	}
+	else {
+		return nullptr;
+		//return std::shared_ptr<ActorRecordingItem>();
+	}
+	
 }
 
 bool Actor::hasRecording()

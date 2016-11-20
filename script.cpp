@@ -4037,6 +4037,9 @@ void action_toggle_scene_mode() {
 		}
 		else {
 			actor.stopReplayRecording();
+			ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
+			recordingPlayback.setRecordingItemIndex(0);
+
 
 			//Disable default rel group
 			//assign_actor_to_relationship_group(actorPed, getDefaultRelationshipGroup());

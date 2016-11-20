@@ -19,11 +19,13 @@ protected:
 	DWORD m_ticksDeltaCheckCompletion;
 	DWORD m_ticksLength;
 	DWORD m_ticksDeltaWhenRecorded;
+	MARKER_TYPE m_markerType;
 public:
 	ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actorPed, Vector3 location);
 
 	DWORD getTicksAfterRecordStart();
 	Vector3 getLocation();
+	void setLocation(Vector3 location);
 
 
 	DWORD getTicksDeltaCheckCompletion();
@@ -37,6 +39,8 @@ public:
 	virtual std::string toString();
 	virtual void executeNativesAfterRecording(Actor actor);
 	virtual void drawMarkerForRecording(bool isCurrent);
+	virtual void setMarkerType(MARKER_TYPE markerType);
+	virtual MARKER_TYPE getMarkerType();
 };
 
 class ActorOnFootMovementRecordingItem : public ActorRecordingItem {

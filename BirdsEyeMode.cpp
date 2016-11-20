@@ -13,6 +13,7 @@ BirdsEyeMode::BirdsEyeMode()
 	shouldDrawMenu = true;
 	shouldDrawRecordingMarkers = true;
 	cameraSpeedFactor = 0.1;
+	camLastPos = {};
 }
 /**
 * Main loop which is called for each tick from script.cpp
@@ -40,6 +41,8 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 			}
 		}
 
+		checkInputAction();
+
 		mainTickLast = GetTickCount();
 
 	}
@@ -49,7 +52,25 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 	}
 
 
-	checkInputMovement();
+	if (checkInputMovement()) {
+		//we have camera movement. Updated selected recording accordingly
+		if (selectedRecording != nullptr) {
+			//log_to_file("#Cam pos vs last  (" + std::to_string(camNewPos.x) + ", " + std::to_string(camNewPos.y) + ", " + std::to_string(camNewPos.z) + ")(" + std::to_string(camLastPos.x) + ", " + std::to_string(camLastPos.y) + ", " + std::to_string(camLastPos.z) + ")");
+
+			Vector3 deltaPos = {};
+			deltaPos.x = camNewPos.x - camLastPos.x;
+			deltaPos.y = camNewPos.y - camLastPos.y;
+			//log_to_file("#Delta location (" + std::to_string(deltaPos.x) + ", " + std::to_string(deltaPos.y) + ", " + std::to_string(deltaPos.z) + ")");
+
+			Vector3 recordingLocation = selectedRecording->getLocation();
+			recordingLocation.x += deltaPos.x;
+			recordingLocation.y += deltaPos.y;
+
+			selectedRecording->setLocation(recordingLocation);
+			//log_to_file("#New location of recording (" + std::to_string(recordingLocation.x) + ", " + std::to_string(recordingLocation.y) + ", " + std::to_string(recordingLocation.z) + ")");
+		}
+
+	}
 	checkInputRotation();
 
 	//actions to be used during active scene
@@ -57,14 +78,22 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 
 	//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
 	check_player_model();
+	 
 
-	//check if any recordings should be played
+	std::shared_ptr<ActorRecordingItem> nearestRecording = getNearestRecording(actors);
+	if (nearestRecording != nullptr) {
+		nearestRecording->setMarkerType(MARKER_TYPE_HIGHLIGHTED);
+	}
+	if (selectedRecording != nullptr) {
+		selectedRecording->setMarkerType(MARKER_TYPE_SELECTED);
+	}
+
+	drawRecordingMarkers(actors);
+
+	//update any recording playback
 	for (auto & actor : actors) {
 		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
 			Actor::update_tick_recording_replay(actor);
-		}
-		if (shouldDrawRecordingMarkers) {
-			actor.drawMarkersForRecording();
 		}
 	}
 
@@ -119,6 +148,37 @@ void BirdsEyeMode::onExitMode()
 	CAM::DO_SCREEN_FADE_IN(1000);
 }
 
+std::shared_ptr<ActorRecordingItem> BirdsEyeMode::getNearestRecording(std::vector<Actor> & actors) {
+	Vector3 camPos = CAM::GET_CAM_COORD(cameraHandle);
+	float nearestDistance = FLT_MAX;
+
+	//only the one nearest recording item should be marked as highlighted 
+	for (auto & actor : actors) {
+		if (shouldDrawRecordingMarkers && actor.hasRecording()) {
+			std::shared_ptr<ActorRecordingItem> nearestRecordingForActor = actor.getNearestRecording(camPos);
+			if (nearestRecordingForActor != nullptr) {
+				//calc distance to cam
+				Vector3 recordingLocation = nearestRecordingForActor->getLocation();
+				float recDistance = SYSTEM::VDIST(camPos.x, camPos.y, camPos.z, recordingLocation.x, recordingLocation.y, recordingLocation.z);
+
+				if (recDistance < nearestDistance) {
+					nearestRecording = nearestRecordingForActor;
+					nearestActor = std::make_shared<Actor>(actor);
+					nearestDistance = recDistance;
+				}
+			}
+		}
+	}
+	return nearestRecording;
+}
+
+void BirdsEyeMode::drawRecordingMarkers(std::vector<Actor> & actors) {
+	if (shouldDrawRecordingMarkers) {
+		for (auto & actor : actors) {
+			actor.drawMarkersForRecording();
+		}
+	}
+}
 
 void BirdsEyeMode::drawMenu() {
 	if (menu_active_index > menu_max_index) {
@@ -272,7 +332,7 @@ void BirdsEyeMode::drawInstructions() {
 	}
 }
 
-void BirdsEyeMode::checkInputRotation()
+bool BirdsEyeMode::checkInputRotation()
 {
 
 	float rightAxisX = CONTROLS::GET_DISABLED_CONTROL_NORMAL(0, 220);
@@ -284,11 +344,43 @@ void BirdsEyeMode::checkInputRotation()
 		currentRotation.z += rightAxisX*-10.0f;
 		currentRotation.x += rightAxisY*-5.0f;
 		CAM::SET_CAM_ROT(cameraHandle, currentRotation.x, currentRotation.y, currentRotation.z,2);
+		return true;
+	}
+	else {
+		return false;
+	}
+
+}
+
+bool BirdsEyeMode::checkInputAction()
+{
+	if (is_key_pressed_for_select_item() && selectedRecording == nullptr) {
+		if (nearestRecording != nullptr) {
+			log_to_file("Selected nearest recording");
+			selectedRecording = nearestRecording;
+			selectedRecording->setMarkerType(MARKER_TYPE_SELECTED);
+			selectedActor = nearestActor;
+		}
+		nextWaitTicks = 200;
+
+		return true;
+	} 
+	else if (is_key_pressed_for_select_item() && selectedRecording != nullptr) {
+		log_to_file("Deselected nearest recording");
+		selectedRecording->setMarkerType(MARKER_TYPE_NORMAL);
+		selectedRecording = nullptr;
+		selectedActor = nullptr;
+		nextWaitTicks = 200;
+
+		return true;
+	}
+	else {
+		return false;
 	}
 }
 
 
-void BirdsEyeMode::checkInputMovement()
+bool BirdsEyeMode::checkInputMovement()
 {
 
 	Vector3 camDelta = {};
@@ -329,20 +421,23 @@ void BirdsEyeMode::checkInputMovement()
 				camDelta.z *= 3;
 			}
 
-			Vector3 camPos = CAM::GET_CAM_COORD(cameraHandle);
+			camNewPos = CAM::GET_CAM_COORD(cameraHandle);
+			camLastPos.x = camNewPos.x;
+			camLastPos.y = camNewPos.y;
+			camLastPos.z = camNewPos.z;
+
 			Vector3 camRot = {};
 			camRot= CAM::GET_CAM_ROT(cameraHandle, 2);
 			//camera rotation is not as expected. .x value is rotation in the z-plane (view up/down) and third paramter is the rotation in the x,y plane.
 
 			Vector3 direction = {};
 			direction = MathUtils::rotationToDirection(camRot);
-			//log_to_file("Vector direction (" + std::to_string(direction.x) + ", " + std::to_string(direction.y) + ", " + std::to_string(direction.z) + ")");
 
 			//forward motion
 			if (camDelta.x != 0.0) {
-				camPos.x += direction.x * camDelta.x * cameraSpeedFactor;
-				camPos.y += direction.y * camDelta.x * cameraSpeedFactor;
-				camPos.z += direction.z * camDelta.x * cameraSpeedFactor;
+				camNewPos.x += direction.x * camDelta.x * cameraSpeedFactor;
+				camNewPos.y += direction.y * camDelta.x * cameraSpeedFactor;
+				camNewPos.z += direction.z * camDelta.x * cameraSpeedFactor;
 			}
 
 			//sideways motion
@@ -353,21 +448,24 @@ void BirdsEyeMode::checkInputMovement()
 
 				Vector3 sideWays = {};
 				sideWays = MathUtils::crossProduct(direction, b);
-				//log_to_file("Vector sideways  (" + std::to_string(sideWays.x) + ", " + std::to_string(sideWays.y) + ", " + std::to_string(sideWays.z) + ")");
 				
-				camPos.x += sideWays.x * camDelta.y * cameraSpeedFactor;
-				camPos.y += sideWays.y * camDelta.y * cameraSpeedFactor;
+				camNewPos.x += sideWays.x * camDelta.y * cameraSpeedFactor;
+				camNewPos.y += sideWays.y * camDelta.y * cameraSpeedFactor;
 			}
 
 			//up/down
 			if (camDelta.z != 0.0) {
-				camPos.z += camDelta.z * cameraSpeedFactor;
+				camNewPos.z += camDelta.z * cameraSpeedFactor;
 			}
 
-			CAM::SET_CAM_COORD(cameraHandle, camPos.x, camPos.y, camPos.z);
+			CAM::SET_CAM_COORD(cameraHandle, camNewPos.x, camNewPos.y, camNewPos.z);
+
+			//log_to_file("Cam pos vs last  (" + std::to_string(camNewPos.x) + ", " + std::to_string(camNewPos.y) + ", " + std::to_string(camNewPos.z) + ")(" + std::to_string(camLastPos.x) + ", " + std::to_string(camLastPos.y) + ", " + std::to_string(camLastPos.z) + ")");
+			return true;
 		}
 
 	}
+	return false;
 
 }
 
@@ -424,6 +522,16 @@ void BirdsEyeMode::disableControls() {
 	//INPUT_LOOK_UP = 272,
 	//INPUT_LOOK_DOWN = 273,
 
+}
+
+bool BirdsEyeMode::is_key_pressed_for_select_item() {
+	//ALT+ R
+	if (IsKeyDown(VK_SPACE)) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 bool BirdsEyeMode::is_key_pressed_for_exit_mode() {

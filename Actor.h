@@ -58,6 +58,7 @@ private:
 
 	DWORD m_recordingDelay;
 
+
 public:
 	Actor();
 	Actor(Ped ped);
@@ -157,4 +158,7 @@ public:
 	void setRecordingPlayback(ActorRecordingPlayback recordingPlayback);
 
 	void drawMarkersForRecording();
+
+	float distanceToNearestLocation(Vector3 startingPoint);
+	std::shared_ptr<ActorRecordingItem> getNearestRecording(Vector3 startingPoint);
 };
