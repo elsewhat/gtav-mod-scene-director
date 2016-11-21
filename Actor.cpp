@@ -418,7 +418,13 @@ std::vector<std::shared_ptr<ActorRecordingItem>> Actor::getRecording()
 
 std::shared_ptr<ActorRecordingItem> Actor::getRecordingAt(int index)
 {
-	return m_actorRecordingItems[index];
+	if (index >= m_actorRecordingItems.size() || index< 0) {
+		return nullptr;
+	}
+	else {
+		return m_actorRecordingItems[index];
+	}
+	
 }
 
 void Actor::update_tick_recording_replay(Actor & actor) {

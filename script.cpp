@@ -220,6 +220,17 @@ Actor& get_actor_from_ped(Ped ped) {
 	return nullActor;
 }
 
+int get_actor_index_from_ped(Ped ped) {
+	int i = -1;
+	for (auto &actor : actors) {
+		if (actor.isActorThisPed(ped)) {
+			return i;
+		}
+		i++;
+	}
+	return i;
+}
+
 // player model control, switching on normal ped model when needed	
 void check_player_model()
 {
@@ -761,6 +772,8 @@ void draw_submenu_animation(int drawIndex) {
 }
 
 void draw_submenu_world(int drawIndex) {
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	Actor & playerActor = get_actor_from_ped(playerPed);
 	int submenu_index = 0;
 	
 	//colors for swapping from active to inactive... messy
@@ -785,6 +798,73 @@ void draw_submenu_world(int drawIndex) {
 
 	drawIndex++;
 	submenu_index++;
+
+
+	//5. If chase is engaged
+	if (is_chase_player_engaged) {
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_CHASE;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT("Player chase: Active", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+	}
+	else if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_CHASE;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT("Activate chase", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+	}
+
+
+	//6. If escort is engaged
+	if (is_escort_player_engaged) {
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_ESCORT;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT("Player escort: Active", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+	}
+	else if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_ESCORT;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT("Activate escort", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+	}
+
 
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
@@ -1176,6 +1256,25 @@ void draw_submenu_player(int drawIndex) {
 	}
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_EDIT_NAME;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	std::string actorName = actor.getName();
+	if (actorName.empty()) {
+		int actorIndex = get_actor_index_from_ped(actor.getActorPed());
+		actorName = "Actor " + std::to_string(actorIndex + 1);
+	}
+		
+	DRAW_TEXT(strdup(("Name: " + actorName).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
 	submenu_max_index = submenu_index;
 }
 
@@ -1397,68 +1496,68 @@ void draw_menu() {
 		}
 	}
 
-	//5. If chase is engaged
-	if (is_chase_player_engaged) {
-		DRAW_TEXT("Player chase: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-		if (menu_active_index == drawIndex) {
-			menu_active_action = MENU_ITEM_CHASE;
-		}
+	////5. If chase is engaged
+	//if (is_chase_player_engaged) {
+	//	DRAW_TEXT("Player chase: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	//	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	//	if (menu_active_index == drawIndex) {
+	//		menu_active_action = MENU_ITEM_CHASE;
+	//	}
 
-		drawIndex++;
-		if (menu_active_index == drawIndex) {
-			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		}
-		else {
-			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-		}
-	} else if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
-		DRAW_TEXT("Activate chase", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-		if (menu_active_index == drawIndex) {
-			menu_active_action = MENU_ITEM_CHASE;
-		}
+	//	drawIndex++;
+	//	if (menu_active_index == drawIndex) {
+	//		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	//	}
+	//	else {
+	//		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	//	}
+	//} else if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+	//	DRAW_TEXT("Activate chase", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	//	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	//	if (menu_active_index == drawIndex) {
+	//		menu_active_action = MENU_ITEM_CHASE;
+	//	}
 
-		drawIndex++;
-		if (menu_active_index == drawIndex) {
-			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		}
-		else {
-			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-		}
-	}
+	//	drawIndex++;
+	//	if (menu_active_index == drawIndex) {
+	//		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	//	}
+	//	else {
+	//		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	//	}
+	//}
 
 
-	//6. If escort is engaged
-	if (is_escort_player_engaged) {
-		DRAW_TEXT("Player escort: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-		if (menu_active_index == drawIndex) {
-			menu_active_action = MENU_ITEM_ESCORT;
-		}
+	////6. If escort is engaged
+	//if (is_escort_player_engaged) {
+	//	DRAW_TEXT("Player escort: Active", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	//	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	//	if (menu_active_index == drawIndex) {
+	//		menu_active_action = MENU_ITEM_ESCORT;
+	//	}
 
-		drawIndex++;
-		if (menu_active_index == drawIndex) {
-			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		}
-		else {
-			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-		}
-	} else if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
-		DRAW_TEXT("Activate escort", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-		if (menu_active_index == drawIndex) {
-			menu_active_action = MENU_ITEM_ESCORT;
-		}
+	//	drawIndex++;
+	//	if (menu_active_index == drawIndex) {
+	//		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	//	}
+	//	else {
+	//		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	//	}
+	//} else if (PED::IS_PED_IN_ANY_VEHICLE(playerPed, 0)) {
+	//	DRAW_TEXT("Activate escort", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	//	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	//	if (menu_active_index == drawIndex) {
+	//		menu_active_action = MENU_ITEM_ESCORT;
+	//	}
 
-		drawIndex++;
-		if (menu_active_index == drawIndex) {
-			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		}
-		else {
-			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-		}
-	}
+	//	drawIndex++;
+	//	if (menu_active_index == drawIndex) {
+	//		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	//	}
+	//	else {
+	//		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	//	}
+	//}
 
 	//7. If firing squad is engaged
 	if (is_firing_squad_engaged) {
@@ -1562,7 +1661,13 @@ void draw_menu() {
 				}
 			}
 
-			char* actorText = strdup(("Actor "+ std::to_string(i+1)).c_str());
+			std::string actorName = actors[i].getName();
+			if (actorName.empty()) {
+				int actorIndex = get_actor_index_from_ped(actors[i].getActorPed());
+				actorName = "Actor " + std::to_string(i + 1);
+			}
+
+			char* actorText = strdup((actorName).c_str());
 			DRAW_TEXT(actorText, 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 			GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
@@ -3289,6 +3394,27 @@ void action_next_driving_mode() {
 	}
 }
 
+void action_edit_name() {
+	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+
+	set_status_text("Enter new name for actor");
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		WAIT(0);
+	}
+
+
+	if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+		log_to_file("Got null keyboard value");
+		return;
+	}
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strName = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strName);
+
+	actor.setName(strName);
+}
 
 
 void action_next_spot_light_color() {
@@ -5180,6 +5306,12 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_RECORD_RELOAD) {
 		do_record_reload = !do_record_reload;
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_CHASE) {
+		action_vehicle_chase();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_ESCORT) {
+		action_vehicle_escort();
+	}
 	else if (submenu_active_action == SUBMENU_ITEM_SPOT_LIGHT) {
 		action_next_spot_light();
 	}
@@ -5194,6 +5326,9 @@ void action_submenu_active_selected() {
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_DRIVING_MODE) {
 		action_next_driving_mode();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_NAME) {
+		action_edit_name();
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_RELATIONSHIP) {
 		action_next_relationshipgroup();
@@ -5301,12 +5436,6 @@ void action_menu_active_selected() {
 	else if (menu_active_action == MENU_ITEM_AUTOPILOT) {
 		//autpilot is cancelled by switching to current actor
 		possess_ped(PLAYER::PLAYER_PED_ID());
-	}
-	else if (menu_active_action == MENU_ITEM_CHASE) {
-		action_vehicle_chase();
-	}
-	else if (menu_active_action == MENU_ITEM_ESCORT) {
-		action_vehicle_escort();
 	}
 	else if (menu_active_action == MENU_ITEM_BIRDS_EYE_MODE) {
 		log_to_file("Switching to Birds eye mode");

@@ -46,6 +46,8 @@ private:
 	bool checkInputAction();
 	bool checkInputMovement();
 	bool checkInputRotation();
+	std::shared_ptr<ActorRecordingItem> getActiveRecordingItem();
+	std::shared_ptr<Actor> getActiveActor();
 	bool is_key_pressed_for_select_item();
 	bool is_key_pressed_for_exit_mode();
 	bool is_key_pressed_for_forward();

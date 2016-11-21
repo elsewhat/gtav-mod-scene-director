@@ -65,6 +65,11 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 			}
 			else if (menu_right_key_pressed()) {
 				submenu_active_index = -1;
+				//cancel edit location and highlighted
+				selectedRecording = nullptr;
+				selectedActor = nullptr;
+				highlightedRecording = nullptr;
+				highlightedActor = nullptr;
 				nextWaitTicks = 200;
 			}
 		}
@@ -83,11 +88,18 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 			Vector3 deltaPos = {};
 			deltaPos.x = camNewPos.x - camLastPos.x;
 			deltaPos.y = camNewPos.y - camLastPos.y;
+			deltaPos.z = 0.0;
+			//only include if mouse buttons used to change z-elevation
+			if (CONTROLS::IS_DISABLED_CONTROL_PRESSED(2, 329) || CONTROLS::IS_DISABLED_CONTROL_PRESSED(2, 330)) {
+				deltaPos.z = camNewPos.z - camLastPos.z;
+			}
+
 			//log_to_file("#Delta location (" + std::to_string(deltaPos.x) + ", " + std::to_string(deltaPos.y) + ", " + std::to_string(deltaPos.z) + ")");
 
 			Vector3 recordingLocation = selectedRecording->getLocation();
 			recordingLocation.x += deltaPos.x;
 			recordingLocation.y += deltaPos.y;
+			recordingLocation.z += deltaPos.z;
 
 			selectedRecording->setLocation(recordingLocation);
 			//log_to_file("#New location of recording (" + std::to_string(recordingLocation.x) + ", " + std::to_string(recordingLocation.y) + ", " + std::to_string(recordingLocation.z) + ")");
@@ -345,7 +357,8 @@ void BirdsEyeMode::drawSubMenuEdit() {
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
-	if (submenu_is_active && submenu_active_index == submenu_index) {
+
+	/*if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_SAVE_ACTORS;
 	}
@@ -373,7 +386,7 @@ void BirdsEyeMode::drawSubMenuEdit() {
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
-	submenu_index++;
+	submenu_index++;*/
 
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
@@ -440,6 +453,24 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 {
 	if (submenu_active_action == SUBMENU_ITEM_NEXT_RECORDING) {
 		nextWaitTicks = 200;
+		int nextRecordingIndex = 0;
+
+		//cancel any ongoing location edits
+		selectedRecording = nullptr;
+		selectedActor = nullptr;
+
+		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+		if (activeRecordingItem != nullptr) {
+			
+			std::shared_ptr<Actor> activeActor = getActiveActor();
+			nextRecordingIndex = (activeRecordingItem->getIndex()-1)+1;
+			highlightedRecording = activeActor->getRecordingAt(nextRecordingIndex);
+			highlightedActor = activeActor;
+			if (highlightedRecording == nullptr) {
+				highlightedRecording = activeActor->getRecordingAt(0);
+			}
+		}
+
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_LOCATION) {
 		actionToggleEditLocation();
@@ -485,6 +516,10 @@ void BirdsEyeMode::drawInstructions() {
 		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CREATE_CONTAINER");
 
 		char* altControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 19, 1);
+		char* mouseLeftButton = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 330, 1);
+		char* mouseRightButton = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 329, 1);
+		char* spaceControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 22, 1);
+		char* shiftControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 21, 1);
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
@@ -497,12 +532,21 @@ void BirdsEyeMode::drawInstructions() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Shift: Faster");
+		GRAPHICS::_0xE83A3E3557A56640(shiftControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Increase camera speed");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Left/Right mouse btn: Up/Down");
+		GRAPHICS::_0xE83A3E3557A56640(mouseLeftButton);
+		GRAPHICS::_0xE83A3E3557A56640(mouseRightButton);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera up/down");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_0xE83A3E3557A56640(spaceControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Quick edit position");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
@@ -536,6 +580,36 @@ bool BirdsEyeMode::checkInputRotation()
 		return false;
 	}
 
+}
+
+std::shared_ptr<ActorRecordingItem> BirdsEyeMode::getActiveRecordingItem()
+{
+	std::shared_ptr<ActorRecordingItem> activeRecordingItem = nullptr;
+	if (selectedRecording != nullptr) {
+		activeRecordingItem = selectedRecording;
+	}
+	else if (highlightedRecording != nullptr) {
+		activeRecordingItem = highlightedRecording;
+	}
+	else if (nearestRecording != nullptr) {
+		activeRecordingItem = nearestRecording;
+	}
+	return activeRecordingItem;
+}
+
+std::shared_ptr<Actor> BirdsEyeMode::getActiveActor()
+{
+	std::shared_ptr<Actor> activeActor = nullptr;
+	if (selectedActor != nullptr) {
+		activeActor = selectedActor;
+	}
+	else if (highlightedActor != nullptr) {
+		activeActor = highlightedActor;
+	}
+	else if (nearestActor != nullptr) {
+		activeActor = nearestActor;
+	}
+	return activeActor;
 }
 
 bool BirdsEyeMode::checkInputAction()
