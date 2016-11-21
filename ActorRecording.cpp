@@ -53,6 +53,16 @@ DWORD ActorRecordingItem::getTicksLength()
 	return m_ticksLength;
 }
 
+int ActorRecordingItem::getIndex()
+{
+	return m_index;
+}
+
+void ActorRecordingItem::setIndex(int index)
+{
+	m_index = index;
+}
+
 std::string ActorRecordingItem::toString()
 {
 	return "ActorRecordingItem " + std::to_string(m_actorPed) + " ticks: " + std::to_string(m_ticksAfterRecordStart) + " delta_ticks:" + std::to_string(m_ticksDeltaWhenRecorded);
@@ -95,6 +105,11 @@ void ActorRecordingItem::setMarkerType(MARKER_TYPE markerType)
 MARKER_TYPE ActorRecordingItem::getMarkerType()
 {
 	return m_markerType;
+}
+
+std::string ActorRecordingItem::toUserFriendlyName()
+{
+	return "Recording";
 }
 
 ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
@@ -169,6 +184,16 @@ std::string ActorOnFootMovementRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorMovementRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Speed " + std::to_string(m_walkSpeed);
 }
 
+std::string ActorOnFootMovementRecordingItem::toUserFriendlyName()
+{
+	if (m_walkSpeed > 1.0) {
+		return "Running";
+	}
+	else {
+		return "Walking";
+	}
+}
+
 
 ActorVehicleRecordingItem::ActorVehicleRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh,float vehHeading) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
@@ -196,6 +221,11 @@ VEHICLE_TYPE ActorVehicleRecordingItem::getVehicleType()
 std::string ActorVehicleRecordingItem::toString()
 {
 	return ActorRecordingItem::toString() + " ActorVehicleRecordingItem Vehicle " + std::to_string(m_vehicle) + " Vehicle type " + std::to_string(m_vehicleType) + " Heading  " + std::to_string(m_vehicleHeading)+ " Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ")";
+}
+
+std::string ActorVehicleRecordingItem::toUserFriendlyName()
+{
+	return "Vehicle";
 }
 
 VEHICLE_TYPE ActorVehicleRecordingItem::_getVehicleTypeFromNatives()
@@ -373,6 +403,11 @@ bool ActorVehicleEnterRecordingItem::isRecordingItemCompleted(std::shared_ptr<Ac
 	}
 }
 
+std::string ActorVehicleEnterRecordingItem::toUserFriendlyName()
+{
+	return "Enter";
+}
+
 ActorVehicleExitRecordingItem::ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading): ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading)
 {
 	//check for completion every 200 ticks (default 1000)
@@ -404,6 +439,11 @@ bool ActorVehicleExitRecordingItem::isRecordingItemCompleted(std::shared_ptr<Act
 	}
 }
 
+std::string ActorVehicleExitRecordingItem::toUserFriendlyName()
+{
+	return "Exit";
+}
+
 ActorStandingStillRecordingItem::ActorStandingStillRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float heading) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_heading = heading;
@@ -429,6 +469,11 @@ bool ActorStandingStillRecordingItem::isRecordingItemCompleted(std::shared_ptr<A
 {
 	//will first be checked after m_ticksDeltaCheckCompletion
 	return true;
+}
+
+std::string ActorStandingStillRecordingItem::toUserFriendlyName()
+{
+	return "Waiting";
 }
 
 ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, float speedInVehicle) : ActorVehicleRecordingItem(ticksStart,  ticksDeltaWhenRecorded, actor, location, veh, vehHeading)
@@ -592,6 +637,11 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 	}
 }
 
+std::string ActorVehicleMovementRecordingItem::toUserFriendlyName()
+{
+	return "Vehicle";
+}
+
 ActorScenarioRecordingItem::ActorScenarioRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Scenario scenario): ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_scenario = scenario;
@@ -637,6 +687,11 @@ void ActorScenarioRecordingItem::executeNativesAfterRecording(Actor actor)
 	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
 
+std::string ActorScenarioRecordingItem::toUserFriendlyName()
+{
+	return "Scenario";
+}
+
 ActorAimAtRecordingItem::ActorAimAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity aimedAtEntity): ActorRecordingItem( ticksStart, ticksDeltaWhenRecorded, actor,  location)
 {
 	m_aimedAtEntity = aimedAtEntity;
@@ -674,6 +729,11 @@ void ActorAimAtRecordingItem::executeNativesAfterRecording(Actor actor)
 	AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
 
+std::string ActorAimAtRecordingItem::toUserFriendlyName()
+{
+	return "Aim";
+}
+
 ActorShootAtEntityRecordingItem::ActorShootAtEntityRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity shotAtEntity) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor,location)
 {
 	m_shotAtEntity = shotAtEntity;
@@ -704,6 +764,11 @@ bool ActorShootAtEntityRecordingItem::isRecordingItemCompleted(std::shared_ptr<A
 void ActorShootAtEntityRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 	AI::CLEAR_PED_TASKS(actor.getActorPed());
+}
+
+std::string ActorShootAtEntityRecordingItem::toUserFriendlyName()
+{
+	return "Shoot";
 }
 
 ActorAnimationSequenceRecordingItem::ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, AnimationSequence animationSequence, AnimationFlag animationFlag):ActorRecordingItem(ticksStart,ticksDeltaWhenRecorded,actor,location)
@@ -765,6 +830,11 @@ bool ActorAnimationSequenceRecordingItem::isRecordingItemCompleted(std::shared_p
 	return true;
 }
 
+std::string ActorAnimationSequenceRecordingItem::toUserFriendlyName()
+{
+	return "Animation";
+}
+
 ActorCoverAtRecordingItem::ActorCoverAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vector3 enterCoverPosition, Vector3 coverPosition) : ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_coverPosition = coverPosition;
@@ -802,6 +872,11 @@ bool ActorCoverAtRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRe
 	else {
 		return false;
 	}
+}
+
+std::string ActorCoverAtRecordingItem::toUserFriendlyName()
+{
+	return "Cover";
 }
 
 ActorShootAtByImpactRecordingItem::ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern, float walkSpeed, float heading):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
@@ -920,6 +995,11 @@ void ActorShootAtByImpactRecordingItem::executeNativesAfterRecording(Actor actor
 	//AI::CLEAR_PED_TASKS(actor.getActorPed());
 }
 
+std::string ActorShootAtByImpactRecordingItem::toUserFriendlyName()
+{
+	return "Shoot";
+}
+
 ActorJumpingRecordingItem::ActorJumpingRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, walkSpeed, headingAtEnd)
 {
 	//TODO
@@ -942,6 +1022,11 @@ bool ActorJumpingRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRe
 std::string ActorJumpingRecordingItem::toString()
 {
 	return ActorOnFootMovementRecordingItem::toString() + " ActorJumpingRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Speed " + std::to_string(m_walkSpeed);
+}
+
+std::string ActorJumpingRecordingItem::toUserFriendlyName()
+{
+	return "Jumping";
 }
 
 ActorReloadRecordingItem::ActorReloadRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, bool doAim, Vector3 weaponImpact):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
@@ -972,6 +1057,11 @@ bool ActorReloadRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRec
 		log_to_file("Used " + std::to_string(ticksNow - ticksStart) + " ticks to reload");
 		return true;
 	}
+}
+
+std::string ActorReloadRecordingItem::toUserFriendlyName()
+{
+	return "Reload";
 }
 
 
@@ -1014,4 +1104,9 @@ std::string ActorSpeakRecordingItem::toString() {
 void ActorSpeakRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 	AI::STOP_ANIM_TASK(actor.getActorPed(), "mp_facial", "mic_chatter", -4.0);
+}
+
+std::string ActorSpeakRecordingItem::toUserFriendlyName()
+{
+	return "Speaking";
 }

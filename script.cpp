@@ -1314,7 +1314,7 @@ void draw_menu() {
 		menu_active_action = MENU_ITEM_BIRDS_EYE_MODE;
 
 	}
-	DRAW_TEXT("Birds eye mode (BETA)", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Edit scene (BETA)", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 	drawIndex++;
@@ -2351,6 +2351,7 @@ void add_ped_to_slot(int slotIndex, Ped ped) {
 		actors[slotIndex-1].setWaypoint(waypointCoord);
 		actors[slotIndex - 1].setHasWaypoint(true);
 	}
+	actors[slotIndex - 1].setName("Actor " + std::to_string(slotIndex));
 
 	ensure_ped_and_vehicle_is_not_deleted(ped);
 

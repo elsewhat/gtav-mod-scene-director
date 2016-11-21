@@ -4,6 +4,7 @@
 #include "keyboard.h"
 #include "utils.h"
 #include <vector>
+#include <string>
 
 
 
@@ -23,21 +24,48 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 {
 	disableControls();
 
-	/* ACTIONS WHICH MAY NEED TO WAIT A FEW TICKS */
+	/* ACTIONS WHICH MAY REQUIRE A WAIT PERIODE iN TICKS AFTERWAREDS */
 	if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
 		nextWaitTicks = 0;
 		shouldExitMode = false;
 		if (shouldDrawMenu) {
 			if (menu_up_key_pressed()) {
-				menu_active_index++;
-				nextWaitTicks = 200;
+				if (submenu_active_index != -1) {
+					submenu_active_index++;
+					nextWaitTicks = 200;
+				}
+				else {
+					menu_active_index++;
+					nextWaitTicks = 200;
+				}
 			}
 			else if (menu_down_key_pressed()) {
-				menu_active_index--;
-				nextWaitTicks = 200;
+				if (submenu_active_index != -1) {
+					submenu_active_index--;
+					nextWaitTicks = 200;
+				}
+				else {
+					menu_active_index--;
+					nextWaitTicks = 200;
+				}
 			}
 			else if (menu_select_key_pressed()) {
-				actionMenuSelected();
+				if (submenu_active_index != -1) {
+					actionSubMenuEditSelected();
+				}
+				else {
+					actionMenuSelected();
+				}
+
+				nextWaitTicks = 200;
+			}
+			else if (menu_left_key_pressed()) {
+				submenu_active_index = 0;
+				nextWaitTicks = 200;
+			}
+			else if (menu_right_key_pressed()) {
+				submenu_active_index = -1;
+				nextWaitTicks = 200;
 			}
 		}
 
@@ -46,16 +74,11 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 		mainTickLast = GetTickCount();
 
 	}
-	if (shouldDrawMenu) {
-		drawMenu();
-		drawInstructions();
-	}
-
 
 	if (checkInputMovement()) {
 		//we have camera movement. Updated selected recording accordingly
 		if (selectedRecording != nullptr) {
-			//log_to_file("#Cam pos vs last  (" + std::to_string(camNewPos.x) + ", " + std::to_string(camNewPos.y) + ", " + std::to_string(camNewPos.z) + ")(" + std::to_string(camLastPos.x) + ", " + std::to_string(camLastPos.y) + ", " + std::to_string(camLastPos.z) + ")");
+			log_to_file("#Cam pos vs last  (" + std::to_string(camNewPos.x) + ", " + std::to_string(camNewPos.y) + ", " + std::to_string(camNewPos.z) + ")(" + std::to_string(camLastPos.x) + ", " + std::to_string(camLastPos.y) + ", " + std::to_string(camLastPos.z) + ")");
 
 			Vector3 deltaPos = {};
 			deltaPos.x = camNewPos.x - camLastPos.x;
@@ -73,20 +96,39 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 	}
 	checkInputRotation();
 
+	if (shouldDrawMenu) {
+		drawMenu();
+		drawSubMenuEdit();
+		drawInstructions();
+	}
+
+
 	//actions to be used during active scene
 	draw_spot_lights();
 
 	//check if the player is dead/arrested, in order to swap back to original in order to avoid crash
 	check_player_model();
 	 
-
+	//Highlighting of the 3 points we have for highlighted recording items
 	std::shared_ptr<ActorRecordingItem> nearestRecording = getNearestRecording(actors);
-	if (nearestRecording != nullptr) {
-		nearestRecording->setMarkerType(MARKER_TYPE_HIGHLIGHTED);
-	}
 	if (selectedRecording != nullptr) {
+		nearestRecording->setMarkerType(MARKER_TYPE_NORMAL);
+		if (highlightedRecording != nullptr) {
+			highlightedRecording->setMarkerType(MARKER_TYPE_NORMAL);
+		}
 		selectedRecording->setMarkerType(MARKER_TYPE_SELECTED);
+		submenu_is_active = true;
 	}
+	else if (highlightedRecording != nullptr) {
+		nearestRecording->setMarkerType(MARKER_TYPE_NORMAL);
+		highlightedRecording->setMarkerType(MARKER_TYPE_HIGHLIGHTED);
+		submenu_is_active = true;
+	}
+	else if (nearestRecording != nullptr) {
+		nearestRecording->setMarkerType(MARKER_TYPE_HIGHLIGHTED);
+		submenu_is_active = true;
+	}
+
 
 	drawRecordingMarkers(actors);
 
@@ -252,8 +294,28 @@ void BirdsEyeMode::drawMenu() {
 		menu_active_action = MENU_ITEM_SHOW_REC_MARKERS;
 	}
 
-	drawIndex++;
 
+	if (nearestRecording != nullptr) {
+		drawIndex++;
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_EDIT_RECORDING;
+		}
+
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+
+		DRAW_TEXT("Edit nearest recording", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	}
+
+
+	drawIndex++;
 
 	if (menu_active_index == -1) {
 		menu_active_index = 0;
@@ -263,6 +325,93 @@ void BirdsEyeMode::drawMenu() {
 	if (menu_active_index > menu_max_index) {
 		menu_active_index = menu_max_index;
 	}
+}
+
+void BirdsEyeMode::drawSubMenuEdit() {
+	if (submenu_active_index > submenu_max_index) {
+		submenu_active_index = submenu_max_index;
+	}
+	if (submenu_active_index < -1) {
+		submenu_active_index = -1;
+	}
+
+	if (submenu_is_active != true) {
+		return;
+	}
+
+	int submenu_index = 0;
+	//Edit nearest recording is always index 3
+	int drawIndex = 3; 
+	//colors for swapping from active to inactive... messy
+	int textColorR = 255, textColorG = 255, textColorB = 255;
+	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_SAVE_ACTORS;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Save actors", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_PREV_RECORDING;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("TBD", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_EDIT_LOCATION;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+	
+	DRAW_TEXT("Edit position", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_NEXT_RECORDING;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	std::string menuText;
+	if (selectedRecording != nullptr) {
+		menuText =  "Item " + std::to_string(selectedRecording->getIndex()) + ": " + selectedRecording->toUserFriendlyName()+ " (" + selectedActor->getName() + ")";
+	}
+	else if (highlightedRecording != nullptr) {
+		menuText = "Item " + std::to_string(highlightedRecording->getIndex()) + ": " + highlightedRecording->toUserFriendlyName() + " (" + highlightedActor->getName() + ")";
+	}
+	else if(nearestRecording!=nullptr){
+		menuText = "Item " + std::to_string(nearestRecording->getIndex()) + ": " + nearestRecording->toUserFriendlyName() + " (" + nearestActor->getName() + ")";
+	}
+
+	DRAW_TEXT(strdup((menuText).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	submenu_max_index = submenu_index;
 }
 
 void BirdsEyeMode::actionMenuSelected() {
@@ -284,6 +433,43 @@ void BirdsEyeMode::actionMenuSelected() {
 	else if (menu_active_action == MENU_ITEM_SHOW_REC_MARKERS) {
 		nextWaitTicks = 200;
 		shouldDrawRecordingMarkers = !shouldDrawRecordingMarkers;
+	}
+}
+
+void BirdsEyeMode::actionSubMenuEditSelected()
+{
+	if (submenu_active_action == SUBMENU_ITEM_NEXT_RECORDING) {
+		nextWaitTicks = 200;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_LOCATION) {
+		actionToggleEditLocation();
+		nextWaitTicks = 200;
+	}
+}
+
+void BirdsEyeMode::actionToggleEditLocation()
+{
+	if (selectedRecording == nullptr) {
+		if (highlightedRecording != nullptr) {
+			log_to_file("Selected nearest recording");
+			selectedRecording = highlightedRecording;
+			highlightedRecording->setMarkerType(MARKER_TYPE_SELECTED);
+			selectedActor = highlightedActor;
+		}
+		else if (nearestRecording != nullptr) {
+			log_to_file("Selected nearest recording");
+			selectedRecording = nearestRecording;
+			selectedRecording->setMarkerType(MARKER_TYPE_SELECTED);
+			selectedActor = nearestActor;
+		}
+		nextWaitTicks = 200;
+	}
+	else if (selectedRecording != nullptr) {
+		log_to_file("Deselected nearest recording");
+		selectedRecording->setMarkerType(MARKER_TYPE_NORMAL);
+		selectedRecording = nullptr;
+		selectedActor = nullptr;
+		nextWaitTicks = 200;
 	}
 }
 
@@ -354,26 +540,12 @@ bool BirdsEyeMode::checkInputRotation()
 
 bool BirdsEyeMode::checkInputAction()
 {
-	if (is_key_pressed_for_select_item() && selectedRecording == nullptr) {
-		if (nearestRecording != nullptr) {
-			log_to_file("Selected nearest recording");
-			selectedRecording = nearestRecording;
-			selectedRecording->setMarkerType(MARKER_TYPE_SELECTED);
-			selectedActor = nearestActor;
-		}
+	if (is_key_pressed_for_select_item()) {
+		actionToggleEditLocation();
 		nextWaitTicks = 200;
 
 		return true;
 	} 
-	else if (is_key_pressed_for_select_item() && selectedRecording != nullptr) {
-		log_to_file("Deselected nearest recording");
-		selectedRecording->setMarkerType(MARKER_TYPE_NORMAL);
-		selectedRecording = nullptr;
-		selectedActor = nullptr;
-		nextWaitTicks = 200;
-
-		return true;
-	}
 	else {
 		return false;
 	}

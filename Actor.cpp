@@ -21,6 +21,17 @@ Ped Actor::getActorPed()
 	return m_ped;
 }
 
+std::string Actor::getName()
+{
+	return m_name;
+}
+
+void Actor::setName(std::string name)
+{
+	m_name = name;
+}
+
+
 Actor Actor::nullActor()
 {
 	return Actor(0);
@@ -306,14 +317,19 @@ std::shared_ptr<ActorRecordingItem> Actor::getNearestRecording(Vector3 startingP
 	if (hasRecording()) {
 		float nearestDistance = FLT_MAX;
 		std::shared_ptr<ActorRecordingItem> nearestRecording;
+		int index = 1; 
 		for (std::shared_ptr<ActorRecordingItem> &recording_item : m_actorRecordingItems) {
 			recording_item->setMarkerType(MARKER_TYPE_NORMAL);
+			recording_item->setIndex(index);
+
 			Vector3 recordingLocation = recording_item->getLocation();
 			float recDistance = SYSTEM::VDIST(startingPoint.x, startingPoint.y, startingPoint.z, recordingLocation.x, recordingLocation.y, recordingLocation.z);
 			if (recDistance < nearestDistance) {
 				nearestRecording = recording_item;
 				nearestDistance = recDistance;
 			}
+
+			index++;
 		}
 		return nearestRecording;
 	}

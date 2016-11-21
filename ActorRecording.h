@@ -20,6 +20,7 @@ protected:
 	DWORD m_ticksLength;
 	DWORD m_ticksDeltaWhenRecorded;
 	MARKER_TYPE m_markerType;
+	int m_index;
 public:
 	ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actorPed, Vector3 location);
 
@@ -34,6 +35,9 @@ public:
 	void setTicksLength(DWORD ticks);
 	DWORD getTicksLength();
 
+	int getIndex();
+	void setIndex(int index);
+
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)=0;
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem,DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)=0;
 	virtual std::string toString();
@@ -41,6 +45,7 @@ public:
 	virtual void drawMarkerForRecording(bool isCurrent);
 	virtual void setMarkerType(MARKER_TYPE markerType);
 	virtual MARKER_TYPE getMarkerType();
+	virtual std::string toUserFriendlyName();
 };
 
 class ActorOnFootMovementRecordingItem : public ActorRecordingItem {
@@ -54,6 +59,7 @@ public:
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location);
 	std::string toString() override;
+	virtual std::string toUserFriendlyName() override;
 
 };
 
@@ -66,6 +72,7 @@ public:
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location);
 	std::string toString() override;
 	virtual void executeNativesAfterRecording(Actor actor) override;
+	virtual std::string toUserFriendlyName() override;
 };
 
 class ActorJumpingRecordingItem : public ActorOnFootMovementRecordingItem {
@@ -75,6 +82,7 @@ public:
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location);
 	std::string toString() override;
+	virtual std::string toUserFriendlyName() override;
 
 };
 
@@ -87,6 +95,7 @@ public:
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem,DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
 
 };
 
@@ -100,6 +109,7 @@ public:
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	virtual void executeNativesAfterRecording(Actor actor) override;
+	virtual std::string toUserFriendlyName() override;
 };
 
 class ActorShootAtEntityRecordingItem : public ActorRecordingItem {
@@ -112,6 +122,7 @@ public:
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	virtual void executeNativesAfterRecording(Actor actor) override;
+	virtual std::string toUserFriendlyName() override;
 
 };
 
@@ -128,6 +139,7 @@ public:
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	void executeNativesAfterRecording(Actor actor) override;
+	virtual std::string toUserFriendlyName() override;
 
 };
 
@@ -141,7 +153,7 @@ public:
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
-
+	virtual std::string toUserFriendlyName() override;
 };
 
 class ActorScenarioRecordingItem : public ActorRecordingItem {
@@ -155,6 +167,7 @@ public:
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	void executeNativesAfterRecording(Actor actor) override;
+	virtual std::string toUserFriendlyName() override;
 
 };
 
@@ -170,6 +183,7 @@ public:
 	VEHICLE_TYPE getVehicleType();
 	float getVehicleHeading();
 	std::string toString() override;
+	virtual std::string toUserFriendlyName() override;
 };
 
 class ActorVehicleEnterRecordingItem : public ActorVehicleRecordingItem {
@@ -181,6 +195,7 @@ public:
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
 };
 
 class ActorVehicleExitRecordingItem : public ActorVehicleRecordingItem {
@@ -192,6 +207,7 @@ public:
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
 };
 
 class ActorVehicleMovementRecordingItem : public ActorVehicleRecordingItem {
@@ -203,6 +219,7 @@ public:
 	float getSpeedInVehicle();
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
 };
 
 
@@ -216,6 +233,7 @@ public:
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
 
 };
 
@@ -229,6 +247,7 @@ public:
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
 };
 
 

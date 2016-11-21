@@ -21,6 +21,7 @@ class Actor
 private:
 	Ped m_ped;
 	int m_blipId;
+	std::string m_name;
 	
 	SCENE_MODE m_sceneStatus;
 	
@@ -64,6 +65,8 @@ public:
 	Actor(Ped ped);
 
 	Ped getActorPed();
+	std::string getName();
+	void setName(std::string name);
 
 	static Actor nullActor();
 
