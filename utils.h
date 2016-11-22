@@ -11,6 +11,7 @@
 
 // returns module load path with trailing slash
 std::string GetCurrentModulePath();
+std::string roundNumber(float number);
 
 
 class MathUtils {

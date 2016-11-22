@@ -43,6 +43,8 @@ private:
 	void actionMenuSelected();
 	void actionSubMenuEditSelected();
 	void actionToggleEditLocation();
+	float actionInputFloat();
+	void actionInputWalkSpeed();
 	bool checkInputAction();
 	bool checkInputMovement();
 	bool checkInputRotation();

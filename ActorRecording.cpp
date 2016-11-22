@@ -123,6 +123,11 @@ float ActorOnFootMovementRecordingItem::getWalkSpeed()
 	return m_walkSpeed;
 }
 
+void ActorOnFootMovementRecordingItem::setWalkSpeed(float walkSpeed)
+{
+	m_walkSpeed = walkSpeed;
+}
+
 void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, m_heading, 0.5f);

@@ -8,6 +8,7 @@
 
 
 
+
 BirdsEyeMode::BirdsEyeMode()
 {
 	shouldExitMode = false;
@@ -350,6 +351,9 @@ void BirdsEyeMode::drawSubMenuEdit() {
 	if (submenu_is_active != true) {
 		return;
 	}
+	std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+	std::shared_ptr<Actor> activeActor = getActiveActor();
+
 
 	int submenu_index = 0;
 	//Edit nearest recording is always index 3
@@ -357,6 +361,29 @@ void BirdsEyeMode::drawSubMenuEdit() {
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+
+	//dynamic actions based on the type of recording item
+	if (activeRecordingItem) {
+		std::shared_ptr<ActorOnFootMovementRecordingItem> onfootRecordingItem = std::dynamic_pointer_cast<ActorOnFootMovementRecordingItem>(activeRecordingItem);
+
+		if (onfootRecordingItem) {
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_SPEED;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+
+			DRAW_TEXT(strdup(("Walking speed:"+ roundNumber(onfootRecordingItem->getWalkSpeed())).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
+		}
+
+	}
+
 
 	/*if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
@@ -476,6 +503,10 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 		actionToggleEditLocation();
 		nextWaitTicks = 200;
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_SPEED) {
+		actionInputWalkSpeed();
+		nextWaitTicks = 200;
+	}
 }
 
 void BirdsEyeMode::actionToggleEditLocation()
@@ -501,6 +532,39 @@ void BirdsEyeMode::actionToggleEditLocation()
 		selectedRecording = nullptr;
 		selectedActor = nullptr;
 		nextWaitTicks = 200;
+	}
+}
+
+float BirdsEyeMode::actionInputFloat()
+{
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		WAIT(0);
+	}
+
+
+	if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+		log_to_file("Got null keyboard value");
+		return -1.0f;
+	}
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strValue = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strValue);
+	return atof(keyboardValue);
+}
+
+void BirdsEyeMode::actionInputWalkSpeed()
+{
+	std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+	std::shared_ptr<ActorOnFootMovementRecordingItem> onfootRecordingItem = std::dynamic_pointer_cast<ActorOnFootMovementRecordingItem>(activeRecordingItem);
+	if (onfootRecordingItem
+		) {
+		set_status_text("Enter walk speed (1.0 = walk 2.0 = run)");
+		float f = actionInputFloat();
+		if (f > 0.0) {
+			onfootRecordingItem->setWalkSpeed(f);
+		}
 	}
 }
 

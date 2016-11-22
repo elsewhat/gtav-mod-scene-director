@@ -7,6 +7,9 @@
 #include "utils.h"
 
 #include <windows.h>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
 
 extern "C" IMAGE_DOS_HEADER __ImageBase; // MSVC specific, with other compilers use HMODULE from DllMain
 
@@ -31,6 +34,14 @@ std::string GetCurrentModulePath()
 		cachedModulePath = modPath;
 	}
 	return cachedModulePath;
+}
+
+std::string roundNumber(float number)
+{
+	std::ostringstream out;
+	out << std::setprecision(1) << std::fixed << std::showpoint << number;
+	std::string roundResult = out.str();
+	return roundResult;
 }
 
 Vector3 MathUtils::rotationToDirection(Vector3 rotation)
