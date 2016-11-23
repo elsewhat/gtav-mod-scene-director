@@ -19,6 +19,7 @@ protected:
 	DWORD m_ticksDeltaCheckCompletion;
 	DWORD m_ticksLength;
 	DWORD m_ticksDeltaWhenRecorded;
+	float m_minDistanceBeforeCompleted;
 	MARKER_TYPE m_markerType;
 	int m_index;
 public:
@@ -46,6 +47,8 @@ public:
 	virtual void setMarkerType(MARKER_TYPE markerType);
 	virtual MARKER_TYPE getMarkerType();
 	virtual std::string toUserFriendlyName();
+	virtual void setMinDistanceBeforeCompleted(float minDistanceBeforeCompleted);
+	virtual float getMinDistanceBeforeCompleted();
 };
 
 class ActorOnFootMovementRecordingItem : public ActorRecordingItem {
@@ -218,6 +221,7 @@ public:
 	ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, float speedInVehicle);
 	std::string toString() override;
 	float getSpeedInVehicle();
+	void setSpeedInVehicle(float speedInVehicle);
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	virtual std::string toUserFriendlyName() override;

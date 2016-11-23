@@ -369,7 +369,7 @@ void BirdsEyeMode::drawSubMenuEdit() {
 		if (onfootRecordingItem) {
 			if (submenu_is_active && submenu_active_index == submenu_index) {
 				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-				submenu_active_action = SUBMENU_ITEM_EDIT_SPEED;
+				submenu_active_action = SUBMENU_ITEM_EDIT_WALK_SPEED;
 			}
 			else {
 				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
@@ -380,7 +380,41 @@ void BirdsEyeMode::drawSubMenuEdit() {
 
 			drawIndex++;
 			submenu_index++;
+
+
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_MIN_DIST_COMPL;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+
+			DRAW_TEXT(strdup(("Minimal distance:" + roundNumber(onfootRecordingItem->getMinDistanceBeforeCompleted())).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
+
 		}
+
+		std::shared_ptr<ActorVehicleMovementRecordingItem> vehicleMovementRecordingItem = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(activeRecordingItem);
+		if (vehicleMovementRecordingItem) {
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_VEH_SPEED;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+
+			DRAW_TEXT(strdup(("Speed:" + roundNumber(vehicleMovementRecordingItem->getSpeedInVehicle())).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
+		}
+
 
 	}
 
@@ -503,8 +537,16 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 		actionToggleEditLocation();
 		nextWaitTicks = 200;
 	}
-	else if (submenu_active_action == SUBMENU_ITEM_EDIT_SPEED) {
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_WALK_SPEED) {
 		actionInputWalkSpeed();
+		nextWaitTicks = 200;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_VEH_SPEED) {
+		actionInputVehicleSpeed();
+		nextWaitTicks = 200;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_MIN_DIST_COMPL) {
+		actionInputMinDistance();
 		nextWaitTicks = 200;
 	}
 }
@@ -558,12 +600,45 @@ void BirdsEyeMode::actionInputWalkSpeed()
 {
 	std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
 	std::shared_ptr<ActorOnFootMovementRecordingItem> onfootRecordingItem = std::dynamic_pointer_cast<ActorOnFootMovementRecordingItem>(activeRecordingItem);
-	if (onfootRecordingItem
-		) {
+	if (onfootRecordingItem) {
 		set_status_text("Enter walk speed (1.0 = walk 2.0 = run)");
 		float f = actionInputFloat();
 		if (f > 0.0) {
 			onfootRecordingItem->setWalkSpeed(f);
+		}
+	}
+}
+
+void BirdsEyeMode::actionInputMinDistance()
+{
+	std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+	std::shared_ptr<ActorOnFootMovementRecordingItem> onfootRecordingItem = std::dynamic_pointer_cast<ActorOnFootMovementRecordingItem>(activeRecordingItem);
+	std::shared_ptr<ActorVehicleMovementRecordingItem> vehicleMovementRecordingItem = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(activeRecordingItem);
+	if (onfootRecordingItem) {
+		set_status_text("Enter minimal distance before this recording item is completed speed (use between 0.5 and 10.0)");
+		float f = actionInputFloat();
+		if (f > 0.0) {
+			onfootRecordingItem->setMinDistanceBeforeCompleted(f);
+		}
+	}else if (vehicleMovementRecordingItem) {
+		set_status_text("Enter minimal distance before this recording item is completed speed (use between 1.0 and 100.0)");
+		float f = actionInputFloat();
+		if (f > 0.0) {
+			vehicleMovementRecordingItem->setMinDistanceBeforeCompleted(f);
+		}
+	}
+}
+
+
+void BirdsEyeMode::actionInputVehicleSpeed()
+{
+	std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+	std::shared_ptr<ActorVehicleMovementRecordingItem> vehicleMovementRecordingItem = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(activeRecordingItem);
+	if (vehicleMovementRecordingItem) {
+		set_status_text("Enter vehicle speed (typically from 10.0 to 80.0)");
+		float f = actionInputFloat();
+		if (f > 0.0) {
+			vehicleMovementRecordingItem->setSpeedInVehicle(f);
 		}
 	}
 }

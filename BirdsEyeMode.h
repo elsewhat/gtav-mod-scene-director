@@ -45,6 +45,8 @@ private:
 	void actionToggleEditLocation();
 	float actionInputFloat();
 	void actionInputWalkSpeed();
+	void actionInputVehicleSpeed();
+	void actionInputMinDistance();
 	bool checkInputAction();
 	bool checkInputMovement();
 	bool checkInputRotation();

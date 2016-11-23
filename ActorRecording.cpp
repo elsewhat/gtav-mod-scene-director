@@ -112,10 +112,28 @@ std::string ActorRecordingItem::toUserFriendlyName()
 	return "Recording";
 }
 
+void ActorRecordingItem::setMinDistanceBeforeCompleted(float minDistanceBeforeCompleted)
+{
+	m_minDistanceBeforeCompleted = minDistanceBeforeCompleted;
+}
+
+float ActorRecordingItem::getMinDistanceBeforeCompleted()
+{
+	return m_minDistanceBeforeCompleted;
+}
+
+
 ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
 	m_walkSpeed = walkSpeed;
 	m_heading = headingAtEnd;
+
+	//determine min distance before completion
+	float m_minDistanceBeforeCompleted = 4.0;
+	if (m_walkSpeed > 1.0) {
+		m_minDistanceBeforeCompleted = 7.0;
+	}
+
 }
 
 float ActorOnFootMovementRecordingItem::getWalkSpeed()
@@ -131,20 +149,18 @@ void ActorOnFootMovementRecordingItem::setWalkSpeed(float walkSpeed)
 void ActorOnFootMovementRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, m_heading, 0.5f);
+
 }
 
 bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
 {
 	if (ticksNow - ticksStart >= (m_ticksDeltaWhenRecorded / 2.0)) {
-		float minDistance = 4.0;
-		if (m_walkSpeed > 1.0) {
-			minDistance = 7.0;
-		}
+		float minDistance = getMinDistanceBeforeCompleted();
+		
 
 		//special handling if next recording is an animation or shooting
 		if (nextRecordingItem) {
 			std::shared_ptr<ActorAnimationSequenceRecordingItem> animationRecording = std::dynamic_pointer_cast<ActorAnimationSequenceRecordingItem>(nextRecordingItem);
-
 			if (animationRecording) {
 				log_to_file("Special handling since next recording is an ActorAnimationSequenceRecordingItem");
 				minDistance = 0.5;
@@ -156,7 +172,6 @@ bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<
 				log_to_file("Special handling since next recording is an ActorShootAtByImpactRecordingItem");
 				minDistance = 0.5;
 			}
-
 		}
 
 
@@ -484,6 +499,36 @@ std::string ActorStandingStillRecordingItem::toUserFriendlyName()
 ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, float speedInVehicle) : ActorVehicleRecordingItem(ticksStart,  ticksDeltaWhenRecorded, actor, location, veh, vehHeading)
 {
 	m_speedInVehicle = speedInVehicle;
+
+
+	Hash vehicleHash = ENTITY::GET_ENTITY_MODEL(veh);
+
+	bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actor, 0);
+	bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(vehicleHash);
+	bool isPedInPlane = VEHICLE::IS_THIS_MODEL_A_PLANE(vehicleHash);
+	bool isPedInBoat = VEHICLE::IS_THIS_MODEL_A_BOAT(vehicleHash);
+
+	m_minDistanceBeforeCompleted = 4.0;
+
+	if (isPedInHeli) {
+		m_minDistanceBeforeCompleted = 90.0;
+	}
+	else if (isPedInPlane) {
+		m_minDistanceBeforeCompleted = 100.0;
+	}
+	else if (isPedInBoat) {
+		m_minDistanceBeforeCompleted = 60.0;
+	}
+	else if (isInVehicle) {
+		//TODO: Tweak based on heading changes
+		if (m_speedInVehicle > 30.0) {
+			m_minDistanceBeforeCompleted = 17.0;
+		}
+		else {
+			m_minDistanceBeforeCompleted = 10.0;
+		}
+	}
+
 }
 
 std::string ActorVehicleMovementRecordingItem::toString()
@@ -494,6 +539,11 @@ std::string ActorVehicleMovementRecordingItem::toString()
 float ActorVehicleMovementRecordingItem::getSpeedInVehicle()
 {
 	return m_speedInVehicle;
+}
+
+void ActorVehicleMovementRecordingItem::setSpeedInVehicle(float speedInVehicle)
+{
+	m_speedInVehicle = speedInVehicle;
 }
 
 void ActorVehicleMovementRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
@@ -562,50 +612,30 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 			bool isPedInPlane = PED::IS_PED_IN_ANY_PLANE(actor.getActorPed());
 			bool isPedInBoat = PED::IS_PED_IN_ANY_BOAT(actor.getActorPed());
 
-			float minDistance = 4.0;
+			float minDistance = getMinDistanceBeforeCompleted();
 
-			if (isPedInHeli) {
-				minDistance = 90.0;
-			}
-			else if (isPedInPlane) {
-				minDistance = 100.0;
-			}
-			else if (isPedInBoat) {
-				minDistance = 60.0;
-			}
-			else if (isInVehicle) {
-				//TODO: Tweak based on heading changes
-				if (m_speedInVehicle > 30.0) {
-					minDistance = 17.0;
-				}
-				else {
-					minDistance = 10.0;
-				}
-			}
-
-	
 
 			//check if next is not a vehicle movement (will often be exit vehicle) Then the threshold should be much less
 			std::shared_ptr<ActorVehicleMovementRecordingItem> nextVehicleMovement = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(nextRecordingItem);
 			if (nextVehicleMovement == NULL) {
 				log_to_file("Next recording is not a vehicle movement, will require a smaller distance to target");
-				if (isPedInHeli) {
+				if (isPedInHeli && minDistance>45.0) {
 					minDistance = 45.0;
 				}
-				else if (isPedInPlane) {
+				else if (isPedInPlane && minDistance>50.0) {
 					minDistance = 50.0;
 				}
-				else if (isPedInBoat) {
+				else if (isPedInBoat && minDistance>30.0) {
 					minDistance = 30.0;
 				}
-				else if (isInVehicle) {
+				else if (isInVehicle && minDistance>2.0) {
 					minDistance = 2.0;
 				}
 			}
 			else {
 				if (nextVehicleMovement->getSpeedInVehicle() == 0.0) {
 					log_to_file("nextVehicleMovement->getSpeedInVehicle() == 0");
-					if (isInVehicle) {
+					if (isInVehicle && minDistance>2.0) {
 						minDistance = 2.0;
 					}
 				}
