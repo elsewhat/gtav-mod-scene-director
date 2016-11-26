@@ -10,6 +10,7 @@
 #include "..\..\inc\types.h"
 #include "..\..\inc\enums.h"
 #include "..\..\inc\main.h"
+#include "Animation.h"
 #include <string>
 
 enum SCENE_MODE {
@@ -113,6 +114,8 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_PREV_RECORDING = 306,
 	SUBMENU_ITEM_EDIT_VEH_SPEED = 307,
 	SUBMENU_ITEM_EDIT_MIN_DIST_COMPL = 308,
+	SUBMENU_ITEM_EDIT_TICKS_DELTA = 309,
+	SUBMENU_ITEM_EDIT_ANIMATION_REC = 310,
 };
 
 enum MARKER_TYPE {
@@ -140,3 +143,4 @@ bool menu_right_key_pressed();
 bool menu_select_key_pressed();
 bool menu_delete_key_pressed();
 void action_toggle_scene_mode();
+void action_animation_sequence_play(AnimationSequence animSequence);

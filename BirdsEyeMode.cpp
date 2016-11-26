@@ -33,21 +33,21 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 			if (menu_up_key_pressed()) {
 				if (submenu_active_index != -1) {
 					submenu_active_index++;
-					nextWaitTicks = 200;
+					nextWaitTicks = 150;
 				}
 				else {
 					menu_active_index++;
-					nextWaitTicks = 200;
+					nextWaitTicks = 150;
 				}
 			}
 			else if (menu_down_key_pressed()) {
 				if (submenu_active_index != -1) {
 					submenu_active_index--;
-					nextWaitTicks = 200;
+					nextWaitTicks = 150;
 				}
 				else {
 					menu_active_index--;
-					nextWaitTicks = 200;
+					nextWaitTicks = 150;
 				}
 			}
 			else if (menu_select_key_pressed()) {
@@ -58,11 +58,11 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 					actionMenuSelected();
 				}
 
-				nextWaitTicks = 200;
+				nextWaitTicks = 150;
 			}
 			else if (menu_left_key_pressed()) {
 				submenu_active_index = 0;
-				nextWaitTicks = 200;
+				nextWaitTicks = 150;
 			}
 			else if (menu_right_key_pressed()) {
 				submenu_active_index = -1;
@@ -71,7 +71,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 				selectedActor = nullptr;
 				highlightedRecording = nullptr;
 				highlightedActor = nullptr;
-				nextWaitTicks = 200;
+				nextWaitTicks = 150;
 			}
 		}
 
@@ -362,6 +362,23 @@ void BirdsEyeMode::drawSubMenuEdit() {
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
 
+	if (activeRecordingItem) {
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_EDIT_TICKS_DELTA;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT(strdup(("Check every " + std::to_string(activeRecordingItem->getTicksDeltaCheckCompletion())+ " ms").c_str()) , 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+
+	}
+
 	//dynamic actions based on the type of recording item
 	if (activeRecordingItem) {
 		std::shared_ptr<ActorOnFootMovementRecordingItem> onfootRecordingItem = std::dynamic_pointer_cast<ActorOnFootMovementRecordingItem>(activeRecordingItem);
@@ -413,41 +430,43 @@ void BirdsEyeMode::drawSubMenuEdit() {
 
 			drawIndex++;
 			submenu_index++;
+
+
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_MIN_DIST_COMPL;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+
+			DRAW_TEXT(strdup(("Minimal distance:" + roundNumber(vehicleMovementRecordingItem->getMinDistanceBeforeCompleted())).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
+		}
+
+		std::shared_ptr<ActorAnimationSequenceRecordingItem> animationRecording = std::dynamic_pointer_cast<ActorAnimationSequenceRecordingItem>(activeRecordingItem);
+		if (animationRecording) {
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_ANIMATION_REC;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+
+			DRAW_TEXT(strdup(("Anims:" + animationRecording->getAnimationSequence().toString()).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
 		}
 
 
 	}
 
-
-	/*if (submenu_is_active && submenu_active_index == submenu_index) {
-		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		submenu_active_action = SUBMENU_ITEM_SAVE_ACTORS;
-	}
-	else {
-		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-	}
-
-
-	DRAW_TEXT("Save actors", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-
-
-	drawIndex++;
-	submenu_index++;
-
-	if (submenu_is_active && submenu_active_index == submenu_index) {
-		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		submenu_active_action = SUBMENU_ITEM_PREV_RECORDING;
-	}
-	else {
-		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-	}
-
-	DRAW_TEXT("TBD", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-
-	drawIndex++;
-	submenu_index++;*/
 
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
@@ -513,7 +532,7 @@ void BirdsEyeMode::actionMenuSelected() {
 void BirdsEyeMode::actionSubMenuEditSelected()
 {
 	if (submenu_active_action == SUBMENU_ITEM_NEXT_RECORDING) {
-		nextWaitTicks = 200;
+		nextWaitTicks = 150;
 		int nextRecordingIndex = 0;
 
 		//cancel any ongoing location edits
@@ -535,19 +554,27 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_LOCATION) {
 		actionToggleEditLocation();
-		nextWaitTicks = 200;
+		nextWaitTicks = 150;
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_WALK_SPEED) {
 		actionInputWalkSpeed();
-		nextWaitTicks = 200;
+		nextWaitTicks = 150;
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_VEH_SPEED) {
 		actionInputVehicleSpeed();
-		nextWaitTicks = 200;
+		nextWaitTicks = 150;
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_MIN_DIST_COMPL) {
 		actionInputMinDistance();
-		nextWaitTicks = 200;
+		nextWaitTicks = 150;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_TICKS_DELTA) {
+		actionInputDeltaCheck();
+		nextWaitTicks = 150;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_ANIMATION_REC) {
+		actionInputAnimationRecording();
+		nextWaitTicks = 150;
 	}
 }
 
@@ -596,6 +623,25 @@ float BirdsEyeMode::actionInputFloat()
 	return atof(keyboardValue);
 }
 
+DWORD BirdsEyeMode::actionInputDword()
+{
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		WAIT(0);
+	}
+
+
+	if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+		log_to_file("Got null keyboard value");
+		return 0;
+	}
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strValue = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strValue);
+	return atoi(keyboardValue);
+}
+
 void BirdsEyeMode::actionInputWalkSpeed()
 {
 	std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
@@ -608,6 +654,19 @@ void BirdsEyeMode::actionInputWalkSpeed()
 		}
 	}
 }
+
+void BirdsEyeMode::actionInputDeltaCheck()
+{
+	std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+	if (activeRecordingItem) {
+		set_status_text("Enter how often to check for completion in milliseconds/ticks (typically 1 to 1000)");
+		DWORD deltaCheck = actionInputDword();
+		if (deltaCheck > 0) {
+			activeRecordingItem->setTicksDeltaCheckCompletion(deltaCheck);
+		}
+	}
+}
+
 
 void BirdsEyeMode::actionInputMinDistance()
 {
@@ -640,6 +699,61 @@ void BirdsEyeMode::actionInputVehicleSpeed()
 		if (f > 0.0) {
 			vehicleMovementRecordingItem->setSpeedInVehicle(f);
 		}
+	}
+}
+
+void BirdsEyeMode::actionInputAnimationRecording() {
+	std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+	std::shared_ptr<ActorAnimationSequenceRecordingItem> animationRecording = std::dynamic_pointer_cast<ActorAnimationSequenceRecordingItem>(activeRecordingItem);
+
+	if (animationRecording == nullptr) {
+		return;
+	}
+
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "INVALID_IN_ORDER_TO_DISPLAY_NOTHING", "", "", "", "", "", 256);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		DRAW_TEXT("Add one or more animations to an animation sequence below", 0.3, 0.325, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
+		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
+		WAIT(0);
+	}
+
+	if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+		log_to_file("Got null keyboard value");
+		return;
+	}
+
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strAnimationIndex = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strAnimationIndex);
+
+	char* token = strtok(keyboardValue, " ");
+	std::vector<Animation> animations = {};
+	int i = 0;
+	while (token != NULL)
+	{
+		log_to_file("Finding animation for token " + std::string(token));
+		Animation animation = getAnimationForShortcutIndex(token);
+		if (animation.shortcutIndex != 0) {
+			log_to_file("Adding animation " + animation.toString());
+			animations.push_back(animation);
+		}
+
+		token = strtok(NULL, " ");
+		i++;
+		if (i > 100) {
+			return;
+		}
+	}
+
+	if (animations.size() > 0) {
+		AnimationSequence animSequence{ animations };
+		animationRecording->setAnimationSequence(animSequence);
+
+		action_animation_sequence_play(animSequence);
+	}
+	else {
+		set_status_text("No valid animations IDs found in input");
 	}
 }
 
@@ -856,7 +970,7 @@ bool BirdsEyeMode::checkInputMovement()
 
 void BirdsEyeMode::disableControls() {
 	std::vector<int> disabledControls = {
-		0,2,3,4,5,6,16,17,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,44,45,156,243,257,261,262,263,264,267,268,269,270,271,272,273
+		0,2,3,4,5,6,16,17,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,44,45,71,72,156,243,257,261,262,263,264,267,268,269,270,271,272,273
 	};
 
 	for (auto & controlCode : disabledControls) {

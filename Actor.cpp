@@ -264,7 +264,9 @@ void Actor::removeRecording()
 {
 	m_hasRecording = false;
 	m_hasStartLocation = false;
+	m_startLocationVehicle = 0;
 	m_startLocation = Vector3();
+	m_hasRecordingWithGunFire = false;
 
 }
 

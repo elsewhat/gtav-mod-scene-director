@@ -49,7 +49,16 @@ struct AnimationSequence
 	}
 
 	std::string toString() {
-		return std::to_string(animationsInSequence.size()) + " animations";
+		if (isNullAnimationSequence()) {
+			return "No animations";
+		}
+		else {
+			std::string strAnims = "";
+			for (auto &animation : animationsInSequence) {
+				strAnims += animation.strShortcutIndex +" ";
+			}
+			return strAnims;
+		}
 	}
 };
 

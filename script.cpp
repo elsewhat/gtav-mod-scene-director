@@ -175,7 +175,7 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.2 beta1 by elsewhat");
+	set_status_text("Scene director 3.2 beta2 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
 	set_status_text("Scene is setup mode");
 }
@@ -1465,7 +1465,7 @@ void draw_menu() {
 
 	}
 
-	DRAW_TEXT("Animation (beta)", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Animation (BETA)", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 	if (menu_active_index == drawIndex) {
 		menu_active_action = MENU_ITEM_ANIMATION;
@@ -3603,13 +3603,9 @@ void action_animation_sequence_add() {
 			 animationSequences.push_back(animSequence);
 		 }
 
-
-
 		 log_to_file("Animation sequences " + std::to_string(animationSequences.size()));
 
 		 action_animation_sequence_play(animSequence);
-
-
 	}
 	else {
 		set_status_text("No valid animations IDs found in input");
@@ -3617,7 +3613,6 @@ void action_animation_sequence_add() {
 			set_status_text("Missing or empty SceneDirectorAnim.txt");
 		}
 	}
-
 }
 
 

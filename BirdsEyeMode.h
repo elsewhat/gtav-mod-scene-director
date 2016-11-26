@@ -44,9 +44,12 @@ private:
 	void actionSubMenuEditSelected();
 	void actionToggleEditLocation();
 	float actionInputFloat();
+	DWORD actionInputDword();
 	void actionInputWalkSpeed();
 	void actionInputVehicleSpeed();
 	void actionInputMinDistance();
+	void actionInputDeltaCheck();
+	void actionInputAnimationRecording();
 	bool checkInputAction();
 	bool checkInputMovement();
 	bool checkInputRotation();

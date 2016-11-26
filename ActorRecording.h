@@ -235,6 +235,7 @@ protected:
 public:
 	ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, AnimationSequence animationSequence, AnimationFlag animationFlag);
 	AnimationSequence getAnimationSequence();
+	void ActorAnimationSequenceRecordingItem::setAnimationSequence(AnimationSequence animationSequence);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;

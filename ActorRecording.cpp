@@ -129,7 +129,7 @@ ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksSt
 	m_heading = headingAtEnd;
 
 	//determine min distance before completion
-	float m_minDistanceBeforeCompleted = 4.0;
+	m_minDistanceBeforeCompleted = 4.0;
 	if (m_walkSpeed > 1.0) {
 		m_minDistanceBeforeCompleted = 7.0;
 	}
@@ -183,7 +183,7 @@ bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<
 			return true;
 		}
 		else {
-			if (nrOfChecksForCompletion > 10) {
+			if (nrOfChecksForCompletion > 25) {
 				log_to_file("Giving up after " + std::to_string(nrOfChecksForCompletion) + " attempts");
 				return true;
 			}
@@ -201,7 +201,7 @@ bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<
 
 std::string ActorOnFootMovementRecordingItem::toString()
 {
-	return ActorRecordingItem::toString() + " ActorMovementRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Speed " + std::to_string(m_walkSpeed);
+	return ActorRecordingItem::toString() + " ActorOnFootMovementRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Speed " + std::to_string(m_walkSpeed);
 }
 
 std::string ActorOnFootMovementRecordingItem::toUserFriendlyName()
@@ -504,7 +504,7 @@ ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticks
 	Hash vehicleHash = ENTITY::GET_ENTITY_MODEL(veh);
 
 	bool isInVehicle = PED::IS_PED_IN_ANY_VEHICLE(actor, 0);
-	bool isPedInHeli = PED::IS_PED_IN_ANY_HELI(vehicleHash);
+	bool isPedInHeli = VEHICLE::IS_THIS_MODEL_A_HELI(vehicleHash);
 	bool isPedInPlane = VEHICLE::IS_THIS_MODEL_A_PLANE(vehicleHash);
 	bool isPedInBoat = VEHICLE::IS_THIS_MODEL_A_BOAT(vehicleHash);
 
@@ -651,7 +651,7 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 				return true;
 			}
 			else {
-				if (nrOfChecksForCompletion > 10) {
+				if (nrOfChecksForCompletion > 25) {
 					log_to_file("Giving up after " + std::to_string(nrOfChecksForCompletion) + " attempts");
 					return true;
 				}
@@ -816,6 +816,11 @@ ActorAnimationSequenceRecordingItem::ActorAnimationSequenceRecordingItem(DWORD t
 AnimationSequence ActorAnimationSequenceRecordingItem::getAnimationSequence()
 {
 	return m_animationSequence;
+}
+
+void ActorAnimationSequenceRecordingItem::setAnimationSequence(AnimationSequence animationSequence)
+{
+	m_animationSequence = animationSequence;
 }
 
 std::string ActorAnimationSequenceRecordingItem::toString()
