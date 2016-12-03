@@ -14,6 +14,7 @@ private:
 	bool shouldExitMode = false;
 	bool shouldDrawMenu = true;
 	bool shouldDrawRecordingMarkers = true;
+	bool invertedControls = true;
 	int menu_active_index = 0;
 	int menu_max_index = 0;
 	MENU_ITEM menu_active_action = MENU_ITEM_SCENE_MODE;
@@ -49,6 +50,7 @@ private:
 	void actionInputVehicleSpeed();
 	void actionInputMinDistance();
 	void actionInputDeltaCheck();
+	void actionInputNrAttemptsBeforeSkipping();
 	void actionInputAnimationRecording();
 	bool checkInputAction();
 	bool checkInputMovement();
@@ -62,6 +64,7 @@ private:
 	bool is_key_pressed_for_left();
 	bool is_key_pressed_for_right();
 	bool is_key_pressed_for_run();
+	bool is_key_pressed_for_inverted_cam();
 public:
 	BirdsEyeMode();
 	void onEnterMode(SCENE_MODE aSceneMode);

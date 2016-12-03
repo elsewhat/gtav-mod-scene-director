@@ -12,6 +12,7 @@ ActorRecordingItem::ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRec
 	m_location = location;
 	m_ticksDeltaCheckCompletion = 300;
 	m_ticksDeltaWhenRecorded = ticksDeltaWhenRecorded;
+	m_nrAttemptsBeforeSkipping = 25;
 }
 
 DWORD ActorRecordingItem::getTicksAfterRecordStart()
@@ -30,6 +31,14 @@ void ActorRecordingItem::setLocation(Vector3 location)
 	m_location = location;
 }
 
+
+int ActorRecordingItem::getNrAttemptsBeforeSkipping() {
+	return m_nrAttemptsBeforeSkipping;
+}
+
+void ActorRecordingItem::setNrAttemptsBeforeSkipping(int nrAttemptsBeforeSkipping) {
+	m_nrAttemptsBeforeSkipping = nrAttemptsBeforeSkipping;
+}
 
 
 
@@ -183,7 +192,7 @@ bool ActorOnFootMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr<
 			return true;
 		}
 		else {
-			if (nrOfChecksForCompletion > 25) {
+			if (nrOfChecksForCompletion > m_nrAttemptsBeforeSkipping) {
 				log_to_file("Giving up after " + std::to_string(nrOfChecksForCompletion) + " attempts");
 				return true;
 			}
@@ -512,6 +521,7 @@ ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticks
 
 	if (isPedInHeli) {
 		m_minDistanceBeforeCompleted = 90.0;
+		m_nrAttemptsBeforeSkipping = 100;
 	}
 	else if (isPedInPlane) {
 		m_minDistanceBeforeCompleted = 100.0;
@@ -651,7 +661,7 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 				return true;
 			}
 			else {
-				if (nrOfChecksForCompletion > 25) {
+				if (nrOfChecksForCompletion > m_nrAttemptsBeforeSkipping) {
 					log_to_file("Giving up after " + std::to_string(nrOfChecksForCompletion) + " attempts");
 					return true;
 				}
@@ -854,7 +864,7 @@ void ActorAnimationSequenceRecordingItem::executeNativesForRecording(Actor actor
 
 	//load animation dicts
 	for (auto &animation : m_animationSequence.animationsInSequence) {
-		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, m_animationFlag.id, 8.0f, 0, 0, 0);
+		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, m_animationFlag.id | ANIMATION_LOOP_FLAG1, 8.0f, 0, 0, 0);
 	}
 
 	AI::CLOSE_SEQUENCE_TASK(task_seq);

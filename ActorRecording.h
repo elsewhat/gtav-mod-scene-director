@@ -22,6 +22,7 @@ protected:
 	float m_minDistanceBeforeCompleted;
 	MARKER_TYPE m_markerType;
 	int m_index;
+	int m_nrAttemptsBeforeSkipping;
 public:
 	ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actorPed, Vector3 location);
 
@@ -49,6 +50,8 @@ public:
 	virtual std::string toUserFriendlyName();
 	virtual void setMinDistanceBeforeCompleted(float minDistanceBeforeCompleted);
 	virtual float getMinDistanceBeforeCompleted();
+	virtual int getNrAttemptsBeforeSkipping();
+	virtual void setNrAttemptsBeforeSkipping(int nrAttemptsBeforeSkipping);
 };
 
 class ActorOnFootMovementRecordingItem : public ActorRecordingItem {

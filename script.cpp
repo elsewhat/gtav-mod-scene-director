@@ -133,6 +133,8 @@ Ped lastPlayerPed = 0;
 
 BirdsEyeMode birdsEyeController;
 
+TaskSequence currentTaskSequence = 100;
+
 void set_status_text(std::string text)
 {
 	UI::_SET_NOTIFICATION_TEXT_ENTRY("STRING");
@@ -175,7 +177,7 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.2 beta2 by elsewhat");
+	set_status_text("Scene director 3.2 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
 	set_status_text("Scene is setup mode");
 }
@@ -562,7 +564,7 @@ void draw_instructional_buttons_player_recording() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_R");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_E");
 		GRAPHICS::_0xE83A3E3557A56640(altControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Stop recording");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
@@ -3536,18 +3538,26 @@ void action_animation_sequence_play(AnimationSequence animSequence) {
 	}
 
 	//create task sequence
-	TaskSequence task_seq = 1;
+	currentTaskSequence += 1;
+	TaskSequence task_seq = rand();
 	AI::OPEN_SEQUENCE_TASK(&task_seq);
 
 	//load animation dicts
 	for (auto &animation : animSequence.animationsInSequence) {
-		log_to_file("AI::TASK_PLAY_ANIM " + std::to_string(animation.shortcutIndex) + " " + std::string(animation.animName));
-		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, animationFlag.id, 8.0f, 0, 0, 0);
+		try {
+			log_to_file("AI::TASK_PLAY_ANIM " + std::to_string(task_seq) + " - " + std::to_string(animation.shortcutIndex) + " " + std::string(animation.animName) + " " + std::string(animation.animLibrary) + " " + std::to_string(animation.duration) + " " + std::to_string(animationFlag.id));
+			AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, animationFlag.id, 8.0f, 0, 0, 0);
+		}
+		catch (const std::exception& e) {
+			log_to_file("Exception " + std::string(e.what()));
+		}
 	}
+	log_to_file("AI::CLOSE_SEQUENCE_TASK ");
 
 	AI::CLOSE_SEQUENCE_TASK(task_seq);
 	AI::TASK_PERFORM_SEQUENCE(actorPed, task_seq);
 	AI::CLEAR_SEQUENCE_TASK(&task_seq);
+	log_to_file("end of action_animation_sequence_play ");
 }
 
 void action_animation_sequence_add() {
@@ -3575,11 +3585,12 @@ void action_animation_sequence_add() {
 	char* token = strtok(keyboardValue, " ");
 	std::vector<Animation> animations = {};
 	int i = 0;
+	int maxAnimations = 15;
 	while (token != NULL)
 	{
 		log_to_file("Finding animation for token " + std::string(token));
 		Animation animation = getAnimationForShortcutIndex(token);
-		if (animation.shortcutIndex != 0) {
+		if (animation.shortcutIndex != 0 && animations.size() < maxAnimations) {
 			log_to_file("Adding animation " + animation.toString());
 			animations.push_back(animation);
 		}
@@ -4181,6 +4192,8 @@ void action_toggle_scene_mode() {
 bool record_scene_for_actor_key_press() {
 	//ALT+ R
 	if (IsKeyDown(VK_MENU) && IsKeyDown(0x52)) {
+		return true;
+	}else if (IsKeyDown(VK_MENU) && IsKeyDown(0x45)) {
 		return true;
 	}
 	else {
@@ -4822,6 +4835,8 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, animationSeqRecorded, animationFlag);
 					log_to_file(recordingItem.toString());
 
+					DELTA_TICKS = 500;
+
 					std::bitset<19> bitCheck(animationFlag.id);
 					log_to_file("Bitcheck " + bitCheck.to_string());
 					if (!bitCheck.test(5)) {//Bit 6 is not set
@@ -4831,8 +4846,9 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 						//take no new animation input before the animation is complete
 						ticksNextControl = ticksNow + animationSeqRecorded.getDurationOfAnimations();
-						//do not other recording before the animation is complete
+						//do no other recording before the animation is complete
 						DELTA_TICKS = animationSeqRecorded.getDurationOfAnimations();
+						log_to_file("ticksNow " + std::to_string(ticksNow) + "ticksNextControl " + std::to_string(ticksNextControl));
 
 					}
 					else {
@@ -4840,7 +4856,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						actorRecording.push_back(std::make_shared<ActorAnimationSequenceRecordingItem>(recordingItem));
 						ticksNextControl = ticksNow + 250;
 					}
-					DELTA_TICKS = 500;
+	
 					ticksLast = ticksNow;
 				}
 			}
@@ -4867,7 +4883,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 					//don't record as often for certain vehicles
 					if (PED::IS_PED_IN_ANY_HELI(actorPed)) {
-						DELTA_TICKS = 4000;
+						DELTA_TICKS = 2000;
 					}
 					else if (PED::IS_PED_IN_ANY_PLANE(actorPed)) {
 						DELTA_TICKS = 6000;
@@ -6022,6 +6038,7 @@ void main()
 
 void ScriptMain()
 {
+	srand(time(NULL));
 	GRAPHICS::REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
 
 	scaleForm = GRAPHICS::REQUEST_SCALEFORM_MOVIE_INSTANCE("instructional_buttons");
