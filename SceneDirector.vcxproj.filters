@@ -46,6 +46,7 @@
     <ClInclude Include="ActorProp.h" />
     <ClInclude Include="tinyxml2.h" />
     <ClInclude Include="BirdsEyeMode.h" />
+    <ClInclude Include="Prop.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

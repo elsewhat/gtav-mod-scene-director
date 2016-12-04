@@ -7,11 +7,26 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <sstream>
 #include "..\..\inc\types.h"
+#include "..\..\inc\natives.h"
 
 // returns module load path with trailing slash
 std::string GetCurrentModulePath();
 std::string roundNumber(float number);
+
+std::string actionInputString(int maxLength);
+DWORD actionInputDword();
+float actionInputFloat();
+
+
+class StringUtils {
+public:
+	static void split(const std::string &s, char delim, std::vector<std::string> &elems);
+	static std::vector<std::string> split(const std::string &s, char delim);
+};
+
 
 
 class MathUtils {

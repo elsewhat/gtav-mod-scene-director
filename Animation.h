@@ -2,6 +2,13 @@
 #include <vector>
 #include <string>
 #include <windows.h>
+#include "utils.h"
+
+enum FILTER_OPERATORS {
+	FILTER_AND,
+	FILTER_OR,
+	FILTER_NOT
+};
 
 struct Animation
 {
@@ -10,6 +17,8 @@ struct Animation
 	char* animLibrary;
 	char* animName;
 	int duration;
+
+	bool matchesFilter(std::string filterStr); 
 
 	std::string toString() {
 		return strShortcutIndex + " " + std::string(animLibrary) + " " + std::string(animName) + " " + std::to_string(duration);

@@ -858,18 +858,18 @@ void ActorAnimationSequenceRecordingItem::executeNativesForRecording(Actor actor
 		}
 	}
 
-	//create task sequence
 	TaskSequence task_seq = 1;
 	AI::OPEN_SEQUENCE_TASK(&task_seq);
 
 	//load animation dicts
 	for (auto &animation : m_animationSequence.animationsInSequence) {
-		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, m_animationFlag.id | ANIMATION_LOOP_FLAG1, 8.0f, 0, 0, 0);
+		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, m_animationFlag.id, 8.0f, 0, 0, 0);
 	}
 
 	AI::CLOSE_SEQUENCE_TASK(task_seq);
 	AI::TASK_PERFORM_SEQUENCE(actor.getActorPed(), task_seq);
 	AI::CLEAR_SEQUENCE_TASK(&task_seq);
+
 }
 
 bool ActorAnimationSequenceRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)

@@ -38,6 +38,7 @@
     <ClInclude Include="driving_mode.h" />
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="Lighting.h" />
+    <ClInclude Include="Prop.h" />
     <ClInclude Include="relationship.h" />
     <ClInclude Include="scenario.h" />
     <ClInclude Include="script.h" />

@@ -6,6 +6,58 @@
 #include <string>
 
 
+bool Animation::matchesFilter(std::string filterStr){
+	std::vector<std::string> filterTokens = StringUtils::split(filterStr, ' ');
+
+	FILTER_OPERATORS currentFitlerOperator = FILTER_OR;
+	bool matchesFilter = true;
+	int nrMatches = 0;
+	for (auto token : filterTokens) {
+		if (!token.empty() && (token.compare("AND") == 0 || token.compare("and") == 0)) {
+			currentFitlerOperator = FILTER_AND;
+			continue;
+		}
+		else if (!token.empty() && (token.compare("OR") == 0 || token.compare("or") == 0)) {
+			currentFitlerOperator = FILTER_OR;
+			continue;
+		}
+		else if (!token.empty() && (token.compare("NOT") == 0 || token.compare("not") == 0)) {
+			currentFitlerOperator = FILTER_NOT;
+			continue;
+		}
+
+		if (currentFitlerOperator == FILTER_AND) {
+			if (std::string(animName).find(token) == std::string::npos && std::string(animLibrary).find(token) == std::string::npos) {
+				return false;
+			}
+		}
+		else if (currentFitlerOperator == FILTER_NOT) {
+			if (std::string(animName).find(token) != std::string::npos || std::string(animLibrary).find(token) != std::string::npos) {
+				return false;
+			}
+		}
+		else {//FILTER_OR
+			if (std::string(animName).find(token) != std::string::npos || std::string(animLibrary).find(token) != std::string::npos) {
+				nrMatches++;
+			}
+		}
+	}
+
+	if (nrMatches > 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+
+	/*if (std::string(animName).find(filterStr) != std::string::npos || std::string(animLibrary).find(filterStr) != std::string::npos) {
+	return true;
+	}
+	else {
+	return false;
+	}*/
+}
+
 std::vector<AnimationFlag> gtaAnimationFlags = {
 	{ "Normal",ANIMATION_LOOP_FLAG1 },
 	{ "Controllable*",ANIMATION_LOOP_FLAG1 | ANIMATION_ALLOW_MOVEMENT_FLAG6 | ANIMATION_UPPER_BODY_FLAG5 },

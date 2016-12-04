@@ -62,6 +62,11 @@ Animation animationPrevious{ 0,"00000","","",0 };
 std::vector<AnimationSequence>  animationSequences;
 int animationSequencesIndex = 0;
 
+bool hasAnimationFilter = false;
+std::string animationFilterStr;
+bool doAnimationLoop = false;
+
+
 bool is_autopilot_engaged_for_player = false;
 bool is_chase_player_engaged = false;
 bool is_escort_player_engaged = false;
@@ -177,7 +182,7 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.2 by elsewhat");
+	set_status_text("Scene director 3.3 beta1 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
 	set_status_text("Scene is setup mode");
 }
@@ -637,8 +642,31 @@ void draw_instructional_buttons_animation_preview() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_G");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Go to anim");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_L");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop");
+		if (doAnimationLoop) {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop: On");
+		}
+		else {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop: Off");
+		}
+
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(7);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F");
+		std::string filterInstruction = "Filter";
+		if (hasAnimationFilter) {
+			filterInstruction += ": " + animationFilterStr;
+		}
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(filterInstruction.c_str()));
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
@@ -3536,7 +3564,11 @@ void action_animation_sequence_play(AnimationSequence animSequence) {
 			}
 		}
 	}
-
+	//for (auto &animation : animSequence.animationsInSequence) {
+		//ENTITY::PLAY_ENTITY_ANIM(actor.getActorPed(), animation.animLibrary,animation.animName,  1000.0, 0, 0, 0, 0, 0);
+		//ENTITY::FORCE_ENTITY_AI_AND_ANIMATION_UPDATE(actor.getActorPed());
+	//}
+	
 	//create task sequence
 	currentTaskSequence += 1;
 	TaskSequence task_seq = rand();
@@ -3639,6 +3671,11 @@ void action_animations_preview(){
 
 	boolean customCamera = true; 
 
+	animationFilterStr = std::string();
+	hasAnimationFilter = false;
+	doAnimationLoop = false;
+
+	/*
 	set_status_text("Enter animation code to begin preview");
 	set_status_text("Rotate character before starting preview for different angle");
 	set_status_text("Also available on Youtube through http://bit.ly/GTAVAnims");
@@ -3655,9 +3692,9 @@ void action_animations_preview(){
 	}
 	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
 	std::string strAnimationIndex = std::string(keyboardValue);
-	log_to_file("Got keyboard value " + strAnimationIndex);
+	log_to_file("Got keyboard value " + strAnimationIndex);*/
 
-	Animation animation = getAnimationForShortcutIndex(keyboardValue);
+	Animation animation = getAnimationForShortcutIndex("1");
 
 
 	Vector3 startLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
@@ -3697,8 +3734,6 @@ void action_animations_preview(){
 		return;
 	}
 
-
-	bool doLoop = false;
 
 	float currentCamHeading = startHeading;
 	/*Code for calculating length of animations 
@@ -3747,9 +3782,15 @@ void action_animations_preview(){
 	*/
 
 
+
+
 	for (int i = animation.shortcutIndex; i < animations.size();i++) {
 		Animation animation = animations[i];
 		std::string strAnimation = animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(animation.duration);
+
+		if (hasAnimationFilter && !animation.matchesFilter(animationFilterStr)) {
+			continue;
+		}
 
 		if (animation.shortcutIndex != 0 && animation.duration != 0) {
 			STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
@@ -3806,20 +3847,44 @@ void action_animations_preview(){
 						return ;
 					}
 					else if (IsKeyDown(0x4E)) {//next animation
+						if (hasAnimationFilter) {
+							for (int j = i+1; j < animations.size(); j++) {
+								if (animations[j].matchesFilter(animationFilterStr)) {
+									i = j;
+									WAIT(50);
+									break;
+								}
+							}
+						}
+						else {
+							i = i +1;
+						}
 						break;
 					}
 					else if (IsKeyDown(0x42)) {//previous animation
-						i = i - 2;
+						if (hasAnimationFilter) {
+							for (int j = i - 2; j >= 0; j--) {
+								if (animations[j].matchesFilter(animationFilterStr)) {
+									i=j;
+									WAIT(50);
+									break;
+								}
+							}
+						}
+						else {
+							i = i - 2;
+						}
+						
 						break;
 					}
 					else if (IsKeyDown(0x4C)) {//previous animation
 						
-						if (doLoop) {
+						if (doAnimationLoop) {
 							set_status_text("Stopped looping");
-							doLoop = false;
+							doAnimationLoop = false;
 						}
 						else {
-							doLoop = true;
+							doAnimationLoop = true;
 							set_status_text("Now looping current animation");
 						}
 						
@@ -3855,7 +3920,57 @@ void action_animations_preview(){
 
 
 					}
+					else if (IsKeyDown(0x46)) {//F key
+						set_status_text("Enter text to filter animations on. Operators AND OR NOT can be used");
+						animationFilterStr = actionInputString(50);
+						if (!animationFilterStr.empty()) {
+							int nrMatches = 0;
+							for (int j = 0; j < animations.size(); j++) {
+								if (animations[j].matchesFilter(animationFilterStr)) {
+									nrMatches++;
+								}
+							}
+							if (nrMatches == 0) {
+								set_status_text("Found no animations matching filter " + animationFilterStr);
+								hasAnimationFilter = false;
+							}
+							else {
+								set_status_text("Found " +std::to_string(nrMatches) + " animations matching filter ");
+								i = 0;
+								hasAnimationFilter = true;
+								doAnimationLoop = true;
+								break;
+							}
+						}
+						else {
+							hasAnimationFilter = false;
+							break;
+						}
+					}
+					else if (IsKeyDown(0x47)) {//G - key
 
+						set_status_text("Enter animation code to begin preview");
+						GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
+
+						while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+							WAIT(0);
+						}
+
+
+						if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+							log_to_file("Got null keyboard value");
+						}
+						else {
+							char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+							std::string strAnimationIndex = std::string(keyboardValue);
+							log_to_file("Got keyboard value " + strAnimationIndex);
+
+							Animation animation = getAnimationForShortcutIndex(keyboardValue);
+							i = animation.shortcutIndex - 1;
+							break;
+						}
+					}
+					
 
 					
 					if (GetTickCount() > ticksStart + 60000) {
@@ -3864,7 +3979,7 @@ void action_animations_preview(){
 						break;
 					}
 
-				}
+				} 
 
 
 
@@ -3874,7 +3989,7 @@ void action_animations_preview(){
 			else {
 				log_to_file(animation.strShortcutIndex + " " + std::string(animation.animLibrary) + " " + std::string(animation.animName) + " " + std::to_string(0));
 			}
-			if (doLoop) {
+			if (doAnimationLoop) {
 				i = i - 1;
 			}
 		}
