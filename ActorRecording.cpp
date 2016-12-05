@@ -1050,9 +1050,10 @@ std::string ActorShootAtByImpactRecordingItem::toUserFriendlyName()
 	return "Shoot";
 }
 
-ActorJumpingRecordingItem::ActorJumpingRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, walkSpeed, headingAtEnd)
+ActorJumpingRecordingItem::ActorJumpingRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isClimbing):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, walkSpeed, headingAtEnd)
 {
 	//TODO
+	m_isClimbing = isClimbing;
 	
 }
 
@@ -1060,7 +1061,13 @@ ActorJumpingRecordingItem::ActorJumpingRecordingItem(DWORD ticksStart, DWORD tic
 
 void ActorJumpingRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
-	AI::TASK_JUMP(actor.getActorPed(), 0);
+	if (m_isClimbing) {
+		AI::TASK_CLIMB(actor.getActorPed(), 0);
+	}
+	else {
+		AI::TASK_JUMP(actor.getActorPed(), 0);
+	}
+	
 }
 
 bool ActorJumpingRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)

@@ -773,6 +773,20 @@ void draw_submenu_animation(int drawIndex) {
 	submenu_index++;
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_ANIMATION_SYNC;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Sync anim test", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_ACTOR_PROP_ADD;
 	}
 	else {
@@ -3026,6 +3040,7 @@ void action_teleport_to_start_locations() {
 
 			PED::RESET_PED_VISIBLE_DAMAGE(actorPed);
 			PED::CLEAR_PED_BLOOD_DAMAGE(actorPed);
+			PED::SET_PED_SWEAT(actorPed, 0.0);
 
 			//ressurect any dead actors
 			if (ENTITY::IS_ENTITY_DEAD(actorPed)) {
@@ -3488,8 +3503,8 @@ void action_animation_single() {
 		set_status_text("Switch to an actor before playing animation");
 		return;
 	}
+
 	Ped actorPed = actor.getActorPed();
-	/*
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
 
 	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
@@ -3499,9 +3514,6 @@ void action_animation_single() {
 	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
 	std::string strAnimationIndex = std::string(keyboardValue);
 	log_to_file("Got keyboard value " + strAnimationIndex);
-	*/
-	char * keyboardValue = "01780";
-	std::string strAnimationIndex = std::string(keyboardValue);
 
 	Animation animation = getAnimationForShortcutIndex(keyboardValue);
 	if (animation.shortcutIndex != 0) {
@@ -3658,7 +3670,88 @@ void action_animation_sequence_add() {
 	}
 }
 
+void action_animation_sync_execute(Actor mainActor, Actor secondaryActor, Animation mainActorAnim, Animation secondaryActorAnimation) {
+	log_to_file("action_animation_sync_execute");
+	if (mainActor.isNullActor() || secondaryActor.isNullActor()) {
+		set_status_text("Actors must exist");
+		return;
+	}
 
+	Ped mainPed = mainActor.getActorPed();
+	Ped secondaryPed = secondaryActor.getActorPed();
+	Vector3 mainPedLoc = ENTITY::GET_ENTITY_COORDS(mainPed, true);
+
+	STREAMING::REQUEST_ANIM_DICT(mainActorAnim.animLibrary);
+	STREAMING::REQUEST_ANIM_DICT(secondaryActorAnimation.animLibrary);
+
+	while (!STREAMING::HAS_ANIM_DICT_LOADED(mainActorAnim.animLibrary) || !STREAMING::HAS_ANIM_DICT_LOADED(secondaryActorAnimation.animLibrary))
+	{
+		WAIT(0);
+	}
+
+	int scene = PED::CREATE_SYNCHRONIZED_SCENE(mainPedLoc.x, mainPedLoc.y, mainPedLoc.z-1.0, 0.0, 0.0, 180.0, 2);
+	PED::SET_SYNCHRONIZED_SCENE_LOOPED(scene, false);
+	AI::TASK_SYNCHRONIZED_SCENE(mainPed, scene, mainActorAnim.animLibrary, mainActorAnim.animName, 1000.0, -4.0, 64, 0, 0x447a0000, 0);
+	AI::TASK_SYNCHRONIZED_SCENE(secondaryPed, scene, secondaryActorAnimation.animLibrary, secondaryActorAnimation.animName, 1000.0, -4.0, 1, 0, 0x447a0000, 0);
+	PED::SET_SYNCHRONIZED_SCENE_PHASE(scene, 0.0);
+}
+
+void action_animation_sync_setup() {
+	log_to_file("action_animation_sync_setup");
+	if (actors[0].isNullActor() || actors[1].isNullActor()) {
+		set_status_text("Actor 1 and 2 must exist");
+		return;
+	}
+
+	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "INVALID_IN_ORDER_TO_DISPLAY_NOTHING", "", "", "", "", "", 256);
+
+	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+		DRAW_TEXT("Add two animations below that will be played on actor 1 and 2", 0.3, 0.325, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
+		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
+		WAIT(0);
+	}
+
+	if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+		log_to_file("Got null keyboard value");
+		return;
+	}
+
+	char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+	std::string strAnimationIndex = std::string(keyboardValue);
+	log_to_file("Got keyboard value " + strAnimationIndex);
+
+	char* token = strtok(keyboardValue, " ");
+	Animation mainActorAnim;
+	Animation secondaryActorAnimation;
+	int i = 0;
+	while (token != NULL)
+	{
+		if (i <= 1) {
+			log_to_file("Finding animation for token " + std::string(token));
+			Animation animation = getAnimationForShortcutIndex(token);
+			if (animation.shortcutIndex != 0 && i == 0) {
+				mainActorAnim = animation;
+			}
+			else if (animation.shortcutIndex != 0 && i == 1)
+			{
+				secondaryActorAnimation = animation;
+				break;
+			}
+		}
+
+		token = strtok(NULL, " ");
+		i++;
+	}
+
+	if (mainActorAnim.shortcutIndex == 0 || secondaryActorAnimation.shortcutIndex == 0) {
+		set_status_text("Animations could not be found");
+		return;
+	}
+	else {
+		action_animation_sync_execute(actors[0], actors[1], mainActorAnim, secondaryActorAnimation);
+	}
+
+}
 
 
 void action_animations_preview(){
@@ -3801,7 +3894,7 @@ void action_animations_preview(){
 
 				WAIT(0);
 				draw_instructional_buttons_animation_preview();
-				DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
+				DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 200);
 				if (GetTickCount() > ticksStart + 10000) {
 					log_to_file("Failed STREAMING::HAS_ANIM_DICT_LOADED for "+ std::string(animation.animLibrary));
 					hasLoaded = false;
@@ -3819,7 +3912,7 @@ void action_animations_preview(){
 				while (!ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
 					WAIT(0);
 					draw_instructional_buttons_animation_preview();
-					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 200);
+					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 200);
 
 					CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
 					if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {//stop preview
@@ -3839,7 +3932,7 @@ void action_animations_preview(){
 				while (ENTITY::IS_ENTITY_PLAYING_ANIM(actorPed, animation.animLibrary, animation.animName, 3)) {
 					WAIT(0);
 					draw_instructional_buttons_animation_preview();
-					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, false, false, false, false, 255, 255, 255, 255);
+					DRAW_TEXT(strdup(strAnimation.c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 255);
 
 					CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
 					if (IsKeyDown(0x43)) {//stop preview
@@ -5116,15 +5209,28 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 							}
 
 						}
-						else if (PED::IS_PED_JUMPING(actorPed)) {
+						else if (PED::IS_PED_JUMPING(actorPed) || PED::IS_PED_CLIMBING(actorPed)) {
 							float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
 							float walkSpeed = 1.0;
 							if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
 								walkSpeed = 2.0;
 							}
 
-							ActorJumpingRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
+							if (PED::IS_PED_CLIMBING(actorPed)) {
+								//walk over to where the jumping happened
+								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
+								recordingItem.setMinDistanceBeforeCompleted(1.8);
+								recordingItem.setTicksDeltaCheckCompletion(50);
+								recordingItem.setNrAttemptsBeforeSkipping(50);
+								actorRecording.push_back(std::make_shared<ActorOnFootMovementRecordingItem>(recordingItem));
+								log_to_file(recordingItem.toString());
+							}
+
+							ActorJumpingRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading, PED::IS_PED_CLIMBING(actorPed));
+							recordingItem.setTicksDeltaCheckCompletion(50);
 							actorRecording.push_back(std::make_shared<ActorJumpingRecordingItem>(recordingItem));
+							
+							log_to_file(recordingItem.toString());
 						}
 						else {
 							if (isActorUsingScenario) {//actor just stopped using scearion
@@ -5477,6 +5583,9 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SEQUENCE) {
 		action_animation_sequence_add();
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SYNC) {
+		action_animation_sync_setup();
+	}
 	else if (submenu_active_action >= SUBMENU_ITEM_ANIMATION_SEQUENCE_0 && submenu_active_action <= SUBMENU_ITEM_ANIMATION_SEQUENCE_20) {
 		int animSequenceIndex = submenu_active_action - SUBMENU_ITEM_ANIMATION_SEQUENCE_0;
 		if (animSequenceIndex >= 0 && animSequenceIndex < animationSequences.size()) {
@@ -5552,6 +5661,7 @@ void action_menu_active_delete() {
 }
 
 void action_menu_active_selected() {
+	log_to_file("action_menu_active_selected " + std::to_string(menu_active_action));
 	//switch to actor
 	if (menu_active_action >= 1 && menu_active_action <= 100) {
 		action_swap_to_actor_with_index(menu_active_action);
