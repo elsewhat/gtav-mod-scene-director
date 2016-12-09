@@ -92,6 +92,9 @@ public:
 	std::string toString() override;
 	virtual std::string toUserFriendlyName() override;
 
+	bool isClimbing();
+	void setIsClimbing(bool isClimbing);
+
 };
 
 class ActorStandingStillRecordingItem : public ActorRecordingItem {

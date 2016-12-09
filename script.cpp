@@ -3611,9 +3611,9 @@ void action_animation_sequence_add() {
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "INVALID_IN_ORDER_TO_DISPLAY_NOTHING", "", "", "", "", "", 256);
 
 	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
-		DRAW_TEXT("View animations on Youtube http://bit.ly/GTAVAnims", 0.3, 0.30, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
-		DRAW_TEXT("Add one or more animations to an animation sequence below", 0.3, 0.325, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
-		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
+		DRAW_TEXT("View animations on Youtube http://bit.ly/GTAVAnims", 0.3, 0.30, 0.3, 0.3, 0, true, false, false, false, 255, 255, 255, 255);
+		DRAW_TEXT("Add one or more animations to an animation sequence below", 0.3, 0.325, 0.3, 0.3, 0, true, false, false, false, 255, 255, 255, 255);
+		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, true, false, false, false, 255, 255, 255, 255);
 		WAIT(0);
 	}
 
@@ -3670,44 +3670,49 @@ void action_animation_sequence_add() {
 	}
 }
 
-void action_animation_sync_execute(Actor mainActor, Actor secondaryActor, Animation mainActorAnim, Animation secondaryActorAnimation) {
+void action_animation_sync_execute(Vector3 sceneLocation, std::vector<Actor>  syncActors, std::vector<Animation>  syncAnimations) {
 	log_to_file("action_animation_sync_execute");
-	if (mainActor.isNullActor() || secondaryActor.isNullActor()) {
-		set_status_text("Actors must exist");
+	if (syncActors[0].isNullActor() || syncActors[1].isNullActor()) {
+		set_status_text("Must have at least two actors");
 		return;
 	}
 
-	Ped mainPed = mainActor.getActorPed();
-	Ped secondaryPed = secondaryActor.getActorPed();
-	Vector3 mainPedLoc = ENTITY::GET_ENTITY_COORDS(mainPed, true);
-
-	STREAMING::REQUEST_ANIM_DICT(mainActorAnim.animLibrary);
-	STREAMING::REQUEST_ANIM_DICT(secondaryActorAnimation.animLibrary);
-
-	while (!STREAMING::HAS_ANIM_DICT_LOADED(mainActorAnim.animLibrary) || !STREAMING::HAS_ANIM_DICT_LOADED(secondaryActorAnimation.animLibrary))
-	{
-		WAIT(0);
+	//load animations
+	for (auto &synAnimation : syncAnimations) {
+		STREAMING::REQUEST_ANIM_DICT(synAnimation.animLibrary);
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(synAnimation.animLibrary))
+		{
+			WAIT(0);
+		}
 	}
 
-	int scene = PED::CREATE_SYNCHRONIZED_SCENE(mainPedLoc.x, mainPedLoc.y, mainPedLoc.z-1.0, 0.0, 0.0, 180.0, 2);
+	int scene = PED::CREATE_SYNCHRONIZED_SCENE(sceneLocation.x, sceneLocation.y, sceneLocation.z, 0.0, 0.0, 180.0, 2);
 	PED::SET_SYNCHRONIZED_SCENE_LOOPED(scene, false);
-	AI::TASK_SYNCHRONIZED_SCENE(mainPed, scene, mainActorAnim.animLibrary, mainActorAnim.animName, 1000.0, -4.0, 64, 0, 0x447a0000, 0);
-	AI::TASK_SYNCHRONIZED_SCENE(secondaryPed, scene, secondaryActorAnimation.animLibrary, secondaryActorAnimation.animName, 1000.0, -4.0, 1, 0, 0x447a0000, 0);
+	int actorIndex = 0;
+	for (auto &synAnimation : syncAnimations) {
+		if (syncActors[actorIndex].isNullActor()) {
+			set_status_text("Cannot play synced animation #" + std::to_string(actorIndex + 1) + "  since Actor " +std::to_string(actorIndex + 1) + " does not exist");
+		}
+		else {
+			AI::TASK_SYNCHRONIZED_SCENE(syncActors[actorIndex].getActorPed(), scene, synAnimation.animLibrary, synAnimation.animName, 1000.0, -4.0, 64, 0, 0x447a0000, 0);
+		}
+		actorIndex++;
+	}
 	PED::SET_SYNCHRONIZED_SCENE_PHASE(scene, 0.0);
 }
 
 void action_animation_sync_setup() {
 	log_to_file("action_animation_sync_setup");
 	if (actors[0].isNullActor() || actors[1].isNullActor()) {
-		set_status_text("Actor 1 and 2 must exist");
+		set_status_text("Must have at least two actors");
 		return;
 	}
 
 	GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "INVALID_IN_ORDER_TO_DISPLAY_NOTHING", "", "", "", "", "", 256);
 
 	while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
-		DRAW_TEXT("Add two animations below that will be played on actor 1 and 2", 0.3, 0.325, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
-		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, false, false, false, false, 0, 0, 0, 255);
+		DRAW_TEXT("Add two or more animations below that will be played with existing Actors", 0.3, 0.325, 0.3, 0.3, 0, true, false, false, false, 255, 255, 255, 255);
+		DRAW_TEXT("Syntax: <00000-21822> <00000-21822>...", 0.3, 0.35, 0.3, 0.3, 0, true, false, false, false, 255, 255, 255, 255);
 		WAIT(0);
 	}
 
@@ -3721,34 +3726,32 @@ void action_animation_sync_setup() {
 	log_to_file("Got keyboard value " + strAnimationIndex);
 
 	char* token = strtok(keyboardValue, " ");
-	Animation mainActorAnim;
-	Animation secondaryActorAnimation;
+	std::vector<Animation> syncAnimations = {};
 	int i = 0;
+	int maxAnimations = 15;
 	while (token != NULL)
 	{
-		if (i <= 1) {
-			log_to_file("Finding animation for token " + std::string(token));
-			Animation animation = getAnimationForShortcutIndex(token);
-			if (animation.shortcutIndex != 0 && i == 0) {
-				mainActorAnim = animation;
-			}
-			else if (animation.shortcutIndex != 0 && i == 1)
-			{
-				secondaryActorAnimation = animation;
-				break;
-			}
+		log_to_file("Finding animation for token " + std::string(token));
+		Animation animation = getAnimationForShortcutIndex(token);
+		if (animation.shortcutIndex != 0 && syncAnimations.size() < maxAnimations) {
+			log_to_file("Adding animation " + animation.toString());
+			syncAnimations.push_back(animation);
 		}
 
 		token = strtok(NULL, " ");
 		i++;
+		if (i > 100) {
+			return;
+		}
 	}
 
-	if (mainActorAnim.shortcutIndex == 0 || secondaryActorAnimation.shortcutIndex == 0) {
-		set_status_text("Animations could not be found");
+	if (syncAnimations.size() == 0) {
+		set_status_text("No animations could be found");
 		return;
 	}
 	else {
-		action_animation_sync_execute(actors[0], actors[1], mainActorAnim, secondaryActorAnimation);
+		Vector3 startLocation = ENTITY::GET_ENTITY_COORDS(actors[0].getActorPed(), true);
+		action_animation_sync_execute(startLocation,actors, syncAnimations);
 	}
 
 }
@@ -5216,7 +5219,8 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								walkSpeed = 2.0;
 							}
 
-							if (PED::IS_PED_CLIMBING(actorPed)) {
+							bool isClimbing = PED::IS_PED_CLIMBING(actorPed);
+							if (isClimbing) {
 								//walk over to where the jumping happened
 								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
 								recordingItem.setMinDistanceBeforeCompleted(1.8);
@@ -5226,10 +5230,17 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								log_to_file(recordingItem.toString());
 							}
 
-							ActorJumpingRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading, PED::IS_PED_CLIMBING(actorPed));
-							recordingItem.setTicksDeltaCheckCompletion(50);
-							actorRecording.push_back(std::make_shared<ActorJumpingRecordingItem>(recordingItem));
+
+							ActorJumpingRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading, isClimbing);
+							if (isClimbing) {
+								recordingItem.setTicksDeltaCheckCompletion(50);
+							}
+							else {
+								//make sure jump is before going to next recording item
+								recordingItem.setTicksDeltaCheckCompletion(400);
+							}
 							
+							actorRecording.push_back(std::make_shared<ActorJumpingRecordingItem>(recordingItem));
 							log_to_file(recordingItem.toString());
 						}
 						else {

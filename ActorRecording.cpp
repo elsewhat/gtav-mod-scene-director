@@ -1078,12 +1078,22 @@ bool ActorJumpingRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRe
 
 std::string ActorJumpingRecordingItem::toString()
 {
-	return ActorOnFootMovementRecordingItem::toString() + " ActorJumpingRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") Speed " + std::to_string(m_walkSpeed);
+	return "ActorJumpingRecordingItem Location (" + std::to_string(m_location.x) + "," + std::to_string(m_location.y) + "," + std::to_string(m_location.z) + ") isClimbing:"+std::to_string(m_isClimbing)+" Speed:" + std::to_string(m_walkSpeed);
 }
 
 std::string ActorJumpingRecordingItem::toUserFriendlyName()
 {
 	return "Jumping";
+}
+
+bool ActorJumpingRecordingItem::isClimbing()
+{
+	return m_isClimbing;
+}
+
+void ActorJumpingRecordingItem::setIsClimbing(bool isClimbing)
+{
+	m_isClimbing = isClimbing;
 }
 
 ActorReloadRecordingItem::ActorReloadRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, bool doAim, Vector3 weaponImpact):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)

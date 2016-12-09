@@ -486,6 +486,28 @@ void BirdsEyeMode::drawSubMenuEdit() {
 			submenu_index++;
 		}
 
+		std::shared_ptr<ActorJumpingRecordingItem> jumpOrClimbRecording = std::dynamic_pointer_cast<ActorJumpingRecordingItem>(activeRecordingItem);
+		if (jumpOrClimbRecording) {
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_JUMP_OR_CLIMB;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+			if (jumpOrClimbRecording->isClimbing()) {
+				DRAW_TEXT("Climb: Yes", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}
+			else {
+				DRAW_TEXT("Climb: No", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}
+			
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
+		}
+
 
 	}
 
@@ -562,7 +584,7 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 		selectedActor = nullptr;
 
 		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
-		if (activeRecordingItem != nullptr) {
+		if (activeRecordingItem) {
 			
 			std::shared_ptr<Actor> activeActor = getActiveActor();
 			nextRecordingIndex = (activeRecordingItem->getIndex()-1)+1;
@@ -601,6 +623,16 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_NRATTEMPTS_BEFORE_SKIPPING) {
 		actionInputNrAttemptsBeforeSkipping();
 		nextWaitTicks = 150;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_JUMP_OR_CLIMB) {
+		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+		if (activeRecordingItem) {
+			std::shared_ptr<ActorJumpingRecordingItem> jumpOrClimbRecording = std::dynamic_pointer_cast<ActorJumpingRecordingItem>(activeRecordingItem);
+			if (jumpOrClimbRecording) {
+				jumpOrClimbRecording->setIsClimbing(!jumpOrClimbRecording->isClimbing());
+				nextWaitTicks = 150;
+			}
+		}
 	}
 }
 

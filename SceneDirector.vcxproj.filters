@@ -17,6 +17,8 @@
     <ClCompile Include="ActorProp.cpp" />
     <ClCompile Include="tinyxml2.cpp" />
     <ClCompile Include="BirdsEyeMode.cpp" />
+    <ClCompile Include="SyncedAnimation.cpp" />
+    <ClCompile Include="GTAObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\enums.h">
@@ -47,6 +49,8 @@
     <ClInclude Include="tinyxml2.h" />
     <ClInclude Include="BirdsEyeMode.h" />
     <ClInclude Include="Prop.h" />
+    <ClInclude Include="SyncedAnimation.h" />
+    <ClInclude Include="GTAObject.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
