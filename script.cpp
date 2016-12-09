@@ -14,6 +14,8 @@
 #include "Animation.h"
 #include "ActorProp.h"
 #include "BirdsEyeMode.h"
+#include "GTAObject.h"
+#include "SyncedAnimation.h"
 #include "tinyxml2.h"
 
 #include <string>
@@ -722,24 +724,6 @@ void draw_submenu_animation(int drawIndex) {
 	DRAW_TEXT(strdup(("Type: "+ animationFlag.name).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-	/*
-	drawIndex++;
-	submenu_index++;
-
-	
-	if (submenu_is_active && submenu_active_index == submenu_index) {
-		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
-		submenu_active_action = SUBMENU_ITEM_ANIMATION_SINGLE;
-	}
-	else {
-		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
-	}
-
-	DRAW_TEXT("Animation - Single", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
-	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
-
-	*/
-
 	drawIndex++;
 	submenu_index++;
 	if (submenu_is_active && submenu_active_index == submenu_index) {
@@ -779,12 +763,28 @@ void draw_submenu_animation(int drawIndex) {
 		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 	}
 
-	DRAW_TEXT("Sync anim test", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	DRAW_TEXT("Add new synced anim", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 
 	drawIndex++;
 	submenu_index++;
+
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_ANIMATION_SYNC_PREVIEW;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Synced anim preview", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+
+	drawIndex++;
+	submenu_index++;
+
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_ACTOR_PROP_ADD;
@@ -4165,6 +4165,220 @@ void action_animations_preview(){
 }
 
 
+void action_animation_sync_preview() {
+	log_to_file("action_animation_sync_execute");
+	if (actors[0].isNullActor() || actors[1].isNullActor()) {
+		set_status_text("Must have at least two actors before starting synced animation preview");
+		return;
+	}
+
+	Ped actorPed = actors[0].getActorPed();
+
+	boolean customCamera = true;
+
+	animationFilterStr = std::string();
+	hasAnimationFilter = false;
+	doAnimationLoop = false;
+
+	Vector3 startLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
+	float startHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+	log_to_file("Start heading is " + std::to_string(startHeading));
+	Vector3 camOffset;
+	camOffset.x = (float)sin((startHeading *PI / 180.0f))*3.0f;
+	camOffset.y = (float)cos((startHeading *PI / 180.0f))*3.0f;
+
+
+
+	if (startLocation.x < 0) {
+		camOffset.x = -camOffset.x;
+	}
+	if (startLocation.y < 0) {
+		camOffset.y = -camOffset.y;
+	}
+
+
+	camOffset.z = 0.4;
+
+	log_to_file("Camera offset (" + std::to_string(camOffset.x) + ", " + std::to_string(camOffset.y) + ", " + std::to_string(camOffset.z) + ")");
+	Vector3 camLocation = ENTITY::GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS(actorPed, camOffset.x, camOffset.y, camOffset.z);
+	Any cameraHandle;
+	if (customCamera) {
+		cameraHandle = CAM::CREATE_CAM_WITH_PARAMS("DEFAULT_SCRIPTED_CAMERA", camLocation.x, camLocation.y, camLocation.z, 0.0, 0.0, 0.0, 40.0, 1, 2);
+		CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+		CAM::POINT_CAM_AT_ENTITY(cameraHandle, actorPed, 0.0f, 0.0f, 0.0f, true);
+		CAM::RENDER_SCRIPT_CAMS(true, 0, 3000, 1, 0);
+	}
+
+	std::vector<SyncedAnimation> syncedAnimations = getAllSyncedAnimations();
+	set_status_text(std::to_string(syncedAnimations.size()) + " synced animations");
+	log_to_file("Have " + std::to_string(syncedAnimations.size()) + " synced animations");
+
+	float currentCamHeading = startHeading;
+	
+	for (int i = 0; i < syncedAnimations.size(); i++) {
+		SyncedAnimation syncedAnimation = syncedAnimations[i];
+
+		if (hasAnimationFilter && !syncedAnimation.matchesFilter(animationFilterStr)) {
+			continue;
+		}
+
+
+		DRAW_TEXT(strdup(syncedAnimation.toString().c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 200);
+
+		syncedAnimation.executeSyncedAnimation(actors, std::vector<GTAObject>(), true, Vector3());
+		DWORD ticksStart = GetTickCount();
+
+		while (!syncedAnimation.isCompleted()) {
+			WAIT(0);
+			draw_instructional_buttons_animation_preview();
+			DRAW_TEXT(strdup(syncedAnimation.toString().c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 255);
+
+			CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
+			if (IsKeyDown(0x43)) {//stop preview
+				CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
+				return;
+			}
+			else if (IsKeyDown(0x4E)) {//next animation
+				if (hasAnimationFilter) {
+					for (int j = i + 1; j < syncedAnimations.size(); j++) {
+						if (syncedAnimations[j].matchesFilter(animationFilterStr)) {
+							i = j;
+							WAIT(150);
+							break;
+						}
+					}
+				}
+				else {
+					i = i + 1;
+				}
+				break;
+			}
+			else if (IsKeyDown(0x42)) {//previous animation
+				if (hasAnimationFilter) {
+					for (int j = i - 2; j >= 0; j--) {
+						if (syncedAnimations[j].matchesFilter(animationFilterStr)) {
+							i = j;
+							WAIT(150);
+							break;
+						}
+					}
+				}
+				else {
+					i = i - 2;
+				}
+
+				break;
+			}
+			else if (IsKeyDown(0x4C)) {//previous animation
+
+				if (doAnimationLoop) {
+					set_status_text("Stopped looping");
+					doAnimationLoop = false;
+				}
+				else {
+					doAnimationLoop = true;
+					set_status_text("Now looping current animation");
+				}
+
+				WAIT(100);
+			}
+			else if (IsKeyDown(VK_LEFT)) {//previous animation
+				currentCamHeading += 10.0;
+				if (currentCamHeading >= 359.9) {
+					currentCamHeading = 0.0;
+				}
+
+				camOffset.x = (float)sin((currentCamHeading *PI / 180.0f))*3.0f;
+				camOffset.y = (float)cos((currentCamHeading *PI / 180.0f))*3.0f;
+				if (customCamera) {
+					CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+					WAIT(100);
+				}
+			}
+			else if (IsKeyDown(VK_RIGHT)) {//previous animation
+				currentCamHeading -= 10.0;
+				if (currentCamHeading < 0.0) {
+					currentCamHeading += 360.0;
+				}
+
+				camOffset.x = (float)sin((currentCamHeading *PI / 180.0f))*3.0f;
+				camOffset.y = (float)cos((currentCamHeading *PI / 180.0f))*3.0f;
+				if (customCamera) {
+					CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+					WAIT(100);
+				}
+
+
+			}
+			else if (IsKeyDown(0x46)) {//F key
+				set_status_text("Enter text to filter animations on. Operators AND OR NOT can be used");
+				animationFilterStr = actionInputString(50);
+				if (!animationFilterStr.empty()) {
+					int nrMatches = 0;
+					for (int j = 0; j < syncedAnimations.size(); j++) {
+						if (syncedAnimations[j].matchesFilter(animationFilterStr)) {
+							nrMatches++;
+						}
+					}
+					if (nrMatches == 0) {
+						set_status_text("Found no animations matching filter " + animationFilterStr);
+						hasAnimationFilter = false;
+					}
+					else {
+						set_status_text("Found " + std::to_string(nrMatches) + " animations matching filter ");
+						i = 0;
+						hasAnimationFilter = true;
+						doAnimationLoop = true;
+						break;
+					}
+				}
+				else {
+					hasAnimationFilter = false;
+					break;
+				}
+			}
+			/*else if (IsKeyDown(0x47)) {//G - key
+
+				set_status_text("Enter animation code to begin preview");
+				GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
+
+				while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
+					WAIT(0);
+				}
+
+
+				if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
+					log_to_file("Got null keyboard value");
+				}
+				else {
+					char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
+					std::string strAnimationIndex = std::string(keyboardValue);
+					log_to_file("Got keyboard value " + strAnimationIndex);
+
+					Animation animation = getAnimationForShortcutIndex(keyboardValue);
+					i = animation.shortcutIndex - 1;
+					break;
+				}
+			}*/
+
+
+
+			if (GetTickCount() > ticksStart + 60000) {
+				break;
+			}
+
+		}
+
+		if (doAnimationLoop) {
+			i = i - 1;
+		}
+	}
+
+	//reset cam
+	CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
+}
+
+
 
 AnimationSequence action_if_animation_sequence_shortcut_key_pressed(bool isRecording) {
 	//ALT key
@@ -5597,6 +5811,9 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SYNC) {
 		action_animation_sync_setup();
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SYNC_PREVIEW) {
+		action_animation_sync_preview();
+	}
 	else if (submenu_active_action >= SUBMENU_ITEM_ANIMATION_SEQUENCE_0 && submenu_active_action <= SUBMENU_ITEM_ANIMATION_SEQUENCE_20) {
 		int animSequenceIndex = submenu_active_action - SUBMENU_ITEM_ANIMATION_SEQUENCE_0;
 		if (animSequenceIndex >= 0 && animSequenceIndex < animationSequences.size()) {
@@ -6303,6 +6520,8 @@ void ScriptMain()
 	else {
 		log_to_file("GTA Animations initialization failed. SceneDirectorAnim.txt file missing?");
 	}
+
+	initializeSyncedAnimations();
 	//std::vector<Animation> gtaAnimations = getAllAnimations();
 	//log_to_file("GTA Animations size: " + std::to_string(gtaAnimations.size()));
 

@@ -4,7 +4,6 @@
 #include <windows.h>
 #include "..\..\inc\types.h"
 #include "utils.h"
-#include "utils.h"
 #include "Animation.h"
 #include "Actor.h"
 #include "GTAObject.h"
@@ -31,8 +30,12 @@ public:
 	bool isCompleted();
 	void cleanupAfterExecution();
 
+
+	bool matchesFilter(std::string filterStr);
 	bool isNull();
+	std::string toString();
 };
 
 //Get all the synced animation defined in the mod
-std::vector<SyncedAnimation> getSyncedAnimation();
+std::vector<SyncedAnimation> getAllSyncedAnimations();
+void initializeSyncedAnimations();

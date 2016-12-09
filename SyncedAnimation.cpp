@@ -29,7 +29,7 @@ SyncedAnimation::SyncedAnimation(std::string title, std::vector<Animation>  acto
 
 void SyncedAnimation::executeSyncedAnimation(std::vector<Actor> syncActors, std::vector<GTAObject>  syncObjects, bool useFirstActorLocation, Vector3 directLocation)
 {
-	log_to_file("SyncedAnimation->executeSyncedAnimation");
+	log_to_file("SyncedAnimation->executeSyncedAnimation " + toString());
 	DWORD ticksStart = GetTickCount();
 	
 	//must be at least as many actors as animations
@@ -52,6 +52,7 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor> syncActors, std:
 	//load actor animations
 	for (auto &animation : m_actorAnimations) {
 		STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+		log_to_file("Loading animation " + animation.toString());
 		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
 		{
 			WAIT(0);
@@ -134,7 +135,8 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor> syncActors, std:
 bool SyncedAnimation::isCompleted()
 {
 	if (m_sceneId != 0) {
-		if (PED::IS_SYNCHRONIZED_SCENE_RUNNING(m_sceneId)) {
+		float sceneStatus = PED::GET_SYNCHRONIZED_SCENE_PHASE(m_sceneId);
+		if (sceneStatus>=1.0) {
 			return true;
 		}
 		else {
@@ -167,22 +169,49 @@ void SyncedAnimation::cleanupAfterExecution()
 }
 
 
+bool SyncedAnimation::matchesFilter(std::string filterStr)
+{
+	return true;
+}
+
 bool SyncedAnimation::isNull()
 {
 	return m_isNull;
 }
 
+std::string SyncedAnimation::toString()
+{
+	std::string objString = m_title + " Anims:";
+	for (auto &animation : m_actorAnimations) {
+		objString += std::to_string(animation.shortcutIndex) + " ";
+	}
+	if (m_objectAnimations.size() > 0) {
+		objString += "ObjectAnims:";
+		for (auto &animation : m_objectAnimations) {
+			objString += std::to_string(animation.shortcutIndex) + " ";
+		}
+	}
+
+	objString += "Z-adjustment:" + roundNumber(m_deltaZLocation);
+
+
+	return objString;
+}
+
 //Defined all SyncedAnimations identified so far
 
 //SyncedAnimation aSyncedAnimation = SyncedAnimation("Test",std::vector<Animation> { getAnimationForShortcutIndex(1801), getAnimationForShortcutIndex(1803) }, 0.0);
+std::vector<SyncedAnimation> gtaSyncedAnimations;
 
-std::vector<SyncedAnimation> gtaSyncedAnimations = {
-	SyncedAnimation("Manly handshake(female - female)",std::vector<Animation> {getAnimationForShortcutIndex(1801), getAnimationForShortcutIndex(1803) }, 0.0),
-	SyncedAnimation("Manly handshake (female - male)",std::vector<Animation> {getAnimationForShortcutIndex(1822), getAnimationForShortcutIndex(30710) }, 0.0),
-	SyncedAnimation("Manly handshake (male - male)",std::vector<Animation> {getAnimationForShortcutIndex(30719), getAnimationForShortcutIndex(30720) }, 0.0),
-	SyncedAnimation("Bro hug (female - female)",std::vector<Animation> {getAnimationForShortcutIndex(30697), getAnimationForShortcutIndex(30698) }, 0.0),
-};
+void initializeSyncedAnimations() {
+	gtaSyncedAnimations = {
+		SyncedAnimation("Manly handshake(female - female)",std::vector<Animation> {getAnimationForShortcutIndex(1801), getAnimationForShortcutIndex(1803) }, 0.0),
+		SyncedAnimation("Manly handshake (female - male)",std::vector<Animation> {getAnimationForShortcutIndex(1822), getAnimationForShortcutIndex(30710) }, 0.0),
+		SyncedAnimation("Manly handshake (male - male)",std::vector<Animation> {getAnimationForShortcutIndex(30719), getAnimationForShortcutIndex(30720) }, 0.0),
+		SyncedAnimation("Bro hug (female - female)",std::vector<Animation> {getAnimationForShortcutIndex(30697), getAnimationForShortcutIndex(30698) }, 0.0),
+	};
+}
 
-std::vector<SyncedAnimation> getSyncedAnimation() {
+std::vector<SyncedAnimation> getAllSyncedAnimations() {
 	return gtaSyncedAnimations;
 }
