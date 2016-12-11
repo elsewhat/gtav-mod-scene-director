@@ -18,3 +18,5 @@ struct GTAObject{
 		return objHash == 0;
 	}
 };
+
+GTAObject getGTAObjectFromObjName(std::string objName);

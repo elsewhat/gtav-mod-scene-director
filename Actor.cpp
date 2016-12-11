@@ -248,6 +248,7 @@ void Actor::startReplayRecording(DWORD tickStart)
 void Actor::stopReplayRecording()
 {
 	m_replayRecordingInProgress = false;
+	getRecordingPlayback().setRecordingItemIndex(0);
 }
 
 void Actor::resumeReplayRecording()
