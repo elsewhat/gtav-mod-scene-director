@@ -240,6 +240,14 @@ int get_actor_index_from_ped(Ped ped) {
 	return i;
 }
 
+std::vector<Actor*> getActorPointers() {
+	std::vector<Actor *> actorsPoint(actors.size());
+	for (auto actor : actors) {
+		actorsPoint.push_back(&actor);
+	}
+	return actorsPoint;
+}
+
 // player model control, switching on normal ped model when needed	
 void check_player_model()
 {
@@ -4263,7 +4271,7 @@ void action_animations_preview(){
 
 }
 void action_animation_sync_play(SyncedAnimation syncedAnimation) {
-	syncedAnimation.executeSyncedAnimation(actors, true, Vector3(), false);
+	syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), false);
 	DWORD ticksStart = GetTickCount();
 
 	while (!syncedAnimation.isCompleted()) {
@@ -4340,7 +4348,7 @@ void action_animation_sync_preview() {
 		DRAW_TEXT(strdup(syncedAnimation.toString().c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 200);
 
 		//std::vector<GTAObject>(),
-		syncedAnimation.executeSyncedAnimation(actors,  true, Vector3(), doAnimationLoop);
+		syncedAnimation.executeSyncedAnimation(getActorPointers(),  true, Vector3(), doAnimationLoop);
 		DWORD ticksStart = GetTickCount();
 
 		while (!syncedAnimation.isCompleted()) {
@@ -4462,7 +4470,7 @@ void action_animation_sync_preview() {
 				log_to_file("UP");
 				syncedAnimation.setDeltaZ(syncedAnimation.getDeltaZ() + 0.1);
 				syncedAnimation.cleanupAfterExecution(true, true);
-				syncedAnimation.executeSyncedAnimation(actors, true, Vector3(), doAnimationLoop);
+				syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop);
 
 				WAIT(150);
 			}
@@ -4470,7 +4478,7 @@ void action_animation_sync_preview() {
 				log_to_file("Down");
 				syncedAnimation.setDeltaZ(syncedAnimation.getDeltaZ() - 0.1);
 				syncedAnimation.cleanupAfterExecution(true, true);
-				syncedAnimation.executeSyncedAnimation(actors, true, Vector3(), doAnimationLoop);
+				syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop);
 				WAIT(150);
 			}
 

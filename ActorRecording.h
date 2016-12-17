@@ -254,14 +254,14 @@ public:
 
 class ActorSyncedAnimationRecordingItem : public ActorRecordingItem {
 protected:
-	std::vector<Actor> m_actors;
+	std::vector<Actor*> m_actors;
 	SyncedAnimation m_syncedAnimation;
 public:
-	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor> actors, Vector3 location, SyncedAnimation syncedAnimation);
+	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor*> actors, Vector3 location, SyncedAnimation syncedAnimation);
 	SyncedAnimation getSyncedAnimation();
 	void setSyncedAnimation(SyncedAnimation syncedAnimation);
-	std::vector<Actor> getActors();
-	void setActors(std::vector<Actor> actors);
+	std::vector<Actor*> getActors();
+	void setActors(std::vector<Actor*> actors);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;

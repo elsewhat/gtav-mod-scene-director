@@ -1178,7 +1178,7 @@ std::string ActorSpeakRecordingItem::toUserFriendlyName()
 	return "Speaking";
 }
 
-ActorSyncedAnimationRecordingItem::ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded,Ped pedActor, std::vector<Actor> actors, Vector3 location, SyncedAnimation syncedAnimation):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, pedActor, location)
+ActorSyncedAnimationRecordingItem::ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded,Ped pedActor, std::vector<Actor*> actors, Vector3 location, SyncedAnimation syncedAnimation):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, pedActor, location)
 {
 	m_syncedAnimation = syncedAnimation;
 	m_actors = actors;
@@ -1195,12 +1195,12 @@ void ActorSyncedAnimationRecordingItem::setSyncedAnimation(SyncedAnimation synce
 	m_syncedAnimation = syncedAnimation;
 }
 
-std::vector<Actor> ActorSyncedAnimationRecordingItem::getActors()
+std::vector<Actor*> ActorSyncedAnimationRecordingItem::getActors()
 {
 	return m_actors;
 }
 
-void ActorSyncedAnimationRecordingItem::setActors(std::vector<Actor> actors)
+void ActorSyncedAnimationRecordingItem::setActors(std::vector<Actor*> actors)
 {
 	m_actors = actors;
 }

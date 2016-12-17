@@ -100,10 +100,10 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 	Vector3 sceneLocation = directLocation;
 
 	float startHeading = 0.0;
-	if (syncActors.size() > 1 && !syncActors[0].isNullActor()) {
-		startHeading = ENTITY::GET_ENTITY_HEADING(syncActors[0].getActorPed());
+	if (syncActors.size() > 1 && !syncActors[0]->isNullActor()) {
+		startHeading = ENTITY::GET_ENTITY_HEADING(syncActors[0]->getActorPed());
 		if (useFirstActorLocation) {
-			sceneLocation = ENTITY::GET_ENTITY_COORDS(syncActors[0].getActorPed(), true);
+			sceneLocation = ENTITY::GET_ENTITY_COORDS(syncActors[0]->getActorPed(), true);
 		}
 	}
 	log_to_file("About to create scene");
@@ -114,11 +114,11 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 	//Add the animations to the scene
 	int actorIndex = 0;
 	for (auto &animation : m_actorAnimations) {
-		AI::TASK_SYNCHRONIZED_SCENE(syncActors[actorIndex].getActorPed(), m_sceneId, animation.animLibrary, animation.animName, 1000.0, -4.0, 64, 0, 0x447a0000, 0);
-		m_pedsInScene.push_back(syncActors[actorIndex].getActorPed());
+		AI::TASK_SYNCHRONIZED_SCENE(syncActors[actorIndex]->getActorPed(), m_sceneId, animation.animLibrary, animation.animName, 1000.0, -4.0, 64, 0, 0x447a0000, 0);
+		m_pedsInScene.push_back(syncActors[actorIndex]->getActorPed());
 
-		m_pedsInSceneStartLocation.push_back(ENTITY::GET_ENTITY_COORDS(syncActors[actorIndex].getActorPed(), true));
-		m_pedsInSceneStartHeading.push_back(ENTITY::GET_ENTITY_HEADING(syncActors[actorIndex].getActorPed()));
+		m_pedsInSceneStartLocation.push_back(ENTITY::GET_ENTITY_COORDS(syncActors[actorIndex]->getActorPed(), true));
+		m_pedsInSceneStartHeading.push_back(ENTITY::GET_ENTITY_HEADING(syncActors[actorIndex]->getActorPed()));
 
 		actorIndex++;
 	}
