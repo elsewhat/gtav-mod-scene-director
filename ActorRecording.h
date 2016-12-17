@@ -255,11 +255,11 @@ public:
 class ActorSyncedAnimationRecordingItem : public ActorRecordingItem {
 protected:
 	std::vector<Actor*> m_actors;
-	SyncedAnimation m_syncedAnimation;
+	SyncedAnimation* m_syncedAnimation;
 public:
-	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor*> actors, Vector3 location, SyncedAnimation syncedAnimation);
-	SyncedAnimation getSyncedAnimation();
-	void setSyncedAnimation(SyncedAnimation syncedAnimation);
+	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor*> actors, Vector3 location, SyncedAnimation* syncedAnimation);
+	SyncedAnimation* getSyncedAnimation();
+	void setSyncedAnimation(SyncedAnimation* syncedAnimation);
 	std::vector<Actor*> getActors();
 	void setActors(std::vector<Actor*> actors);
 	std::string toString() override;
@@ -283,48 +283,3 @@ public:
 };
 
 
-class ActorRecordingPlayback {
-protected:
-	bool m_hasFirstItemPlayback = false;;
-	bool m_playbackCompleted = false;
-	bool m_hasTeleportedToStartLocation = false;
-	int m_recordingItemIndex;
-	int m_maxRecordingItemIndex;
-	int m_attemptsCheckCompletion;
-	DWORD m_ticksStartCurrentItem;
-	DWORD m_ticksLastCheckOfCurrentItem;
-	DWORD m_ticksPlaybackStarted;
-	DWORD m_ticksTeleportStartLocation;
-public:
-	ActorRecordingPlayback();
-	ActorRecordingPlayback(DWORD tickStart, int nrOfRecordedItems);
-
-	DWORD getTicksPlaybackStarted();
-
-	void setRecordingItemIndex(int index);
-	void nextRecordingItemIndex(DWORD ticksNow);
-	bool isCurrentRecordedItemLast();
-	int getRecordedItemIndex();
-	int getNumberOfRecordedItems();
-
-	int getAttemptsCheckedCompletion();
-	void incrementAttempstCheckedCompletion();
-
-
-	void setPlaybackCompleted();
-	bool hasPlaybackCompleted();
-
-	void setHasTeleportedToStartLocation(DWORD ticksNow);
-	bool hasTeleportedToStartLocation();
-	DWORD getTicksTeleportedToStartLocation();
-
-	void setTicksLastCheckOfCurrentItem(DWORD ticks);
-	DWORD getTicksLastCheckOfCurrentItem();
-
-	DWORD getTicksStartCurrentItem();
-
-	void setHasFirstItemPlayback(bool hasPlaybacked);
-	bool getHasFirstItemPlayback();
-
-	std::string toString();
-};

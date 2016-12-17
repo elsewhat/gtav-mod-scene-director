@@ -241,10 +241,19 @@ int get_actor_index_from_ped(Ped ped) {
 }
 
 std::vector<Actor*> getActorPointers() {
-	std::vector<Actor *> actorsPoint(actors.size());
-	for (auto actor : actors) {
-		actorsPoint.push_back(&actor);
+	std::vector<Actor *> actorsPoint;
+	for (int i = 0; i < actors.size(); i++) {
+		if (!actors[i].isNullActor()) {
+			actorsPoint.push_back(&actors[i]);
+			log_to_file("ActorPed:" + std::to_string(actors[i].getActorPed()));
+		}
+		
 	}
+
+	for (auto actor : actorsPoint) {
+		log_to_file("ActorPed*:" + std::to_string(actor->getActorPed()));
+	}
+
 	return actorsPoint;
 }
 
