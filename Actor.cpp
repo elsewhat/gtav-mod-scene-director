@@ -528,3 +528,128 @@ void Actor::update_tick_recording_replay(Actor & actor) {
 }
 
 
+ActorRecordingPlayback::ActorRecordingPlayback()
+{
+	m_recordingItemIndex = 0;
+	m_ticksStartCurrentItem = 0;
+	m_attemptsCheckCompletion = 0;
+}
+
+ActorRecordingPlayback::ActorRecordingPlayback(DWORD tickStart, int maxRecordingItemIndex)
+{
+	m_recordingItemIndex = 0;
+	m_ticksStartCurrentItem = tickStart;
+	m_ticksPlaybackStarted = tickStart;
+	m_maxRecordingItemIndex = maxRecordingItemIndex;
+	m_attemptsCheckCompletion = 0;
+}
+
+
+DWORD ActorRecordingPlayback::getTicksPlaybackStarted()
+{
+	return m_ticksPlaybackStarted;
+}
+
+void ActorRecordingPlayback::setRecordingItemIndex(int index)
+{
+	m_recordingItemIndex = index;
+}
+
+void ActorRecordingPlayback::nextRecordingItemIndex(DWORD ticksNow)
+{
+	m_recordingItemIndex = m_recordingItemIndex + 1;
+	m_ticksLastCheckOfCurrentItem = ticksNow;
+	m_ticksStartCurrentItem = ticksNow;
+	m_attemptsCheckCompletion = 0;
+}
+
+bool ActorRecordingPlayback::isCurrentRecordedItemLast()
+{
+	if (m_recordingItemIndex + 1 >= m_maxRecordingItemIndex) {
+		return true;
+	}
+	else {
+		return false;
+	}
+
+}
+
+int ActorRecordingPlayback::getRecordedItemIndex()
+{
+	return m_recordingItemIndex;
+}
+
+int ActorRecordingPlayback::getNumberOfRecordedItems()
+{
+	return m_maxRecordingItemIndex;
+}
+
+int ActorRecordingPlayback::getAttemptsCheckedCompletion()
+{
+	return m_attemptsCheckCompletion;
+}
+
+void ActorRecordingPlayback::incrementAttempstCheckedCompletion()
+{
+	m_attemptsCheckCompletion++;
+}
+
+void ActorRecordingPlayback::setPlaybackCompleted()
+{
+	m_playbackCompleted = true;
+	m_attemptsCheckCompletion = 0;
+}
+
+bool ActorRecordingPlayback::hasPlaybackCompleted()
+{
+	return m_playbackCompleted;
+}
+
+void ActorRecordingPlayback::setHasTeleportedToStartLocation(DWORD ticksNow)
+{
+	m_hasTeleportedToStartLocation = true;
+	m_ticksTeleportStartLocation = ticksNow;
+}
+
+
+bool ActorRecordingPlayback::hasTeleportedToStartLocation()
+{
+	return m_hasTeleportedToStartLocation;
+}
+
+DWORD ActorRecordingPlayback::getTicksTeleportedToStartLocation()
+{
+	return m_ticksTeleportStartLocation;
+}
+
+void ActorRecordingPlayback::setTicksLastCheckOfCurrentItem(DWORD ticks)
+{
+	m_ticksLastCheckOfCurrentItem = ticks;
+}
+
+DWORD ActorRecordingPlayback::getTicksLastCheckOfCurrentItem()
+{
+	return m_ticksLastCheckOfCurrentItem;
+}
+
+DWORD ActorRecordingPlayback::getTicksStartCurrentItem()
+{
+	return m_ticksStartCurrentItem;
+}
+
+void ActorRecordingPlayback::setHasFirstItemPlayback(bool hasPlaybacked)
+{
+	m_hasFirstItemPlayback = hasPlaybacked;
+}
+
+bool ActorRecordingPlayback::getHasFirstItemPlayback()
+{
+	return m_hasFirstItemPlayback;
+}
+
+std::string ActorRecordingPlayback::toString()
+{
+	return "ActorRecordingPlayback getHasFirstItemPlayback()=" + std::to_string(getHasFirstItemPlayback()) + " getRecordedItemIndex()" + std::to_string(getRecordedItemIndex());
+}
+
+

@@ -9,14 +9,57 @@
 //forward declaration
 class ActorRecordingPlayback;
 class ActorRecordingItem;
-class SyncedAnimation;
-#include "SyncedAnimation.h"
+
 #include "ActorRecording.h"
 
 
 #include <functional>
 #include <memory>
+class ActorRecordingPlayback {
+protected:
+	bool m_hasFirstItemPlayback = false;;
+	bool m_playbackCompleted = false;
+	bool m_hasTeleportedToStartLocation = false;
+	int m_recordingItemIndex;
+	int m_maxRecordingItemIndex;
+	int m_attemptsCheckCompletion;
+	DWORD m_ticksStartCurrentItem;
+	DWORD m_ticksLastCheckOfCurrentItem;
+	DWORD m_ticksPlaybackStarted;
+	DWORD m_ticksTeleportStartLocation;
+public:
+	ActorRecordingPlayback();
+	ActorRecordingPlayback(DWORD tickStart, int nrOfRecordedItems);
 
+	DWORD getTicksPlaybackStarted();
+
+	void setRecordingItemIndex(int index);
+	void nextRecordingItemIndex(DWORD ticksNow);
+	bool isCurrentRecordedItemLast();
+	int getRecordedItemIndex();
+	int getNumberOfRecordedItems();
+
+	int getAttemptsCheckedCompletion();
+	void incrementAttempstCheckedCompletion();
+
+
+	void setPlaybackCompleted();
+	bool hasPlaybackCompleted();
+
+	void setHasTeleportedToStartLocation(DWORD ticksNow);
+	bool hasTeleportedToStartLocation();
+	DWORD getTicksTeleportedToStartLocation();
+
+	void setTicksLastCheckOfCurrentItem(DWORD ticks);
+	DWORD getTicksLastCheckOfCurrentItem();
+
+	DWORD getTicksStartCurrentItem();
+
+	void setHasFirstItemPlayback(bool hasPlaybacked);
+	bool getHasFirstItemPlayback();
+
+	std::string toString();
+};
 
 
 class Actor
