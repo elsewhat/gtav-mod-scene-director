@@ -61,7 +61,7 @@ Actor previousActor = Actor::nullActor();
 AnimationFlag animationFlag = getDefaultAnimationFlag();
 Animation animationPrevious{ 0,"00000","","",0 };
 
-std::vector<AnimationSequence>  animationSequences;
+std::vector<AnimationTrigger>  animationSequences;
 int animationSequencesIndex = 0;
 
 bool hasAnimationFilter = false;
@@ -681,6 +681,101 @@ void draw_instructional_buttons_animation_preview() {
 		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
 	}
 }
+
+void draw_instructional_buttons_animation_sync_preview() {
+	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CLEAR_ALL");
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CREATE_CONTAINER");
+
+		char* altControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 19, 1);
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_C");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Stop preview");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_N");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Next");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_B");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Previous");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(197);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Rotate cam");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(196);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Rotate cam");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_+");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Up");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_-");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Down");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(7);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_G");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Go to anim");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(8);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_L");
+		if (doAnimationLoop) {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop: On");
+		}
+		else {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop: Off");
+		}
+
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(9);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F");
+		std::string filterInstruction = "Filter";
+		if (hasAnimationFilter) {
+			filterInstruction += ": " + animationFilterStr;
+		}
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(filterInstruction.c_str()));
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::DRAW_SCALEFORM_MOVIE_FULLSCREEN(scaleForm, 255, 255, 255, 255, 1);
+	}
+	else {
+		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
+	}
+}
+
 
 void draw_submenu_animation(int drawIndex) {
 	int submenu_index = 0;
@@ -3649,13 +3744,15 @@ void action_animation_sequence_add() {
 	if (animations.size() > 0) {
 		//we currently ignore the key bindings, is based on index in vector instead
 		 AnimationSequence animSequence{ animations };
-
+		 AnimationTrigger animTrigger;
+		 animTrigger.setAnimationSequence(animSequence);
 		 if (animationSequences.size() >= 20) {
-			 animationSequences[animationSequencesIndex] = animSequence;
+
+			 animationSequences[animationSequencesIndex] = animTrigger;
 			 animationSequencesIndex++;
 		 }
 		 else {
-			 animationSequences.push_back(animSequence);
+			 animationSequences.push_back(animTrigger);
 		 }
 
 		 log_to_file("Animation sequences " + std::to_string(animationSequences.size()));
@@ -4165,7 +4262,22 @@ void action_animations_preview(){
 	*/
 
 }
+void action_animation_sync_play(SyncedAnimation syncedAnimation) {
+	syncedAnimation.executeSyncedAnimation(actors, true, Vector3(), false);
+	DWORD ticksStart = GetTickCount();
 
+	while (!syncedAnimation.isCompleted()) {
+		WAIT(0);
+		draw_spot_lights();
+
+		if (GetTickCount() > ticksStart + 120000) {
+			break;
+		}
+
+	}
+	//cleanup objects and teleport back to start
+	syncedAnimation.cleanupAfterExecution(true, true);
+}
 
 void action_animation_sync_preview() {
 	log_to_file("action_animation_sync_execute");
@@ -4233,7 +4345,7 @@ void action_animation_sync_preview() {
 
 		while (!syncedAnimation.isCompleted()) {
 			WAIT(0);
-			draw_instructional_buttons_animation_preview();
+			draw_instructional_buttons_animation_sync_preview();
 			draw_spot_lights();
 			DRAW_TEXT(strdup(syncedAnimation.toString().c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 255);
 
@@ -4254,7 +4366,7 @@ void action_animation_sync_preview() {
 					}
 				}
 				else {
-					i = i + 1;
+					WAIT(150);
 				}
 				break;
 			}
@@ -4270,6 +4382,7 @@ void action_animation_sync_preview() {
 				}
 				else {
 					i = i - 2;
+					WAIT(150);
 				}
 
 				break;
@@ -4345,6 +4458,21 @@ void action_animation_sync_preview() {
 					break;
 				}
 			}
+			else if (IsKeyDown(VK_ADD)) {//+
+				log_to_file("UP");
+				syncedAnimation.setDeltaZ(syncedAnimation.getDeltaZ() + 0.1);
+				syncedAnimation.cleanupAfterExecution(true, true);
+				syncedAnimation.executeSyncedAnimation(actors, true, Vector3(), doAnimationLoop);
+
+				WAIT(150);
+			}
+			else if (IsKeyDown(VK_SUBTRACT)) {//-
+				log_to_file("Down");
+				syncedAnimation.setDeltaZ(syncedAnimation.getDeltaZ() - 0.1);
+				syncedAnimation.cleanupAfterExecution(true, true);
+				syncedAnimation.executeSyncedAnimation(actors, true, Vector3(), doAnimationLoop);
+				WAIT(150);
+			}
 
 	
 			/*else if (IsKeyDown(0x47)) {//G - key
@@ -4390,7 +4518,7 @@ void action_animation_sync_preview() {
 
 
 
-AnimationSequence action_if_animation_sequence_shortcut_key_pressed(bool isRecording) {
+AnimationTrigger action_if_animation_sequence_shortcut_key_pressed(bool isRecording) {
 	//ALT key
 	if (IsKeyDown(VK_MENU)) {
 		int animSequenceIndex = -1;
@@ -4431,8 +4559,12 @@ AnimationSequence action_if_animation_sequence_shortcut_key_pressed(bool isRecor
 				log_to_file("action_if_animation_sequence_shortcut_key_pressed");
 				nextWaitTicks = 250;
 
-				action_animation_sequence_play(animationSequences[animSequenceIndex]);
-				return animationSequences[animSequenceIndex];
+				if (animationSequences[animSequenceIndex].isAnimationSequence()) {
+					action_animation_sequence_play(animationSequences[animSequenceIndex].getAnimationSequence());
+					return animationSequences[animSequenceIndex];
+				}
+
+
 
 			}
 			else {
@@ -4441,7 +4573,7 @@ AnimationSequence action_if_animation_sequence_shortcut_key_pressed(bool isRecor
 		}
 	}
 
-	return AnimationSequence::nullAnimationSequence();
+	return AnimationTrigger::getNullAnimationTrigger();
 
 }
 
@@ -5262,8 +5394,9 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					ticksNextControl = ticksNow + 200;
 				}
 
-				AnimationSequence animationSeqRecorded = action_if_animation_sequence_shortcut_key_pressed(true);
-				if (!animationSeqRecorded.isNullAnimationSequence()) {
+				AnimationTrigger animationTriggerRecorded = action_if_animation_sequence_shortcut_key_pressed(true);
+				if (!animationTriggerRecorded.isNullAnimationTrigger() && animationTriggerRecorded.isAnimationSequence() && !animationTriggerRecorded.getAnimationSequence().isNullAnimationSequence()) {
+					AnimationSequence animationSeqRecorded = animationTriggerRecorded.getAnimationSequence();
 					ticksSinceStart = ticksNow - ticksStart;
 
 					actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
@@ -5294,6 +5427,16 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 	
 					ticksLast = ticksNow;
 				}
+				else if (!animationTriggerRecorded.isNullAnimationTrigger() && animationTriggerRecorded.isSyncedAnimation() && !animationTriggerRecorded.getSyncedAnimation().isNull()) {
+					//TODO: SyncedAnimation
+					SyncedAnimation syncedAnimation = animationTriggerRecorded.getSyncedAnimation();
+					action_animation_sync_play(syncedAnimation);
+					//now store
+
+
+				}
+
+
 			}
 
 
@@ -5827,7 +5970,13 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action >= SUBMENU_ITEM_ANIMATION_SEQUENCE_0 && submenu_active_action <= SUBMENU_ITEM_ANIMATION_SEQUENCE_20) {
 		int animSequenceIndex = submenu_active_action - SUBMENU_ITEM_ANIMATION_SEQUENCE_0;
 		if (animSequenceIndex >= 0 && animSequenceIndex < animationSequences.size()) {
-			action_animation_sequence_play(animationSequences[animSequenceIndex]);
+			if (animationSequences[animSequenceIndex].isAnimationSequence()) {
+				action_animation_sequence_play(animationSequences[animSequenceIndex].getAnimationSequence());
+			}
+			else if (animationSequences[animSequenceIndex].isSyncedAnimation()) {
+				action_animation_sync_play(animationSequences[animSequenceIndex].getSyncedAnimation());
+			}
+
 		}
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_ACTOR_PROP_SELECT) {

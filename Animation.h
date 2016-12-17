@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "utils.h"
 
+
 enum FILTER_OPERATORS {
 	FILTER_AND,
 	FILTER_OR,
@@ -109,6 +110,8 @@ enum ANIMATION_FLAGS
 	ANIMATION_FLAG18 = 131072,
 	ANIMATION_FLAG19 = 262144,
 };
+
+
 
 bool initAnimations(std::string fileName);
 std::vector<Animation> getAllAnimations();

@@ -4,12 +4,14 @@
 #include "script.h"
 #include "scenario.h"
 #include "Animation.h"
+#include "SyncedAnimation.h"
 #include <string>
 #include <memory>
 
 //forward declaration
 class Actor;
 struct Scenario;
+class SyncedAnimation;
 
 class ActorRecordingItem {
 protected:
@@ -242,12 +244,29 @@ protected:
 public:
 	ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, AnimationSequence animationSequence, AnimationFlag animationFlag);
 	AnimationSequence getAnimationSequence();
-	void ActorAnimationSequenceRecordingItem::setAnimationSequence(AnimationSequence animationSequence);
+	void setAnimationSequence(AnimationSequence animationSequence);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	virtual std::string toUserFriendlyName() override;
 
+};
+
+class ActorSyncedAnimationRecordingItem : public ActorRecordingItem {
+protected:
+	std::vector<Actor> m_actors;
+	SyncedAnimation m_syncedAnimation;
+public:
+	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor> actors, Vector3 location, SyncedAnimation syncedAnimation);
+	SyncedAnimation getSyncedAnimation();
+	void setSyncedAnimation(SyncedAnimation syncedAnimation);
+	std::vector<Actor> getActors();
+	void setActors(std::vector<Actor> actors);
+	std::string toString() override;
+	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	void executeNativesAfterRecording(Actor actor) override;
+	virtual std::string toUserFriendlyName() override;
 };
 
 class ActorCoverAtRecordingItem : public ActorRecordingItem {

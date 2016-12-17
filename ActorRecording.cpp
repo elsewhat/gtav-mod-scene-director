@@ -1177,3 +1177,60 @@ std::string ActorSpeakRecordingItem::toUserFriendlyName()
 {
 	return "Speaking";
 }
+
+ActorSyncedAnimationRecordingItem::ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded,Ped pedActor, std::vector<Actor> actors, Vector3 location, SyncedAnimation syncedAnimation):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, pedActor, location)
+{
+	m_syncedAnimation = syncedAnimation;
+	m_actors = actors;
+	m_ticksDeltaCheckCompletion = 0;
+}
+
+SyncedAnimation ActorSyncedAnimationRecordingItem::getSyncedAnimation()
+{
+	return m_syncedAnimation;
+}
+
+void ActorSyncedAnimationRecordingItem::setSyncedAnimation(SyncedAnimation syncedAnimation)
+{
+	m_syncedAnimation = syncedAnimation;
+}
+
+std::vector<Actor> ActorSyncedAnimationRecordingItem::getActors()
+{
+	return m_actors;
+}
+
+void ActorSyncedAnimationRecordingItem::setActors(std::vector<Actor> actors)
+{
+	m_actors = actors;
+}
+
+std::string ActorSyncedAnimationRecordingItem::toString()
+{
+	return "ActorSyncedAnimationRecordingItem: " + m_syncedAnimation.toString();
+}
+
+void ActorSyncedAnimationRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
+{
+	m_syncedAnimation.executeSyncedAnimation(m_actors, true, Vector3(), false);
+}
+
+bool ActorSyncedAnimationRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
+{
+	if (m_syncedAnimation.isCompleted()) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void ActorSyncedAnimationRecordingItem::executeNativesAfterRecording(Actor actor)
+{
+	m_syncedAnimation.cleanupAfterExecution(true, false);
+}
+
+std::string ActorSyncedAnimationRecordingItem::toUserFriendlyName()
+{
+	return "SyncedAnim";
+}

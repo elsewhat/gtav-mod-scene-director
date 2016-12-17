@@ -5,8 +5,11 @@
 #include "..\..\inc\types.h"
 #include "utils.h"
 #include "Animation.h"
+class Actor;
 #include "Actor.h"
+class GTAObject;
 #include "GTAObject.h"
+
 
 
 class SyncedAnimation
@@ -29,7 +32,7 @@ public:
 	SyncedAnimation(std::string title, std::vector<Animation>  actorAnimations, float deltaZLocation);
 	SyncedAnimation(std::string title, std::vector<Animation>  actorAnimations, std::vector<Animation>  objectAnimations, std::vector<GTAObject>  syncObjects, float deltaZLocation);
 
-	void executeSyncedAnimation(std::vector<Actor> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop);
+	void executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop);
 	bool isCompleted();
 	void cleanupAfterExecution(bool deleteObjects, bool teleportActorsBackToStart);
 	void setLooping(bool doLooping);
@@ -38,8 +41,63 @@ public:
 	bool matchesFilter(std::string filterStr);
 	bool isNull();
 	std::string toString();
+
+	float getDeltaZ();
+	void setDeltaZ(float deltaZLocation);
 };
 
 //Get all the synced animation defined in the mod
 std::vector<SyncedAnimation> getAllSyncedAnimations();
 void initializeSyncedAnimations();
+
+
+//lazy workaround. Could have have made a good interface to both instance instead but will not prioritize refactoring now
+struct AnimationTrigger {
+	AnimationSequence animationSequence;
+	SyncedAnimation syncedAnimation;
+	bool isAnimSeq = false;
+	bool isSyncAnim = false;
+
+	void setAnimationSequence(AnimationSequence animationSeq) {
+		animationSequence = animationSeq;
+		isAnimSeq = true;
+		isSyncAnim = false;
+	}
+
+	void setSyncedAnimation(SyncedAnimation syncedAnim) {
+		syncedAnimation = syncedAnim;
+		isAnimSeq = false;
+		isSyncAnim = true;
+	}
+
+	bool isAnimationSequence() {
+		return isAnimSeq;
+	}
+
+	bool isSyncedAnimation() {
+		return isSyncAnim;
+	}
+
+	AnimationSequence getAnimationSequence() {
+		return animationSequence;
+	}
+
+	SyncedAnimation getSyncedAnimation() {
+		return syncedAnimation;
+	}
+
+	static AnimationTrigger getNullAnimationTrigger() {
+		AnimationTrigger animTrigger;
+		animTrigger.isAnimSeq = false;
+		animTrigger.isSyncAnim = false;
+		return animTrigger;
+	}
+
+	bool isNullAnimationTrigger() {
+		if (!isAnimSeq && !isSyncAnim) {
+			return true;
+		}
+		return false;
+	}
+
+};

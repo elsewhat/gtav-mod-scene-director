@@ -9,7 +9,10 @@
 //forward declaration
 class ActorRecordingPlayback;
 class ActorRecordingItem;
+class SyncedAnimation;
+#include "SyncedAnimation.h"
 #include "ActorRecording.h"
+
 
 #include <functional>
 #include <memory>
