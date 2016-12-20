@@ -16,8 +16,12 @@ class SyncedAnimation
 {
 private:
 	std::string m_title;
+	std::string m_category;
 	float m_deltaZLocation;
 	bool m_isNull = true;
+	bool m_doLooping = false;
+	bool m_isProperSynced = true;
+	DWORD m_ticksStarted;
 	std::vector<Animation>  m_actorAnimations;
 	std::vector<Animation>  m_objectAnimations;
 	std::vector<GTAObject>  m_syncObjects;
@@ -30,7 +34,7 @@ private:
 public:
 	SyncedAnimation();
 	SyncedAnimation(std::string title, std::vector<Animation>  actorAnimations, float deltaZLocation);
-	SyncedAnimation(std::string title, std::vector<Animation>  actorAnimations, std::vector<Animation>  objectAnimations, std::vector<GTAObject>  syncObjects, float deltaZLocation);
+	SyncedAnimation(std::string title, std::string category, bool isProperSynced, std::vector<Animation>  actorAnimations, std::vector<Animation>  objectAnimations, std::vector<GTAObject>  syncObjects, float deltaZLocation);
 
 	void executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop);
 	bool isCompleted();
@@ -40,7 +44,11 @@ public:
 
 	bool matchesFilter(std::string filterStr);
 	bool isNull();
+	SyncedAnimation* createCopy();
 	std::string toString();
+	void clearObjectReferences();
+
+	int getLength();
 
 	float getDeltaZ();
 	void setDeltaZ(float deltaZLocation);

@@ -256,6 +256,9 @@ class ActorSyncedAnimationRecordingItem : public ActorRecordingItem {
 protected:
 	std::vector<Actor*> m_actors;
 	SyncedAnimation* m_syncedAnimation;
+	bool m_doLooping = false;
+	bool m_keepProps = false;
+
 public:
 	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor*> actors, Vector3 location, SyncedAnimation* syncedAnimation);
 	SyncedAnimation* getSyncedAnimation();
@@ -267,6 +270,12 @@ public:
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	void executeNativesAfterRecording(Actor actor) override;
 	virtual std::string toUserFriendlyName() override;
+	void setDoLooping(bool doLooping);
+	bool getDoLooping();
+
+	void setKeepProps(bool keepProps);
+	bool getKeepProps();
+
 };
 
 class ActorCoverAtRecordingItem : public ActorRecordingItem {

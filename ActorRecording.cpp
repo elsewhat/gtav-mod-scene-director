@@ -1090,7 +1090,8 @@ std::string ActorSyncedAnimationRecordingItem::toString()
 
 void ActorSyncedAnimationRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
-	m_syncedAnimation->executeSyncedAnimation(m_actors, true, Vector3(), false);
+	log_to_file("ActorSyncedAnimationRecordingItem::executeNativesForRecording");
+	m_syncedAnimation->executeSyncedAnimation(m_actors, true, Vector3(), m_doLooping);
 }
 
 bool ActorSyncedAnimationRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
@@ -1105,10 +1106,38 @@ bool ActorSyncedAnimationRecordingItem::isRecordingItemCompleted(std::shared_ptr
 
 void ActorSyncedAnimationRecordingItem::executeNativesAfterRecording(Actor actor)
 {
-	m_syncedAnimation->cleanupAfterExecution(true, false);
+	m_syncedAnimation->cleanupAfterExecution(!m_keepProps, false);
 }
 
 std::string ActorSyncedAnimationRecordingItem::toUserFriendlyName()
 {
 	return "SyncedAnim";
+}
+
+void ActorSyncedAnimationRecordingItem::setDoLooping(bool doLooping)
+{
+	m_doLooping = doLooping;
+	if (m_doLooping) {
+		m_nrAttemptsBeforeSkipping = 10000;
+		m_ticksDeltaCheckCompletion = 10000;
+	}
+	else {
+		m_nrAttemptsBeforeSkipping = 1000;
+		m_nrAttemptsBeforeSkipping = 100;
+	}
+}
+
+bool ActorSyncedAnimationRecordingItem::getDoLooping()
+{
+	return m_doLooping;
+}
+
+void ActorSyncedAnimationRecordingItem::setKeepProps(bool keepProps)
+{
+	m_keepProps = keepProps;
+}
+
+bool ActorSyncedAnimationRecordingItem::getKeepProps()
+{
+	return m_keepProps;
 }

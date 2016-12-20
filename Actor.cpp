@@ -470,6 +470,7 @@ void Actor::update_tick_recording_replay(Actor & actor) {
 				recordingPlayback.setHasFirstItemPlayback(true);
 				recordingPlayback.setTicksLastCheckOfCurrentItem(ticksNow);
 				log_to_file("Starting first recording item");
+				log_to_file(recordingItem->toString());
 
 				recordingItem->executeNativesForRecording(actor, nextRecordingItem, previousRecordingItem);
 

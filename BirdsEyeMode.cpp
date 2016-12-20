@@ -508,6 +508,48 @@ void BirdsEyeMode::drawSubMenuEdit() {
 			submenu_index++;
 		}
 
+		std::shared_ptr<ActorSyncedAnimationRecordingItem> syncedAnimRecording = std::dynamic_pointer_cast<ActorSyncedAnimationRecordingItem>(activeRecordingItem);
+		if (syncedAnimRecording) {
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_ANIMSYNC_DO_LOOPING;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+			if (syncedAnimRecording->getDoLooping()) {
+				DRAW_TEXT("Loop: Yes", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}
+			else {
+				DRAW_TEXT("Loop: No", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}
+
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
+
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_ANIMSYNC_KEEP_PROPS;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+			if (syncedAnimRecording->getKeepProps()) {
+				DRAW_TEXT("Keep props: Yes", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}
+			else {
+				DRAW_TEXT("Keep props: No", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}
+
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
+			
+		}
+
 
 	}
 
@@ -633,6 +675,25 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 				nextWaitTicks = 150;
 			}
 		}
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_ANIMSYNC_DO_LOOPING) {
+		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+		if (activeRecordingItem) {
+			std::shared_ptr<ActorSyncedAnimationRecordingItem> syncedAnimationRecording = std::dynamic_pointer_cast<ActorSyncedAnimationRecordingItem>(activeRecordingItem);
+			if (syncedAnimationRecording) {
+				syncedAnimationRecording->setDoLooping(!syncedAnimationRecording->getDoLooping());
+			}
+		}
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_ANIMSYNC_KEEP_PROPS) {
+		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+		if (activeRecordingItem) {
+			std::shared_ptr<ActorSyncedAnimationRecordingItem> syncedAnimationRecording = std::dynamic_pointer_cast<ActorSyncedAnimationRecordingItem>(activeRecordingItem);
+			if (syncedAnimationRecording) {
+				syncedAnimationRecording->setKeepProps(!syncedAnimationRecording->getKeepProps());
+			}
+		}
+
 	}
 }
 

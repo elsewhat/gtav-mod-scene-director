@@ -64,6 +64,8 @@ Animation animationPrevious{ 0,"00000","","",0 };
 std::vector<AnimationTrigger>  animationSequences;
 int animationSequencesIndex = 0;
 
+std::vector<SyncedAnimation>  syncedAnimationsInRecordings;
+
 bool hasAnimationFilter = false;
 std::string animationFilterStr;
 bool doAnimationLoop = false;
@@ -755,12 +757,18 @@ void draw_instructional_buttons_animation_sync_preview() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(7);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_A");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Add");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(8);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_G");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Go to anim");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(8);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(9);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_L");
 		if (doAnimationLoop) {
 			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop: On");
@@ -772,7 +780,7 @@ void draw_instructional_buttons_animation_sync_preview() {
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(9);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(10);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F");
 		std::string filterInstruction = "Filter";
 		if (hasAnimationFilter) {
@@ -812,10 +820,14 @@ void draw_submenu_animation(int drawIndex) {
 			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 		}
 
-
-		char* animText = strdup(("Anim #" + std::to_string(i + 1) + " ALT+NUM" + std::to_string(i + 1)).c_str());
+		std::string textPrefix = "Anim #";
+		if (animationSequences[i].isSyncedAnimation()) {
+			textPrefix = "SyncedAnim #";
+		}
+			
+		char* animText = strdup((textPrefix + std::to_string(i + 1) + " ALT+NUM" + std::to_string(i + 1)).c_str());
 		if ((i + 1) >= 10) {
-			animText = strdup(("Anim #" + std::to_string(i + 1)).c_str());
+			animText = strdup((textPrefix + std::to_string(i + 1)).c_str());
 		}
 
 		DRAW_TEXT(animText, 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
@@ -4070,6 +4082,7 @@ void action_animations_preview(){
 						}
 						else {
 							i = i +1;
+							WAIT(50);
 						}
 						break;
 					}
@@ -4085,11 +4098,12 @@ void action_animations_preview(){
 						}
 						else {
 							i = i - 2;
+							WAIT(50);
 						}
 						
 						break;
 					}
-					else if (IsKeyDown(0x4C)) {//previous animation
+					else if (IsKeyDown(0x4C)) {//looping
 						
 						if (doAnimationLoop) {
 							set_status_text("Stopped looping");
@@ -4279,7 +4293,10 @@ void action_animations_preview(){
 	*/
 
 }
-void action_animation_sync_play(SyncedAnimation syncedAnimation) {
+void action_animation_sync_play(SyncedAnimation syncedAnimation, bool clearObjectReferences) {
+	if (clearObjectReferences) {
+		syncedAnimation.clearObjectReferences();
+	}
 	syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), false);
 	DWORD ticksStart = GetTickCount();
 
@@ -4294,6 +4311,21 @@ void action_animation_sync_play(SyncedAnimation syncedAnimation) {
 	}
 	//cleanup objects and teleport back to start
 	syncedAnimation.cleanupAfterExecution(true, true);
+}
+
+void action_animation_sync_add(SyncedAnimation syncedAnimation) {
+	//we currently ignore the key bindings, is based on index in vector instead
+	AnimationTrigger animTrigger;
+	animTrigger.setSyncedAnimation(syncedAnimation);
+	if (animationSequences.size() >= 20) {
+		animationSequences[animationSequencesIndex] = animTrigger;
+		animationSequencesIndex++;
+	}
+	else {
+		animationSequences.push_back(animTrigger);
+	}
+
+	log_to_file("Animation sequences " + std::to_string(animationSequences.size()));
 }
 
 void action_animation_sync_preview() {
@@ -4490,6 +4522,12 @@ void action_animation_sync_preview() {
 				syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop);
 				WAIT(150);
 			}
+			else if (IsKeyDown(0x41)) {//A
+				log_to_file("Adding " + syncedAnimation.toString());
+				action_animation_sync_add(syncedAnimation);
+				set_status_text("Added synchronized animation to shortcut");
+				WAIT(150);
+			}
 
 	
 			/*else if (IsKeyDown(0x47)) {//G - key
@@ -4578,6 +4616,10 @@ AnimationTrigger action_if_animation_sequence_shortcut_key_pressed(bool isRecord
 
 				if (animationSequences[animSequenceIndex].isAnimationSequence()) {
 					action_animation_sequence_play(animationSequences[animSequenceIndex].getAnimationSequence());
+					return animationSequences[animSequenceIndex];
+				}
+				else if (animationSequences[animSequenceIndex].isSyncedAnimation()) {
+					action_animation_sync_play(animationSequences[animSequenceIndex].getSyncedAnimation(),true);
 					return animationSequences[animSequenceIndex];
 				}
 
@@ -5412,10 +5454,10 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 				}
 
 				AnimationTrigger animationTriggerRecorded = action_if_animation_sequence_shortcut_key_pressed(true);
+				ticksSinceStart = ticksNow - ticksStart;
 				if (!animationTriggerRecorded.isNullAnimationTrigger() && animationTriggerRecorded.isAnimationSequence() && !animationTriggerRecorded.getAnimationSequence().isNullAnimationSequence()) {
 					AnimationSequence animationSeqRecorded = animationTriggerRecorded.getAnimationSequence();
-					ticksSinceStart = ticksNow - ticksStart;
-
+					
 					actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
 					ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, animationSeqRecorded, animationFlag);
 					log_to_file(recordingItem.toString());
@@ -5445,12 +5487,33 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					ticksLast = ticksNow;
 				}
 				else if (!animationTriggerRecorded.isNullAnimationTrigger() && animationTriggerRecorded.isSyncedAnimation() && !animationTriggerRecorded.getSyncedAnimation().isNull()) {
-					//TODO: SyncedAnimation
+					//Synced animation
 					SyncedAnimation syncedAnimation = animationTriggerRecorded.getSyncedAnimation();
-					action_animation_sync_play(syncedAnimation);
-					//now store
+					//action_animation_sync_play(syncedAnimation);
+					
+					//now store - Let's use a copy since it may be changed in edit scene
+					SyncedAnimation* syncedAnimCopy = syncedAnimation.createCopy();
+					syncedAnimCopy->clearObjectReferences();
+					ActorSyncedAnimationRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, getActorPointers(), actorLocation, syncedAnimCopy);
+					
+					//make sure we walk closer to where animation was recorded
+					if (!PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+						float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
+						float walkSpeed = 1.0;
+						if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
+							walkSpeed = 2.0;
+						}
+						ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
+						recordingItem.setMinDistanceBeforeCompleted(1.8);
+						recordingItem.setTicksDeltaCheckCompletion(50);
+						recordingItem.setNrAttemptsBeforeSkipping(50);
+						actorRecording.push_back(std::make_shared<ActorOnFootMovementRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+					}
 
-
+					actorRecording.push_back(std::make_shared<ActorSyncedAnimationRecordingItem>(recordingItem));
+					log_to_file(recordingItem.toString());
+					ticksNextControl = ticksNow + syncedAnimation.getLength();
 				}
 
 
@@ -5991,7 +6054,7 @@ void action_submenu_active_selected() {
 				action_animation_sequence_play(animationSequences[animSequenceIndex].getAnimationSequence());
 			}
 			else if (animationSequences[animSequenceIndex].isSyncedAnimation()) {
-				action_animation_sync_play(animationSequences[animSequenceIndex].getSyncedAnimation());
+				action_animation_sync_play(animationSequences[animSequenceIndex].getSyncedAnimation(),true);
 			}
 
 		}
