@@ -211,12 +211,23 @@ public:
 	virtual std::string toUserFriendlyName() override;
 };
 
+
 class ActorVehicleExitRecordingItem : public ActorVehicleRecordingItem {
 protected:
 	int m_vehicleSeat;
 	float m_enterVehicleSpeed;
 public:
 	ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
+	std::string toString() override;
+	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
+};
+
+class ActorVehicleRocketBoostRecordingItem : public ActorVehicleRecordingItem {
+protected:
+public:
+	ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
@@ -258,6 +269,9 @@ protected:
 	SyncedAnimation* m_syncedAnimation;
 	bool m_doLooping = false;
 	bool m_keepProps = false;
+	bool m_useActorLocation = true;
+	bool m_useActorRotation = true;
+	float m_rotation;
 
 public:
 	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor*> actors, Vector3 location, SyncedAnimation* syncedAnimation);
@@ -275,6 +289,14 @@ public:
 
 	void setKeepProps(bool keepProps);
 	bool getKeepProps();
+
+	void setUseActorLocation(bool useActorLocation);
+	bool getUseActorLocation();
+
+	void setRotation(float rotation);
+	float getRotation();
+
+	void setUseActorRotation(bool useActorRotation);
 
 };
 

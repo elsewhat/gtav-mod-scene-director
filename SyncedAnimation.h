@@ -7,7 +7,7 @@
 #include "Animation.h"
 class Actor;
 #include "Actor.h"
-class GTAObject;
+struct GTAObject;
 #include "GTAObject.h"
 
 
@@ -36,7 +36,7 @@ public:
 	SyncedAnimation(std::string title, std::vector<Animation>  actorAnimations, float deltaZLocation);
 	SyncedAnimation(std::string title, std::string category, bool isProperSynced, std::vector<Animation>  actorAnimations, std::vector<Animation>  objectAnimations, std::vector<GTAObject>  syncObjects, float deltaZLocation);
 
-	void executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop);
+	void executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation);
 	bool isCompleted();
 	void cleanupAfterExecution(bool deleteObjects, bool teleportActorsBackToStart);
 	void setLooping(bool doLooping);
@@ -52,6 +52,7 @@ public:
 
 	float getDeltaZ();
 	void setDeltaZ(float deltaZLocation);
+
 };
 
 //Get all the synced animation defined in the mod

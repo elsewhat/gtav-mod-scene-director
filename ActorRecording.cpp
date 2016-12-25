@@ -505,7 +505,9 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 
 			//check if next is not a vehicle movement (will often be exit vehicle) Then the threshold should be much less
 			std::shared_ptr<ActorVehicleMovementRecordingItem> nextVehicleMovement = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(nextRecordingItem);
-			if (nextVehicleMovement == NULL) {
+			//std::shared_ptr<ActorVehicleRocketBoostRecordingItem> nextVehicleRocketBoost = std::dynamic_pointer_cast<ActorVehicleRocketBoostRecordingItem>(nextRecordingItem);
+			//&& nextVehicleRocketBoost == NULL
+			if (nextVehicleMovement == NULL ) {
 				log_to_file("Next recording is not a vehicle movement, will require a smaller distance to target");
 				if (isPedInHeli && minDistance>45.0) {
 					minDistance = 45.0;
@@ -1091,7 +1093,9 @@ std::string ActorSyncedAnimationRecordingItem::toString()
 void ActorSyncedAnimationRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	log_to_file("ActorSyncedAnimationRecordingItem::executeNativesForRecording");
-	m_syncedAnimation->executeSyncedAnimation(m_actors, true, Vector3(), m_doLooping);
+	m_syncedAnimation->executeSyncedAnimation(m_actors, m_useActorLocation, Vector3(), m_doLooping, m_useActorRotation,m_rotation);
+
+
 }
 
 bool ActorSyncedAnimationRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
@@ -1111,7 +1115,7 @@ void ActorSyncedAnimationRecordingItem::executeNativesAfterRecording(Actor actor
 
 std::string ActorSyncedAnimationRecordingItem::toUserFriendlyName()
 {
-	return "SyncedAnim";
+	return "Anim";
 }
 
 void ActorSyncedAnimationRecordingItem::setDoLooping(bool doLooping)
@@ -1140,4 +1144,60 @@ void ActorSyncedAnimationRecordingItem::setKeepProps(bool keepProps)
 bool ActorSyncedAnimationRecordingItem::getKeepProps()
 {
 	return m_keepProps;
+}
+
+void ActorSyncedAnimationRecordingItem::setUseActorLocation(bool useActorLocation)
+{
+	m_useActorLocation = useActorLocation;
+}
+
+bool ActorSyncedAnimationRecordingItem::getUseActorLocation()
+{
+	return m_useActorLocation;
+}
+
+void ActorSyncedAnimationRecordingItem::setRotation(float rotation)
+{
+	m_rotation = rotation;
+	m_useActorRotation = false;
+}
+
+float ActorSyncedAnimationRecordingItem::getRotation()
+{
+	return m_rotation;
+}
+
+void ActorSyncedAnimationRecordingItem::setUseActorRotation(bool useActorRotation)
+{
+	m_useActorLocation = useActorRotation;
+}
+
+ActorVehicleRocketBoostRecordingItem::ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading) : ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading)
+{
+	m_ticksDeltaCheckCompletion = 10;
+}
+
+std::string ActorVehicleRocketBoostRecordingItem::toString()
+{
+	return "ActorVehicleRocketBoostRecordingItem";
+}
+
+void ActorVehicleRocketBoostRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
+{
+	if (VEHICLE::_HAS_VEHICLE_ROCKET_BOOST(m_vehicle)) {
+		VEHICLE::_SET_VEHICLE_ROCKET_BOOST_ACTIVE(m_vehicle, true);
+	}
+	else {
+		log_to_file("Vehicle has no rocket boost");
+	}
+}
+
+bool ActorVehicleRocketBoostRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
+{
+	return true;
+}
+
+std::string ActorVehicleRocketBoostRecordingItem::toUserFriendlyName()
+{
+	return "Boost";
 }

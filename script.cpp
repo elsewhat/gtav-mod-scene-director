@@ -64,7 +64,7 @@ Animation animationPrevious{ 0,"00000","","",0 };
 std::vector<AnimationTrigger>  animationSequences;
 int animationSequencesIndex = 0;
 
-std::vector<SyncedAnimation>  syncedAnimationsInRecordings;
+std::vector<SyncedAnimation*>  syncedAnimationsInRecordings;
 
 bool hasAnimationFilter = false;
 std::string animationFilterStr;
@@ -4297,7 +4297,7 @@ void action_animation_sync_play(SyncedAnimation syncedAnimation, bool clearObjec
 	if (clearObjectReferences) {
 		syncedAnimation.clearObjectReferences();
 	}
-	syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), false);
+	syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), false, true, 0.0f);
 	DWORD ticksStart = GetTickCount();
 
 	while (!syncedAnimation.isCompleted()) {
@@ -4389,7 +4389,7 @@ void action_animation_sync_preview() {
 		DRAW_TEXT(strdup(syncedAnimation.toString().c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 200);
 
 		//std::vector<GTAObject>(),
-		syncedAnimation.executeSyncedAnimation(getActorPointers(),  true, Vector3(), doAnimationLoop);
+		syncedAnimation.executeSyncedAnimation(getActorPointers(),  true, Vector3(), doAnimationLoop,true,0.0f);
 		DWORD ticksStart = GetTickCount();
 
 		while (!syncedAnimation.isCompleted()) {
@@ -4511,7 +4511,7 @@ void action_animation_sync_preview() {
 				log_to_file("UP");
 				syncedAnimation.setDeltaZ(syncedAnimation.getDeltaZ() + 0.1);
 				syncedAnimation.cleanupAfterExecution(true, true);
-				syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop);
+				syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop, true,0.0f);
 
 				WAIT(150);
 			}
@@ -4519,7 +4519,7 @@ void action_animation_sync_preview() {
 				log_to_file("Down");
 				syncedAnimation.setDeltaZ(syncedAnimation.getDeltaZ() - 0.1);
 				syncedAnimation.cleanupAfterExecution(true, true);
-				syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop);
+				syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop, true, 0.0f);
 				WAIT(150);
 			}
 			else if (IsKeyDown(0x41)) {//A
@@ -5420,6 +5420,8 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 		DWORD lastBulletRecorded = 0;
 
+		DWORD lastRocketBoost = -10000;
+
 		//1. Store start location
 		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
 		actor.setStartLocationHeading(ENTITY::GET_ENTITY_HEADING(actorPed));
@@ -5493,6 +5495,9 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					
 					//now store - Let's use a copy since it may be changed in edit scene
 					SyncedAnimation* syncedAnimCopy = syncedAnimation.createCopy();
+					//copy leaks memory (since on the heap). Keep references in case we want to free up
+					syncedAnimationsInRecordings.push_back(syncedAnimCopy);
+
 					syncedAnimCopy->clearObjectReferences();
 					ActorSyncedAnimationRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, getActorPointers(), actorLocation, syncedAnimCopy);
 					
@@ -5596,6 +5601,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						}
 						//use vehicle location and not actor location
 						Vector3 location = ENTITY::GET_ENTITY_COORDS(actorVeh, true);
+
 
 						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, location, actorVeh,actorVehHeading, recordedSpeed);
 						actorRecording.push_back(std::make_shared<ActorVehicleMovementRecordingItem>(recordingItem));
@@ -5768,78 +5774,6 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 							else if (isFreeAiming) {//finished free aiming. Stop recording
 								isFreeAiming = false;
 							}
-							/*
-							//Record aiming and shooting
-							if (PLAYER::IS_PLAYER_FREE_AIMING(PLAYER::PLAYER_ID())) {
-								DELTA_TICKS = 10;
-								isFreeAiming = true;
-								Entity targetEntity;
-								bool playerIsAimingAtEntity = PLAYER::_GET_AIMED_ENTITY(PLAYER::PLAYER_ID(), &targetEntity);
-
-								log_to_file("Actor aiming at " + std::to_string(targetEntity));
-
-								if (PED::IS_PED_SHOOTING(actorPed) && playerIsAimingAtEntity) {
-									//add recording item for shooting at
-									if (isAimingAtEntity) {
-										log_to_file("Stopped aiming since we're shooting at target " + std::to_string(aimedAtEntity) + "  for ActorShootAtEntityRecordingItem");
-										isAimingAtEntity = false;
-										ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
-									}
-
-									ActorShootAtEntityRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, targetEntity);
-									actorRecording.push_back(std::make_shared<ActorShootAtEntityRecordingItem>(recordingItem));
-									log_to_file(recordingItem.toString());
-
-								}
-								else if (!isAimingAtEntity && playerIsAimingAtEntity) {//if no existing target exist, record it.
-									log_to_file("Recording start of ActorAimAtRecordingItem");
-									isAimingAtEntity = true;
-									aimedAtEntity = targetEntity;
-									ticksCurrentAimAtStart = ticksNow;
-									//add recording item for aim at
-									ActorAimAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, targetEntity);
-									//default length 1000. Will be updated when aiming stops
-									recordingItem.setTicksLength((DWORD)500);
-									ongoingActorAimAtRecordingItem = std::make_shared<ActorAimAtRecordingItem>(recordingItem);
-									actorRecording.push_back(ongoingActorAimAtRecordingItem);
-									log_to_file(recordingItem.toString());
-								}
-								else if (isAimingAtEntity && targetEntity != aimedAtEntity && playerIsAimingAtEntity) {//if new target whilst already aiming
-									log_to_file("Recording new target for ActorAimAtRecordingItem");
-									ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
-									aimedAtEntity = targetEntity;
-									ticksCurrentAimAtStart = ticksNow;
-									ActorAimAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, targetEntity);
-									//default length 1000. Will be updated when aiming stops
-									recordingItem.setTicksLength((DWORD)1000);
-									ongoingActorAimAtRecordingItem = std::make_shared<ActorAimAtRecordingItem>(recordingItem);
-									actorRecording.push_back(ongoingActorAimAtRecordingItem);
-									log_to_file(recordingItem.toString());
-								}
-								else if (isAimingAtEntity && targetEntity == aimedAtEntity) {
-									log_to_file("Still aiming at entity " + std::to_string(aimedAtEntity) + "  for ActorAimAtRecordingItem");
-								}
-								else if (isAimingAtEntity && !playerIsAimingAtEntity) {
-									log_to_file("Stopped aiming at target " + std::to_string(aimedAtEntity) + "  for ActorAimAtRecordingItem");
-									isAimingAtEntity = false;
-									ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
-								}
-								else {
-									log_to_file("Unexpected ActorAimAtRecordingItem");
-								}
-								
-
-
-							}
-							else if (isFreeAiming) {//finished free aiming. Stop recording
-								isFreeAiming = false;
-								if (isAimingAtEntity) {
-									isAimingAtEntity = false;
-									ongoingActorAimAtRecordingItem->setTicksLength(ticksNow - ticksCurrentAimAtStart);
-								}
-
-							}
-							*/
 							else {
 								DELTA_TICKS = 1000;
 								//record movement on foot
@@ -5898,6 +5832,20 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 				recordingItem.setTicksLength(ticksStoppedSpeaking - ticksStartedSpeaking);
 				actorRecording.push_back(std::make_shared<ActorSpeakRecordingItem>(recordingItem));
 				log_to_file(recordingItem.toString());
+			}
+
+			//check for rocket boost
+			if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+				Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
+				if (VEHICLE::_HAS_VEHICLE_ROCKET_BOOST(actorVeh) && VEHICLE::_IS_VEHICLE_ROCKET_BOOST_ACTIVE(actorVeh)){
+					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
+					if (pedDriver == actorPed && ticksSinceStart > lastRocketBoost + 10000) {
+						ActorVehicleRocketBoostRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
+						actorRecording.push_back(std::make_shared<ActorVehicleRocketBoostRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+						lastRocketBoost = ticksSinceStart;
+					}
+				}
 			}
 
 			

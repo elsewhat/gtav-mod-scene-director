@@ -547,7 +547,40 @@ void BirdsEyeMode::drawSubMenuEdit() {
 
 			drawIndex++;
 			submenu_index++;
-			
+
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_ANIMSYNC_USE_ACTOR_LOC;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+			if (syncedAnimRecording->getUseActorLocation()) {
+				DRAW_TEXT("Use: Actor loc", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}
+			else {
+				DRAW_TEXT("Use: Recording loc", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+			}
+
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
+
+			if (submenu_is_active && submenu_active_index == submenu_index) {
+				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+				submenu_active_action = SUBMENU_ITEM_EDIT_ANIMSYNC_ROTATION;
+			}
+			else {
+				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			}
+
+			DRAW_TEXT(strdup(("Rotation: " + roundNumber(syncedAnimRecording->getRotation())).c_str()), 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+
+			GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+			drawIndex++;
+			submenu_index++;
 		}
 
 
@@ -695,6 +728,34 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 		}
 
 	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_ANIMSYNC_USE_ACTOR_LOC) {
+		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+		if (activeRecordingItem) {
+			std::shared_ptr<ActorSyncedAnimationRecordingItem> syncedAnimationRecording = std::dynamic_pointer_cast<ActorSyncedAnimationRecordingItem>(activeRecordingItem);
+			if (syncedAnimationRecording) {
+				syncedAnimationRecording->setUseActorLocation(!syncedAnimationRecording->getUseActorLocation());
+			}
+		}
+
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_ANIMSYNC_ROTATION) {
+		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+		if (activeRecordingItem) {
+			std::shared_ptr<ActorSyncedAnimationRecordingItem> syncedAnimationRecording = std::dynamic_pointer_cast<ActorSyncedAnimationRecordingItem>(activeRecordingItem);
+			if (syncedAnimationRecording) {
+				set_status_text("Enter rotation (-180.0 to 180.0). Use 0.0 to use actor's rotation");
+				float f = actionInputFloat();
+				syncedAnimationRecording->setRotation(f);
+				if (f == 0.0) {
+					syncedAnimationRecording->setUseActorRotation(true);
+				}
+			}
+
+		}
+
+	}
+
+	
 }
 
 void BirdsEyeMode::actionToggleEditLocation()

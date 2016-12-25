@@ -30,7 +30,7 @@ SyncedAnimation::SyncedAnimation(std::string title, std::string category, bool i
 	m_isNull = false;
 }
 
-void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop)
+void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation)
 {
 	log_to_file("SyncedAnimation->executeSyncedAnimation " + toString());
 	DWORD ticksStart = GetTickCount();
@@ -108,18 +108,20 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 	//Setup scene for synced animation
 	Vector3 sceneLocation = directLocation;
 
-	float startHeading = 0.0;
-	if (syncActors.size() > 1) {
-		startHeading = ENTITY::GET_ENTITY_HEADING(syncActors.at(0)->getActorPed());
-		if (useFirstActorLocation) {
-			sceneLocation = ENTITY::GET_ENTITY_COORDS(syncActors.at(0)->getActorPed(), true);
-		}
+	
+	if (useFirstActorLocation && syncActors.size() > 1) {
+		sceneLocation = ENTITY::GET_ENTITY_COORDS(syncActors.at(0)->getActorPed(), true);
+	}
+	float startHeading =  rotation;
+	if (useFirstActorRotation) {
+		startHeading = ENTITY::GET_ENTITY_ROTATION(syncActors.at(0)->getActorPed(), 2).z;
 	}
 
+
 	if (m_isProperSynced) {
-		log_to_file("About to create scene");
+		log_to_file("About to create scene startHaeding=" + std::to_string(startHeading));
 		m_sceneId = PED::CREATE_SYNCHRONIZED_SCENE(sceneLocation.x, sceneLocation.y, sceneLocation.z + m_deltaZLocation, 0.0, 0.0, startHeading, 2);
-		PED::SET_SYNCHRONIZED_SCENE_LOOPED(m_sceneId, false);
+		PED::SET_SYNCHRONIZED_SCENE_LOOPED(m_sceneId, doLoop);
 
 		log_to_file("About to add animations for actors");
 		//Add the animations to the scene
@@ -148,10 +150,6 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 			log_to_file("Object animation objReference:" + std::to_string(m_syncObjects[objectIndex].objReference) + " Animation " + animation.animName);
 			ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(m_syncObjects[objectIndex].objReference, m_sceneId, animation.animName, animation.animLibrary, 1000.0, -4.0, 0, 0x447a0000);
 			objectIndex++;
-		}
-
-		if (doLoop) {
-			PED::SET_SYNCHRONIZED_SCENE_LOOPED(m_sceneId, doLoop);
 		}
 
 		log_to_file("About to execute the synchronized scene");
@@ -432,7 +430,7 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Mopping (scrub small)", "<select category>", true, std::vector<Animation> {getAnimationForShortcutIndex(9735),}, std::vector<Animation> {getAnimationForShortcutIndex(9734),}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Mopping (scrub)", "<select category>", true, std::vector<Animation> {getAnimationForShortcutIndex(9731),}, std::vector<Animation> {getAnimationForShortcutIndex(9732),}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Mopping (wash mop)", "<select category>", true, std::vector<Animation> {getAnimationForShortcutIndex(9716),}, std::vector<Animation> {getAnimationForShortcutIndex(9715),}, std::vector<GTAObject> {getGTAObjectFromObjName("mop"),getGTAObjectFromObjName("bucket"),}, 0),
-		SyncedAnimation("Door kick #1", "<select category>", true, std::vector<Animation> {getAnimationForShortcutIndex(11026),}, std::vector<Animation> {getAnimationForShortcutIndex(11029),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, 0),
+		SyncedAnimation("Door kick #1", "<select category>", true, std::vector<Animation> {getAnimationForShortcutIndex(11026),}, std::vector<Animation> {getAnimationForShortcutIndex(11029),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_cbankvaulgate01"),}, 0),
 		SyncedAnimation("Eating from bowl", "<select category>", false, std::vector<Animation> {getAnimationForShortcutIndex(82595),}, std::vector<Animation> {getAnimationForShortcutIndex(82596),getAnimationForShortcutIndex(82594),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_cs_bowl_01b_s"),getGTAObjectFromObjName("prop_cs_fork"),}, -2),
 		SyncedAnimation("Eating chips on couch #2", "<select category>", true, std::vector<Animation> {getAnimationForShortcutIndex(50077),}, std::vector<Animation> {getAnimationForShortcutIndex(50076),getAnimationForShortcutIndex(50079),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_bowl_crisps"),getGTAObjectFromObjName("prop_crisp"),}, 0),
 		SyncedAnimation("Eating chips on couch #1", "<select category>", true, std::vector<Animation> {getAnimationForShortcutIndex(50036),}, std::vector<Animation> {getAnimationForShortcutIndex(50037),getAnimationForShortcutIndex(50039),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_bowl_crisps"),getGTAObjectFromObjName("prop_crisp"),}, 0),
