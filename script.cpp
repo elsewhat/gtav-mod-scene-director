@@ -3369,7 +3369,7 @@ void action_teleport_to_start_locations() {
 
 void action_timelapse_tick() {
 	TIME::ADD_TO_CLOCK_TIME(0, timelapse_delta_minutes, timelapse_delta_seconds);
-	log_to_file("Clock after timelapse: " + std::to_string(TIME::GET_CLOCK_HOURS()) + ":" + std::to_string(TIME::GET_CLOCK_MINUTES()) + ":" + std::to_string(TIME::GET_CLOCK_SECONDS()));
+	//log_to_file("Clock after timelapse: " + std::to_string(TIME::GET_CLOCK_HOURS()) + ":" + std::to_string(TIME::GET_CLOCK_MINUTES()) + ":" + std::to_string(TIME::GET_CLOCK_SECONDS()));
 }
 
 void action_toggle_timelapse() {
@@ -5420,7 +5420,11 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 		DWORD lastBulletRecorded = 0;
 
-		DWORD lastRocketBoost = -10000;
+		DWORD lastRocketBoost = 0;
+		bool hasRecordedRocketBoost = false;
+
+		bool hasRecordedVehParachute = false;
+		Vehicle vehicleParachute = 0;
 
 		//1. Store start location
 		actor.setStartLocation(ENTITY::GET_ENTITY_COORDS(actorPed, true));
@@ -5461,7 +5465,8 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					AnimationSequence animationSeqRecorded = animationTriggerRecorded.getAnimationSequence();
 					
 					actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
-					ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, animationSeqRecorded, animationFlag);
+					float heading = ENTITY::GET_ENTITY_HEADING(actorPed);
+					ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, heading,  animationSeqRecorded, animationFlag);
 					log_to_file(recordingItem.toString());
 
 					DELTA_TICKS = 500;
@@ -5499,7 +5504,10 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					syncedAnimationsInRecordings.push_back(syncedAnimCopy);
 
 					syncedAnimCopy->clearObjectReferences();
-					ActorSyncedAnimationRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, getActorPointers(), actorLocation, syncedAnimCopy);
+
+					float actorRotation = ENTITY::GET_ENTITY_ROTATION(actorPed, 2).z;
+
+					ActorSyncedAnimationRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, getActorPointers(), actorLocation, actorRotation, syncedAnimCopy);
 					
 					//make sure we walk closer to where animation was recorded
 					if (!PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
@@ -5834,18 +5842,31 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 				log_to_file(recordingItem.toString());
 			}
 
-			//check for rocket boost
+			//check for rocket boost or vehicle parachute
 			if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 				Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 				if (VEHICLE::_HAS_VEHICLE_ROCKET_BOOST(actorVeh) && VEHICLE::_IS_VEHICLE_ROCKET_BOOST_ACTIVE(actorVeh)){
 					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
-					if (pedDriver == actorPed && ticksSinceStart > lastRocketBoost + 10000) {
+					if (pedDriver == actorPed && (hasRecordedRocketBoost ==false || ticksSinceStart > lastRocketBoost + 5500)) {
 						ActorVehicleRocketBoostRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
 						actorRecording.push_back(std::make_shared<ActorVehicleRocketBoostRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 						lastRocketBoost = ticksSinceStart;
+						hasRecordedRocketBoost = true;
 					}
 				}
+
+				if (VEHICLE::_HAS_VEHICLE_PARACHUTE(actorVeh) && VEHICLE::_CAN_VEHICLE_PARACHUTE_BE_ACTIVATED(actorVeh)) {
+					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
+					if (pedDriver == actorPed && hasRecordedVehParachute == false) {
+						ActorVehicleParachuteRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
+						actorRecording.push_back(std::make_shared<ActorVehicleParachuteRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+						hasRecordedVehParachute = true;
+						vehicleParachute = actorVeh;
+					}
+				}
+
 			}
 
 			
@@ -5866,6 +5887,11 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 
 		log_to_file("Recorded " + std::to_string(actorRecording.size()) + " instructions");
 		set_status_text("Recorded " + std::to_string(actorRecording.size()) + " instructions");
+
+		//doesn't have the intended effect
+		if (hasRecordedVehParachute) {
+			VEHICLE::_SET_VEHICLE_PARACHUTE_ACTIVE(vehicleParachute, false);
+		}
 
 		set_status_text("Recording stopped");
 		nextWaitTicks = 400;

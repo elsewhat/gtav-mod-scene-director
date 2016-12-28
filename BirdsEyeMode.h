@@ -28,6 +28,9 @@ private:
 	DWORD mainTickLast = 0;
 	Vector3 camLastPos;
 	Vector3 camNewPos;
+	bool lastChangedRecordingLocation = false;
+	bool showDisabled = true;
+
 	std::shared_ptr<ActorRecordingItem> nearestRecording=nullptr;
 	std::shared_ptr<Actor> nearestActor = nullptr;
 	std::shared_ptr<ActorRecordingItem> highlightedRecording = nullptr;
@@ -64,6 +67,7 @@ private:
 	bool is_key_pressed_for_left();
 	bool is_key_pressed_for_right();
 	bool is_key_pressed_for_run();
+	bool is_key_pressed_for_crouch();
 	bool is_key_pressed_for_inverted_cam();
 public:
 	BirdsEyeMode();

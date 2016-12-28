@@ -15,6 +15,7 @@ class SyncedAnimation;
 
 class ActorRecordingItem {
 protected:
+	bool m_isDisabled = false;
 	DWORD m_ticksAfterRecordStart;
 	Ped m_actorPed;
 	Vector3 m_location;
@@ -30,7 +31,7 @@ public:
 
 	DWORD getTicksAfterRecordStart();
 	Vector3 getLocation();
-	void setLocation(Vector3 location);
+	virtual void setLocation(Vector3 location);
 
 
 	DWORD getTicksDeltaCheckCompletion();
@@ -42,11 +43,14 @@ public:
 	int getIndex();
 	void setIndex(int index);
 
+	bool isDisabled();
+	void setIsDisabled(bool isDisabled);
+
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)=0;
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem,DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)=0;
 	virtual std::string toString();
 	virtual void executeNativesAfterRecording(Actor actor);
-	virtual void drawMarkerForRecording(bool isCurrent);
+	virtual void drawMarkerForRecording(bool isCurrent, bool showDisabled);
 	virtual void setMarkerType(MARKER_TYPE markerType);
 	virtual MARKER_TYPE getMarkerType();
 	virtual std::string toUserFriendlyName();
@@ -54,6 +58,9 @@ public:
 	virtual float getMinDistanceBeforeCompleted();
 	virtual int getNrAttemptsBeforeSkipping();
 	virtual void setNrAttemptsBeforeSkipping(int nrAttemptsBeforeSkipping);
+	virtual void previewRecording(Actor* actor);
+	virtual void stopPreviewRecording(Actor* actor);
+	virtual void updatePreviewLocation(Actor* actor, Vector3 location);
 };
 
 class ActorOnFootMovementRecordingItem : public ActorRecordingItem {
@@ -224,16 +231,6 @@ public:
 	virtual std::string toUserFriendlyName() override;
 };
 
-class ActorVehicleRocketBoostRecordingItem : public ActorVehicleRecordingItem {
-protected:
-public:
-	ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
-	std::string toString() override;
-	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
-	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
-	virtual std::string toUserFriendlyName() override;
-};
-
 class ActorVehicleMovementRecordingItem : public ActorVehicleRecordingItem {
 protected:
 	float m_speedInVehicle;
@@ -247,20 +244,46 @@ public:
 	virtual std::string toUserFriendlyName() override;
 };
 
+class ActorVehicleRocketBoostRecordingItem : public ActorVehicleMovementRecordingItem {
+protected:
+public:
+	ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
+	std::string toString() override;
+	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
+};
+
+class ActorVehicleParachuteRecordingItem : public ActorVehicleMovementRecordingItem {
+protected:
+public:
+	ActorVehicleParachuteRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
+	std::string toString() override;
+	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
+	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
+	virtual std::string toUserFriendlyName() override;
+};
 
 class ActorAnimationSequenceRecordingItem : public ActorRecordingItem {
 protected:
 	AnimationSequence m_animationSequence;
 	AnimationFlag m_animationFlag;
+	float m_heading;
 public:
-	ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, AnimationSequence animationSequence, AnimationFlag animationFlag);
+	ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float heading, AnimationSequence animationSequence, AnimationFlag animationFlag);
 	AnimationSequence getAnimationSequence();
 	void setAnimationSequence(AnimationSequence animationSequence);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
 	virtual std::string toUserFriendlyName() override;
+	
+	void previewRecording(Actor* actor) override;
+	void stopPreviewRecording(Actor* actor) override;
+	void updatePreviewLocation(Actor* actor,Vector3 location) override;
 
+	float getHeading();
+	void setHeading(float heading);
 };
 
 class ActorSyncedAnimationRecordingItem : public ActorRecordingItem {
@@ -269,12 +292,12 @@ protected:
 	SyncedAnimation* m_syncedAnimation;
 	bool m_doLooping = false;
 	bool m_keepProps = false;
-	bool m_useActorLocation = true;
-	bool m_useActorRotation = true;
+	bool m_useActorLocation = false;
+	bool m_useActorRotation = false;
 	float m_rotation;
 
 public:
-	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor*> actors, Vector3 location, SyncedAnimation* syncedAnimation);
+	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor*> actors, Vector3 location, float actorRotation, SyncedAnimation* syncedAnimation);
 	SyncedAnimation* getSyncedAnimation();
 	void setSyncedAnimation(SyncedAnimation* syncedAnimation);
 	std::vector<Actor*> getActors();
@@ -287,6 +310,8 @@ public:
 	void setDoLooping(bool doLooping);
 	bool getDoLooping();
 
+	void setLocation(Vector3 location) override;
+
 	void setKeepProps(bool keepProps);
 	bool getKeepProps();
 
@@ -297,6 +322,10 @@ public:
 	float getRotation();
 
 	void setUseActorRotation(bool useActorRotation);
+
+	void previewRecording(Actor* actor) override;
+	void stopPreviewRecording(Actor* actor) override;
+	void updatePreviewLocation(Actor* actor,Vector3 location) override;
 
 };
 

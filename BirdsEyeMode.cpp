@@ -105,11 +105,16 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 			recordingLocation.x += deltaPos.x;
 			recordingLocation.y += deltaPos.y;
 			recordingLocation.z += deltaPos.z;
-
+			
 			selectedRecording->setLocation(recordingLocation);
+			lastChangedRecordingLocation = true;
 			//log_to_file("#New location of recording (" + std::to_string(recordingLocation.x) + ", " + std::to_string(recordingLocation.y) + ", " + std::to_string(recordingLocation.z) + ")");
 		}
 
+	}
+	else if (lastChangedRecordingLocation) {//Update the recording preview once there has been no movement
+		selectedRecording->updatePreviewLocation(selectedActor.get(),selectedRecording->getLocation());
+		lastChangedRecordingLocation = false;
 	}
 	checkInputRotation();
 
@@ -237,7 +242,7 @@ std::shared_ptr<ActorRecordingItem> BirdsEyeMode::getNearestRecording(std::vecto
 void BirdsEyeMode::drawRecordingMarkers(std::vector<Actor> & actors) {
 	if (shouldDrawRecordingMarkers) {
 		for (auto & actor : actors) {
-			actor.drawMarkersForRecording();
+			actor.drawMarkersForRecording(showDisabled);
 		}
 	}
 }
@@ -313,7 +318,27 @@ void BirdsEyeMode::drawMenu() {
 	if (menu_active_index == drawIndex) {
 		menu_active_action = MENU_ITEM_SHOW_REC_MARKERS;
 	}
+	drawIndex++;
 
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	if (showDisabled) {
+		DRAW_TEXT("Disabled: Show", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+	else {
+		DRAW_TEXT("Disabled: Hide", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+	}
+
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_SHOW_DISABLED;
+	}
 
 	if (nearestRecording != nullptr) {
 		drawIndex++;
@@ -370,6 +395,26 @@ void BirdsEyeMode::drawSubMenuEdit() {
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
 
 	if (activeRecordingItem) {
+		if (submenu_is_active && submenu_active_index == submenu_index) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			submenu_active_action = SUBMENU_ITEM_EDIT_DISABLE;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+		if (activeRecordingItem->isDisabled()) {
+			DRAW_TEXT("Status: Disabled", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		}
+		else {
+			DRAW_TEXT("Status: Enabled", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		}
+		
+
+		GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		drawIndex++;
+		submenu_index++;
+
 		if (submenu_is_active && submenu_active_index == submenu_index) {
 			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 			submenu_active_action = SUBMENU_ITEM_EDIT_NRATTEMPTS_BEFORE_SKIPPING;
@@ -646,6 +691,10 @@ void BirdsEyeMode::actionMenuSelected() {
 		nextWaitTicks = 200;
 		shouldDrawRecordingMarkers = !shouldDrawRecordingMarkers;
 	}
+	else if (menu_active_action == MENU_ITEM_SHOW_DISABLED) {
+		nextWaitTicks = 200;
+		showDisabled = !showDisabled;
+	}
 }
 
 void BirdsEyeMode::actionSubMenuEditSelected()
@@ -660,20 +709,34 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 
 		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
 		if (activeRecordingItem) {
-			
+			log_to_file("actionSubMenuEditSelected before stopping old preview");
 			std::shared_ptr<Actor> activeActor = getActiveActor();
+			
+			if (highlightedRecording != nullptr) {//stop old preview
+				highlightedRecording->stopPreviewRecording(activeActor.get());
+			}
+
+			
 			nextRecordingIndex = (activeRecordingItem->getIndex()-1)+1;
 			highlightedRecording = activeActor->getRecordingAt(nextRecordingIndex);
 			highlightedActor = activeActor;
 			if (highlightedRecording == nullptr) {
 				highlightedRecording = activeActor->getRecordingAt(0);
 			}
+			log_to_file("actionSubMenuEditSelected before starting new preview");
+			highlightedRecording->previewRecording(activeActor.get());
 		}
-
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_LOCATION) {
 		actionToggleEditLocation();
 		nextWaitTicks = 150;
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_EDIT_DISABLE) {
+		std::shared_ptr<ActorRecordingItem> activeRecordingItem = getActiveRecordingItem();
+		if (activeRecordingItem) {
+			activeRecordingItem->setIsDisabled(!activeRecordingItem->isDisabled());
+			nextWaitTicks = 150;
+		}
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_WALK_SPEED) {
 		actionInputWalkSpeed();
@@ -746,9 +809,10 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 				set_status_text("Enter rotation (-180.0 to 180.0). Use 0.0 to use actor's rotation");
 				float f = actionInputFloat();
 				syncedAnimationRecording->setRotation(f);
-				if (f == 0.0) {
+				if (f <= 0.1 && f>=-0.1) {
 					syncedAnimationRecording->setUseActorRotation(true);
 				}
+				syncedAnimationRecording->previewRecording(selectedActor.get());
 			}
 
 		}
@@ -965,6 +1029,7 @@ void BirdsEyeMode::drawInstructions() {
 		char* mouseRightButton = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 329, 1);
 		char* spaceControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 22, 1);
 		char* shiftControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 21, 1);
+		char* ctrlControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 36, 1);
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
@@ -983,13 +1048,19 @@ void BirdsEyeMode::drawInstructions() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
+		GRAPHICS::_0xE83A3E3557A56640(ctrlControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Decrease camera speed");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
 		GRAPHICS::_0xE83A3E3557A56640(mouseLeftButton);
 		GRAPHICS::_0xE83A3E3557A56640(mouseRightButton);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera up/down");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_I");
 		if (invertedControls) {
 			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera control: Inverted");
@@ -1001,7 +1072,7 @@ void BirdsEyeMode::drawInstructions() {
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
 		GRAPHICS::_0xE83A3E3557A56640(spaceControlKey);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Quick edit position");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
@@ -1130,6 +1201,11 @@ bool BirdsEyeMode::checkInputMovement()
 				camDelta.x *= 3; 
 				camDelta.y *= 3;
 				camDelta.z *= 3;
+			}
+			else if (is_key_pressed_for_crouch()) {
+				camDelta.x /= 20;
+				camDelta.y /= 20;
+				camDelta.z /= 20;
 			}
 
 			camNewPos = CAM::GET_CAM_COORD(cameraHandle);
@@ -1295,6 +1371,16 @@ bool BirdsEyeMode::is_key_pressed_for_right() {
 bool BirdsEyeMode::is_key_pressed_for_run() {
 	//D
 	if (IsKeyDown(VK_SHIFT)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_crouch() {
+	//D
+	if (IsKeyDown(VK_CONTROL)) {
 		return true;
 	}
 	else {

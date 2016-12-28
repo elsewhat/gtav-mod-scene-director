@@ -112,15 +112,19 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 	if (useFirstActorLocation && syncActors.size() > 1) {
 		sceneLocation = ENTITY::GET_ENTITY_COORDS(syncActors.at(0)->getActorPed(), true);
 	}
-	float startHeading =  rotation;
+	else {
+		Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(syncActors.at(0)->getActorPed(), true);
+		log_to_file("Difference in location x:" + std::to_string(sceneLocation.x - actorLocation.x) + " y:" + std::to_string(sceneLocation.y - actorLocation.y) + " z:" + std::to_string(sceneLocation.z - actorLocation.z));
+	}
+	float m_currentRotation =  rotation;
 	if (useFirstActorRotation) {
-		startHeading = ENTITY::GET_ENTITY_ROTATION(syncActors.at(0)->getActorPed(), 2).z;
+		m_currentRotation = ENTITY::GET_ENTITY_ROTATION(syncActors.at(0)->getActorPed(), 2).z;
 	}
 
 
 	if (m_isProperSynced) {
-		log_to_file("About to create scene startHaeding=" + std::to_string(startHeading));
-		m_sceneId = PED::CREATE_SYNCHRONIZED_SCENE(sceneLocation.x, sceneLocation.y, sceneLocation.z + m_deltaZLocation, 0.0, 0.0, startHeading, 2);
+		log_to_file("About to create scene startHeading=" + std::to_string(m_currentRotation));
+		m_sceneId = PED::CREATE_SYNCHRONIZED_SCENE(sceneLocation.x, sceneLocation.y, sceneLocation.z + m_deltaZLocation, 0.0, 0.0, m_currentRotation, 2);
 		PED::SET_SYNCHRONIZED_SCENE_LOOPED(m_sceneId, doLoop);
 
 		log_to_file("About to add animations for actors");
@@ -168,6 +172,19 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 			actorIndex++;
 		}
 
+	}
+}
+
+void SyncedAnimation::previewSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation)
+{
+	executeSyncedAnimation(syncActors, useFirstActorLocation, directLocation, true, useFirstActorLocation, rotation);
+	PED::SET_SYNCHRONIZED_SCENE_RATE(m_sceneId, 0.1f);
+}
+
+void SyncedAnimation::updateLocationOfScene(Vector3 location)
+{
+	if (m_sceneId != 0) {
+		PED::SET_SYNCHRONIZED_SCENE_ORIGIN(m_sceneId, location.x, location.y, location.z, 0, 0, m_currentRotation, 2);
 	}
 }
 
@@ -362,6 +379,15 @@ int SyncedAnimation::getLength()
 	}
 	return maxLength;
 	
+}
+
+bool SyncedAnimation::isActive()
+{
+	if (m_sceneId == 0) {
+		return false;
+	} {
+		return true;
+	}
 }
 
 float SyncedAnimation::getDeltaZ()

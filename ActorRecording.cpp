@@ -40,6 +40,21 @@ void ActorRecordingItem::setNrAttemptsBeforeSkipping(int nrAttemptsBeforeSkippin
 	m_nrAttemptsBeforeSkipping = nrAttemptsBeforeSkipping;
 }
 
+void ActorRecordingItem::previewRecording(Actor* actor)
+{
+	//do nothing
+}
+
+void ActorRecordingItem::stopPreviewRecording(Actor* actor)
+{
+	//do nothing
+}
+
+void ActorRecordingItem::updatePreviewLocation(Actor* actor,Vector3 location)
+{
+	//do nothing
+}
+
 
 
 DWORD ActorRecordingItem::getTicksDeltaCheckCompletion()
@@ -72,6 +87,16 @@ void ActorRecordingItem::setIndex(int index)
 	m_index = index;
 }
 
+bool ActorRecordingItem::isDisabled()
+{
+	return m_isDisabled;
+}
+
+void ActorRecordingItem::setIsDisabled(bool isDisabled)
+{
+	m_isDisabled = isDisabled;
+}
+
 std::string ActorRecordingItem::toString()
 {
 	return "ActorRecordingItem " + std::to_string(m_actorPed) + " ticks: " + std::to_string(m_ticksAfterRecordStart) + " delta_ticks:" + std::to_string(m_ticksDeltaWhenRecorded);
@@ -81,7 +106,7 @@ void ActorRecordingItem::executeNativesAfterRecording(Actor actor)
 {
 }
 
-void ActorRecordingItem::drawMarkerForRecording(bool isCurrent)
+void ActorRecordingItem::drawMarkerForRecording(bool isCurrent, bool showDisabled)
 {
 	int colorR = 204;
 	int colorG = 204; 
@@ -97,12 +122,23 @@ void ActorRecordingItem::drawMarkerForRecording(bool isCurrent)
 		colorB = 130;
 	}
 
-	if (isCurrent) {
-		GRAPHICS::DRAW_MARKER(2, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, colorR, colorG, colorB, 100, false, true, 2, false, false, false, false);
+	if (m_isDisabled) {
+		if (showDisabled) {
+			colorR = 255;
+			colorG = 255;
+			colorB = 255;
+			GRAPHICS::DRAW_MARKER(1, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, colorR, colorG, colorB, 100, false, true, 2, false, false, false, false);
+		}
 	}
 	else {
-		GRAPHICS::DRAW_MARKER(1, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, colorR, colorG, colorB, 100, false, true, 2, false, false, false, false);
+		if (isCurrent) {
+			GRAPHICS::DRAW_MARKER(2, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, colorR, colorG, colorB, 100, false, true, 2, false, false, false, false);
+		}
+		else {
+			GRAPHICS::DRAW_MARKER(1, m_location.x, m_location.y, m_location.z, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 0.0f, 0.75f, 0.75f, 0.75f, colorR, colorG, colorB, 100, false, true, 2, false, false, false, false);
+		}
 	}
+
 
 }
 
@@ -505,9 +541,10 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 
 			//check if next is not a vehicle movement (will often be exit vehicle) Then the threshold should be much less
 			std::shared_ptr<ActorVehicleMovementRecordingItem> nextVehicleMovement = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(nextRecordingItem);
-			//std::shared_ptr<ActorVehicleRocketBoostRecordingItem> nextVehicleRocketBoost = std::dynamic_pointer_cast<ActorVehicleRocketBoostRecordingItem>(nextRecordingItem);
+			log_to_file("nextVehicleMovement: ");
+
 			//&& nextVehicleRocketBoost == NULL
-			if (nextVehicleMovement == NULL ) {
+			if (nextVehicleMovement == NULL) {
 				log_to_file("Next recording is not a vehicle movement, will require a smaller distance to target");
 				if (isPedInHeli && minDistance>45.0) {
 					minDistance = 45.0;
@@ -696,11 +733,12 @@ std::string ActorShootAtEntityRecordingItem::toUserFriendlyName()
 	return "Shoot";
 }
 
-ActorAnimationSequenceRecordingItem::ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, AnimationSequence animationSequence, AnimationFlag animationFlag):ActorRecordingItem(ticksStart,ticksDeltaWhenRecorded,actor,location)
+ActorAnimationSequenceRecordingItem::ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float heading, AnimationSequence animationSequence, AnimationFlag animationFlag):ActorRecordingItem(ticksStart,ticksDeltaWhenRecorded,actor,location)
 {
 	m_animationSequence = animationSequence;
 	m_animationFlag = animationFlag;
 	m_ticksDeltaCheckCompletion = 0;
+	m_heading = heading;
 }
 
 AnimationSequence ActorAnimationSequenceRecordingItem::getAnimationSequence()
@@ -764,6 +802,70 @@ std::string ActorAnimationSequenceRecordingItem::toUserFriendlyName()
 {
 	return "Animation";
 }
+
+void ActorAnimationSequenceRecordingItem::previewRecording(Actor * actor)
+{
+	ENTITY::SET_ENTITY_COORDS_NO_OFFSET(actor->getActorPed(), m_location.x, m_location.y, m_location.z, 0, 0, 1);
+	ENTITY::SET_ENTITY_HEADING(actor->getActorPed(), m_heading);
+	WAIT(100);
+
+	//load animation dicts
+	for (auto &animation : m_animationSequence.animationsInSequence) {
+		STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
+
+		DWORD ticksStart = GetTickCount();
+
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
+		{
+			WAIT(0);
+			if (GetTickCount() > ticksStart + 5000) {
+				//duration will be 0 if it's not loaded
+				log_to_file("Ticks overflow2");
+				set_status_text("Could not load animation with code " + std::string(animation.animLibrary));
+				return;
+			}
+		}
+	}
+
+	TaskSequence task_seq = 1;
+	AI::OPEN_SEQUENCE_TASK(&task_seq);
+
+	//load animation dicts
+	for (auto &animation : m_animationSequence.animationsInSequence) {
+		AI::TASK_PLAY_ANIM(0, animation.animLibrary, animation.animName, 8.0f, -8.0f, animation.duration, m_animationFlag.id, 8.0f, 0, 0, 0);
+	}
+	AI::TASK_PED_SLIDE_TO_COORD(0, m_location.x, m_location.y, m_location.z, m_heading, 1061158912);
+	AI::SET_SEQUENCE_TO_REPEAT(task_seq, true);
+
+	AI::CLOSE_SEQUENCE_TASK(task_seq);
+	AI::TASK_PERFORM_SEQUENCE(actor->getActorPed(), task_seq);
+	AI::CLEAR_SEQUENCE_TASK(&task_seq);
+}
+
+void ActorAnimationSequenceRecordingItem::stopPreviewRecording(Actor* actor)
+{
+	AI::CLEAR_PED_TASKS(actor->getActorPed());
+	ENTITY::SET_ENTITY_COORDS_NO_OFFSET(actor->getActorPed(), m_location.x, m_location.y, m_location.z, 0, 0, 1);
+	ENTITY::SET_ENTITY_HEADING(actor->getActorPed(), m_heading);
+}
+
+void ActorAnimationSequenceRecordingItem::updatePreviewLocation(Actor* actor, Vector3 location)
+{
+	ENTITY::SET_ENTITY_COORDS_NO_OFFSET(actor->getActorPed(), location.x, location.y, location.z, 0, 0, 1);
+	ENTITY::SET_ENTITY_HEADING(actor->getActorPed(), m_heading);
+	previewRecording(actor);
+}
+
+float ActorAnimationSequenceRecordingItem::getHeading()
+{
+	return m_heading;
+}
+
+void ActorAnimationSequenceRecordingItem::setHeading(float heading)
+{
+	m_heading = heading;
+}
+
 
 ActorCoverAtRecordingItem::ActorCoverAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vector3 enterCoverPosition, Vector3 coverPosition) : ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
 {
@@ -1058,11 +1160,12 @@ std::string ActorSpeakRecordingItem::toUserFriendlyName()
 	return "Speaking";
 }
 
-ActorSyncedAnimationRecordingItem::ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded,Ped pedActor, std::vector<Actor*> actors, Vector3 location, SyncedAnimation *syncedAnimation):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, pedActor, location)
+ActorSyncedAnimationRecordingItem::ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded,Ped pedActor, std::vector<Actor*> actors, Vector3 location, float actorRotation, SyncedAnimation *syncedAnimation):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, pedActor, location)
 {
 	m_syncedAnimation = syncedAnimation;
 	m_actors = actors;
 	m_ticksDeltaCheckCompletion = 0;
+	m_rotation = actorRotation;
 }
 
 SyncedAnimation* ActorSyncedAnimationRecordingItem::getSyncedAnimation()
@@ -1093,7 +1196,7 @@ std::string ActorSyncedAnimationRecordingItem::toString()
 void ActorSyncedAnimationRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	log_to_file("ActorSyncedAnimationRecordingItem::executeNativesForRecording");
-	m_syncedAnimation->executeSyncedAnimation(m_actors, m_useActorLocation, Vector3(), m_doLooping, m_useActorRotation,m_rotation);
+	m_syncedAnimation->executeSyncedAnimation(m_actors, m_useActorLocation, m_location, m_doLooping, m_useActorRotation,m_rotation);
 
 
 }
@@ -1136,6 +1239,12 @@ bool ActorSyncedAnimationRecordingItem::getDoLooping()
 	return m_doLooping;
 }
 
+void ActorSyncedAnimationRecordingItem::setLocation(Vector3 location)
+{
+	ActorRecordingItem::setLocation(location);
+
+}
+
 void ActorSyncedAnimationRecordingItem::setKeepProps(bool keepProps)
 {
 	m_keepProps = keepProps;
@@ -1159,7 +1268,6 @@ bool ActorSyncedAnimationRecordingItem::getUseActorLocation()
 void ActorSyncedAnimationRecordingItem::setRotation(float rotation)
 {
 	m_rotation = rotation;
-	m_useActorRotation = false;
 }
 
 float ActorSyncedAnimationRecordingItem::getRotation()
@@ -1172,14 +1280,37 @@ void ActorSyncedAnimationRecordingItem::setUseActorRotation(bool useActorRotatio
 	m_useActorLocation = useActorRotation;
 }
 
-ActorVehicleRocketBoostRecordingItem::ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading) : ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading)
+void ActorSyncedAnimationRecordingItem::previewRecording(Actor* actor)
+{
+	log_to_file("ActorSyncedAnimationRecordingItem::previewRecording");
+	m_syncedAnimation->previewSyncedAnimation(m_actors, false, m_location, m_doLooping, false, m_rotation);
+}
+
+void ActorSyncedAnimationRecordingItem::stopPreviewRecording(Actor* actor)
+{
+	m_syncedAnimation->cleanupAfterExecution(true, false);
+}
+
+void ActorSyncedAnimationRecordingItem::updatePreviewLocation(Actor* actor,Vector3 location)
+{
+	log_to_file("ActorSyncedAnimationRecordingItem::setPreviewLocation");
+	//m_syncedAnimation->updateLocationOfScene(location);
+	if (m_syncedAnimation->isActive()) {
+		//m_syncedAnimation->updateLocationOfScene(location);
+		stopPreviewRecording(actor);
+		previewRecording(actor);
+
+	}
+}
+
+ActorVehicleRocketBoostRecordingItem::ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading):ActorVehicleMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading, 30.0f)
 {
 	m_ticksDeltaCheckCompletion = 10;
 }
 
 std::string ActorVehicleRocketBoostRecordingItem::toString()
 {
-	return "ActorVehicleRocketBoostRecordingItem";
+	return ActorRecordingItem::toString() + " ActorVehicleRocketBoostRecordingItem Vehicle " + std::to_string(m_vehicle) ;
 }
 
 void ActorVehicleRocketBoostRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
@@ -1200,4 +1331,35 @@ bool ActorVehicleRocketBoostRecordingItem::isRecordingItemCompleted(std::shared_
 std::string ActorVehicleRocketBoostRecordingItem::toUserFriendlyName()
 {
 	return "Boost";
+}
+
+
+ActorVehicleParachuteRecordingItem::ActorVehicleParachuteRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading) :ActorVehicleMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading, 30.0f)
+{
+	m_ticksDeltaCheckCompletion = 10;
+}
+
+std::string ActorVehicleParachuteRecordingItem::toString()
+{
+	return ActorRecordingItem::toString() + " ActorVehicleParachuteRecordingItem Vehicle " + std::to_string(m_vehicle);
+}
+
+void ActorVehicleParachuteRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
+{
+	if (VEHICLE::_HAS_VEHICLE_PARACHUTE(m_vehicle)) {
+		VEHICLE::_SET_VEHICLE_PARACHUTE_ACTIVE(m_vehicle, true);
+	}
+	else {
+		log_to_file("Vehicle has no parachute");
+	}
+}
+
+bool ActorVehicleParachuteRecordingItem::isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location)
+{
+	return true;
+}
+
+std::string ActorVehicleParachuteRecordingItem::toUserFriendlyName()
+{
+	return "Parachute";
 }

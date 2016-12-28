@@ -282,7 +282,7 @@ void Actor::setRecordingPlayback(ActorRecordingPlayback recordingPlayback)
 }
 
 
-void Actor::drawMarkersForRecording()
+void Actor::drawMarkersForRecording(bool showDisabled)
 {
 	if (hasRecording()) {
 		int i = 0;
@@ -292,7 +292,7 @@ void Actor::drawMarkersForRecording()
 				isCurrent = true;
 			}
 			if (i >= getRecordingPlayback().getRecordedItemIndex()) {
-				recording_item->drawMarkerForRecording(isCurrent);
+				recording_item->drawMarkerForRecording(isCurrent, showDisabled);
 			}
 			i++;
 		}
@@ -438,6 +438,26 @@ void Actor::update_tick_recording_replay(Actor & actor) {
 	ActorRecordingPlayback & recordingPlayback = actor.getRecordingPlayback();
 
 	std::shared_ptr<ActorRecordingItem> recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+	//skip disabled recording items
+	while (recordingItem->isDisabled()) {
+		log_to_file("DISABLED " + recordingItem->toString());
+		if (recordingPlayback.isCurrentRecordedItemLast()) {
+			recordingItem = nullptr;
+			break;
+		}
+		else {
+			recordingPlayback.nextRecordingItemIndex(GetTickCount());
+			recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+		}
+	}
+	//if we have only disabled items, stop the replay
+	if(recordingItem==nullptr){
+		recordingPlayback.setPlaybackCompleted();
+		actor.stopReplayRecording();
+		return;
+	}
+
+	//get next and previous recording items
 	std::shared_ptr<ActorRecordingItem> nextRecordingItem;
 	if (!recordingPlayback.isCurrentRecordedItemLast()) {
 		nextRecordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex() + 1);
@@ -486,13 +506,7 @@ void Actor::update_tick_recording_replay(Actor & actor) {
 	//check for completion every recordingItem.getTicksDeltaCheckCompletion() ticks
 	if (ticksNow >= recordingPlayback.getTicksLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion()) {
 		Vector3 currentLocation = ENTITY::GET_ENTITY_COORDS(actorPed, 1);
-		//log_to_file(std::to_string(ticksNow) + " checking for completion ticks "+std::to_string(recordingPlayback.getTicksLastCheckOfCurrentItem() + recordingItem->getTicksDeltaCheckCompletion())+ " getticksdelta " + std::to_string(recordingItem->getTicksDeltaCheckCompletion()));
 		log_to_file(std::to_string(ticksNow) + " checking for completion of item " + recordingItem->toString());
-
-
-
-
-
 
 		if (recordingItem->isRecordingItemCompleted(nextRecordingItem, recordingPlayback.getTicksStartCurrentItem(), ticksNow, recordingPlayback.getAttemptsCheckedCompletion(), actor, currentLocation)) {
 			//execute any post actions (normally empty)
@@ -506,11 +520,28 @@ void Actor::update_tick_recording_replay(Actor & actor) {
 			else {
 				recordingPlayback.nextRecordingItemIndex(GetTickCount());
 				recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
-				log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex()) + " : " + recordingItem->toString());
-				recordingItem->executeNativesForRecording(actor, nextRecordingItem, previousRecordingItem);
-
-				//try to avoid flee and other actions
-				//PED::SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(actor.getActorPed(), true);
+				
+				//skip disabled recording items
+				while (recordingItem->isDisabled()) {
+					log_to_file("DISABLED " + recordingItem->toString());
+					if (recordingPlayback.isCurrentRecordedItemLast()) {
+						recordingItem = nullptr;
+						break;
+					}
+					else {
+						recordingPlayback.nextRecordingItemIndex(GetTickCount());
+						recordingItem = actor.getRecordingAt(recordingPlayback.getRecordedItemIndex());
+					}
+				}
+				
+				if (recordingItem != nullptr) {
+					log_to_file("Starting next recorded item " + std::to_string(recordingPlayback.getRecordedItemIndex()) + " : " + recordingItem->toString());
+					recordingItem->executeNativesForRecording(actor, nextRecordingItem, previousRecordingItem);
+				}
+				else {
+					recordingPlayback.setPlaybackCompleted();
+					actor.stopReplayRecording();
+				}
 			}
 		}
 		else {
@@ -518,14 +549,6 @@ void Actor::update_tick_recording_replay(Actor & actor) {
 			recordingPlayback.incrementAttempstCheckedCompletion();
 		}
 	}
-
-	//Logic for checking if current recording is ActorShootAtByImpactRecordingItem
-	//std::shared_ptr<ActorShootAtByImpactRecordingItem> checkIfCurrentShootingRecordingItem = std::dynamic_pointer_cast<ActorShootAtByImpactRecordingItem>(recordingItem);
-	//if (checkIfCurrentShootingRecordingItem) {
-	//	log_to_file("Blocking mouse movements during ActorShootAtByImpactRecordingItem");
-	//	CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(1);
-	//}
-
 }
 
 

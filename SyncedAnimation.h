@@ -21,6 +21,7 @@ private:
 	bool m_isNull = true;
 	bool m_doLooping = false;
 	bool m_isProperSynced = true;
+	float m_currentRotation = 0.0f;
 	DWORD m_ticksStarted;
 	std::vector<Animation>  m_actorAnimations;
 	std::vector<Animation>  m_objectAnimations;
@@ -37,6 +38,8 @@ public:
 	SyncedAnimation(std::string title, std::string category, bool isProperSynced, std::vector<Animation>  actorAnimations, std::vector<Animation>  objectAnimations, std::vector<GTAObject>  syncObjects, float deltaZLocation);
 
 	void executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation);
+	void previewSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation);
+	void updateLocationOfScene(Vector3 location);
 	bool isCompleted();
 	void cleanupAfterExecution(bool deleteObjects, bool teleportActorsBackToStart);
 	void setLooping(bool doLooping);
@@ -49,6 +52,8 @@ public:
 	void clearObjectReferences();
 
 	int getLength();
+
+	bool isActive();
 
 	float getDeltaZ();
 	void setDeltaZ(float deltaZLocation);

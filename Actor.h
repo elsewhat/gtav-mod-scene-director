@@ -206,7 +206,7 @@ public:
 	ActorRecordingPlayback& getRecordingPlayback();
 	void setRecordingPlayback(ActorRecordingPlayback recordingPlayback);
 
-	void drawMarkersForRecording();
+	void drawMarkersForRecording(bool showDisabled);
 
 	float distanceToNearestLocation(Vector3 startingPoint);
 	std::shared_ptr<ActorRecordingItem> getNearestRecording(Vector3 startingPoint);
