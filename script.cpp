@@ -119,6 +119,8 @@ bool do_record_reload = false;
 
 std::vector<RelationshipGroup> modRelationshipGroups;
 
+std::vector<std::string> modSyncedAnimCategories;
+
 
 std::vector<ClipSet> gtaWalkingStyles;
 int index_walking_style = -1;
@@ -378,6 +380,15 @@ bool is_ped_actor_active(Ped ped) {
 bool should_display_app_hud() {
 	return should_display_hud;
 }
+
+
+bool hud_toggle_key_pressed()
+{
+	return IsKeyJustUp(key_hud);
+}
+
+
+
 
 void ensure_ped_and_vehicle_is_not_deleted(Ped ped) {
 	if (!ENTITY::DOES_ENTITY_EXIST(ped)){
@@ -763,12 +774,6 @@ void draw_instructional_buttons_animation_sync_preview() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(8);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_G");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Go to anim");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(9);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_L");
 		if (doAnimationLoop) {
 			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop: On");
@@ -780,7 +785,7 @@ void draw_instructional_buttons_animation_sync_preview() {
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(10);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(9);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F");
 		std::string filterInstruction = "Filter";
 		if (hasAnimationFilter) {
@@ -1446,6 +1451,54 @@ void draw_submenu_player(int drawIndex) {
 	submenu_max_index = submenu_index;
 }
 
+
+void draw_menu_synced_anim_preview() {
+	int drawIndex = 0;
+	Ped playerPed = PLAYER::PLAYER_PED_ID();
+	Actor & playerActor = get_actor_from_ped(playerPed);
+	submenu_is_displayed = false;
+
+	//colors for swapping from active to inactive... messy
+	int textColorR = 255, textColorG = 255, textColorB = 255;
+	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+
+	int indexCategory = 0;
+	for (auto strCategory : modSyncedAnimCategories) {
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		}
+
+		DRAW_TEXT(strdup(strCategory.c_str()), 0.02, 0.108 + (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.07, 0.120 + (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		//DRAW_TEXT(strdup(strCategory.c_str()), 0.02, 0.708 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+		//GRAPHICS::DRAW_RECT(0.07, 0.720 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+		if (menu_active_index == drawIndex) {
+			menu_active_action =(MENU_ITEM) (MENU_ITEM_SYNCEDPREVIEW_CATEGORY1+ indexCategory);
+		}
+		drawIndex++;
+		indexCategory++;
+	}
+
+	if (menu_active_index == -1) {
+		menu_active_index = 0;
+	}
+
+	menu_max_index = drawIndex - 1;
+	if (menu_active_index > menu_max_index) {
+		menu_active_index = menu_max_index;
+	}
+
+	if (submenu_is_displayed == false) {
+		submenu_is_active = false;
+		submenu_active_index = -1;
+	}
+
+}
 
 void draw_menu() {
 	int drawIndex = 0;
@@ -3621,6 +3674,8 @@ void action_animation_lipmovement_stop() {
 	AI::STOP_ANIM_TASK(actor.getActorPed(), "mp_facial", "mic_chatter", -4.0);
 }
 
+
+
 void action_animation_single() {
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
 	if (actor.isNullActor()) {
@@ -4391,12 +4446,44 @@ void action_animation_sync_preview() {
 		//std::vector<GTAObject>(),
 		syncedAnimation.executeSyncedAnimation(getActorPointers(),  true, Vector3(), doAnimationLoop,true,0.0f);
 		DWORD ticksStart = GetTickCount();
+		DWORD ticksLastMenu = GetTickCount();
 
 		while (!syncedAnimation.isCompleted()) {
+			DWORD ticksNow= GetTickCount();
 			WAIT(0);
 			draw_instructional_buttons_animation_sync_preview();
 			draw_spot_lights();
 			DRAW_TEXT(strdup(syncedAnimation.toString().c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 255);
+
+			if (ticksNow >= ticksLastMenu + 100) {
+				if (menu_up_key_pressed()) {
+					menu_action_down();
+					ticksLastMenu = ticksNow;
+				}
+				else if (menu_down_key_pressed()) {
+					menu_action_up();
+					ticksLastMenu = ticksNow;
+				}
+				else if (menu_left_key_pressed()) {
+					menu_action_left();
+					ticksLastMenu = ticksNow;
+				}
+				else if (menu_right_key_pressed()) {
+					menu_action_right();
+					ticksLastMenu = ticksNow;
+				}
+				else if (menu_select_key_pressed()) {
+					menu_action_select();
+					ticksLastMenu = ticksNow;
+				}
+				else if (menu_delete_key_pressed()) {
+					menu_action_delete();
+					ticksLastMenu = ticksNow;
+				}
+			}
+
+			draw_menu_synced_anim_preview();
+
 
 			CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
 			if (IsKeyDown(0x43)) {//stop preview
@@ -5191,125 +5278,6 @@ bool copy_player_actions_key_pressed() {
 	}
 }
 
-bool hud_toggle_key_pressed()
-{
-	return IsKeyJustUp(key_hud);
-}
-
-bool menu_up_key_pressed() {
-	if (IsKeyDown(key_menu_up)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-bool menu_down_key_pressed() {
-	if (IsKeyDown(key_menu_down)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-bool menu_left_key_pressed() {
-	if (IsKeyDown(key_menu_left)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-bool menu_right_key_pressed() {
-	if (IsKeyDown(key_menu_right)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-
-bool menu_select_key_pressed() {
-	if (IsKeyDown(key_menu_select)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-bool menu_delete_key_pressed() {
-	if (IsKeyDown(key_menu_delete)) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-
-
-void menu_action_up() {
-	if(submenu_is_active == false){
-		menu_active_index++;
-		if (menu_active_index > menu_max_index) {
-			menu_active_index = 0;
-			nextWaitTicks = 200;
-		}
-		else {
-			submenu_is_displayed = false;
-			submenu_is_active = false;
-			submenu_active_index = -1;
-		}
-	}
-	else {
-		submenu_active_index++;
-		if (submenu_active_index > submenu_max_index) {
-			submenu_active_index = submenu_max_index;
-		}
-	}
-	nextWaitTicks = 100;
-}
-
-void menu_action_down() {
-	if (submenu_is_active == false) {
-		menu_active_index--;
-		if (menu_active_index < 0) {
-			menu_active_index = menu_max_index;
-			nextWaitTicks = 200;
-		}
-		else {
-			submenu_is_displayed = false;
-			submenu_is_active = false;
-			submenu_active_index = -1;
-		}
-	}
-	else {
-		submenu_active_index--;
-		if (submenu_active_index < 0) {
-			submenu_active_index = 0;
-		}
-	}
-	nextWaitTicks = 100;
-}
-
-void menu_action_left() {
-	if (submenu_is_displayed) {
-		submenu_is_active = true;
-		submenu_active_index = 0;
-	}
-}
-
-void menu_action_right() {
-	if (submenu_is_displayed) {
-		submenu_is_active = false;
-	}
-}
-
 void action_copy_recording_to_other_actors(Actor actorCopyFrom) {
 	Ped actorCopyFromPed = actorCopyFrom.getActorPed();
 
@@ -6020,6 +5988,8 @@ void action_submenu_active_selected() {
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_ANIMATION_SYNC_PREVIEW) {
 		action_animation_sync_preview();
+		menu_active_index = 0;
+		submenu_active_index = 0;
 	}
 	else if (submenu_active_action >= SUBMENU_ITEM_ANIMATION_SEQUENCE_0 && submenu_active_action <= SUBMENU_ITEM_ANIMATION_SEQUENCE_20) {
 		int animSequenceIndex = submenu_active_action - SUBMENU_ITEM_ANIMATION_SEQUENCE_0;
@@ -6101,6 +6071,7 @@ void action_menu_active_delete() {
 	}
 }
 
+
 void action_menu_active_selected() {
 	log_to_file("action_menu_active_selected " + std::to_string(menu_active_action));
 	//switch to actor
@@ -6158,30 +6129,15 @@ void action_menu_active_selected() {
 	}
 	else if (menu_active_action == MENU_ITEM_FIRING_SQUAD) {
 		is_firing_squad_engaged = false;
+	}else if (menu_active_action >= MENU_ITEM_SYNCEDPREVIEW_CATEGORY1 && menu_active_action <= MENU_ITEM_SYNCEDPREVIEW_CATEGORY15) {
+		int categoryIndex = menu_active_action - MENU_ITEM_SYNCEDPREVIEW_CATEGORY1;
+		log_to_file("Index " + std::to_string(categoryIndex));
+
+		std::string selectedCategory = modSyncedAnimCategories[categoryIndex];
+		log_to_file(selectedCategory);
+
 	}
 
-}
-
-
-
-void menu_action_select() {
-	if (submenu_is_active) {
-		action_submenu_active_selected();
-	}
-	else {
-		action_menu_active_selected();
-	}
-	nextWaitTicks = 200;
-}
-
-void menu_action_delete() {
-	if (submenu_is_active) {
-		action_submenu_active_delete();
-	}
-	else {
-		action_menu_active_delete();
-	}
-	nextWaitTicks = 200;
 }
 
 void action_copy_player_actions() {
@@ -6548,6 +6504,139 @@ void action_copy_player_actions() {
 }
 
 
+bool menu_up_key_pressed() {
+	if (IsKeyDown(key_menu_up)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool menu_down_key_pressed() {
+	if (IsKeyDown(key_menu_down)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool menu_left_key_pressed() {
+	if (IsKeyDown(key_menu_left)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool menu_right_key_pressed() {
+	if (IsKeyDown(key_menu_right)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+
+bool menu_select_key_pressed() {
+	if (IsKeyDown(key_menu_select)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool menu_delete_key_pressed() {
+	if (IsKeyDown(key_menu_delete)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+
+
+void menu_action_up() {
+	if (submenu_is_active == false) {
+		menu_active_index++;
+		if (menu_active_index > menu_max_index) {
+			menu_active_index = 0;
+			nextWaitTicks = 200;
+		}
+		else {
+			submenu_is_displayed = false;
+			submenu_is_active = false;
+			submenu_active_index = -1;
+		}
+	}
+	else {
+		submenu_active_index++;
+		if (submenu_active_index > submenu_max_index) {
+			submenu_active_index = submenu_max_index;
+		}
+	}
+	nextWaitTicks = 100;
+}
+
+void menu_action_down() {
+	if (submenu_is_active == false) {
+		menu_active_index--;
+		if (menu_active_index < 0) {
+			menu_active_index = menu_max_index;
+			nextWaitTicks = 200;
+		}
+		else {
+			submenu_is_displayed = false;
+			submenu_is_active = false;
+			submenu_active_index = -1;
+		}
+	}
+	else {
+		submenu_active_index--;
+		if (submenu_active_index < 0) {
+			submenu_active_index = 0;
+		}
+	}
+	nextWaitTicks = 100;
+}
+
+void menu_action_left() {
+	if (submenu_is_displayed) {
+		submenu_is_active = true;
+		submenu_active_index = 0;
+	}
+}
+
+void menu_action_right() {
+	if (submenu_is_displayed) {
+		submenu_is_active = false;
+	}
+}
+
+void menu_action_select() {
+	if (submenu_is_active) {
+		action_submenu_active_selected();
+	}
+	else {
+		action_menu_active_selected();
+	}
+	nextWaitTicks = 200;
+}
+
+void menu_action_delete() {
+	if (submenu_is_active) {
+		action_submenu_active_delete();
+	}
+	else {
+		action_menu_active_delete();
+	}
+	nextWaitTicks = 200;
+}
 
 
 
@@ -6735,8 +6824,8 @@ void ScriptMain()
 	}
 
 	initializeSyncedAnimations();
-	//std::vector<Animation> gtaAnimations = getAllAnimations();
-	//log_to_file("GTA Animations size: " + std::to_string(gtaAnimations.size()));
+	modSyncedAnimCategories = getAllSyncedAnimationCategories();
+
 
 	create_relationship_groups();
 	log_to_file("Screen Director initialized");

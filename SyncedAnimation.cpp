@@ -1,5 +1,6 @@
 #include "SyncedAnimation.h"
 #include <vector>
+#include <map>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -328,6 +329,16 @@ bool SyncedAnimation::matchesFilter(std::string filterStr)
 	}
 }
 
+bool SyncedAnimation::matchesCategory(std::string categoryStr)
+{
+	if (std::string(m_category).find(categoryStr) == std::string::npos) {
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
 bool SyncedAnimation::isNull()
 {
 	return m_isNull;
@@ -367,6 +378,11 @@ void SyncedAnimation::clearObjectReferences()
 	for (auto &gtaObject : m_syncObjects) {
 		gtaObject.objReference = 0;
 	}
+}
+
+std::string SyncedAnimation::getCategory()
+{
+	return m_category;
 }
 
 int SyncedAnimation::getLength()
@@ -737,4 +753,22 @@ void initializeSyncedAnimations() {
 
 std::vector<SyncedAnimation> getAllSyncedAnimations() {
 	return gtaSyncedAnimations;
+}
+
+std::vector<std::string> getAllSyncedAnimationCategories()
+{
+	std::map <std::string,std::string> mapCategories;
+	log_to_file("Copying categories to map");
+	for (auto syncedAnim : gtaSyncedAnimations) {
+		mapCategories.insert({ syncedAnim.getCategory(),syncedAnim.getCategory() });
+	}
+	log_to_file("Copying categories to vector");
+	std::vector <std::string> vCategories;
+	for (std::map <std::string, std::string>::iterator it = mapCategories.begin(); it != mapCategories.end(); ++it) {
+		vCategories.push_back(it->first);
+	}
+	log_to_file("Sorting categories");
+	std::sort(vCategories.begin(), vCategories.end());
+
+	return vCategories;
 }

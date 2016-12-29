@@ -46,10 +46,13 @@ public:
 
 
 	bool matchesFilter(std::string filterStr);
+	bool matchesCategory(std::string categoryStr);
 	bool isNull();
 	SyncedAnimation* createCopy();
 	std::string toString();
 	void clearObjectReferences();
+
+	std::string getCategory();
 
 	int getLength();
 
@@ -62,6 +65,7 @@ public:
 
 //Get all the synced animation defined in the mod
 std::vector<SyncedAnimation> getAllSyncedAnimations();
+std::vector<std::string> getAllSyncedAnimationCategories();
 void initializeSyncedAnimations();
 
 
