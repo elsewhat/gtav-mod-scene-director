@@ -385,6 +385,11 @@ std::string SyncedAnimation::getCategory()
 	return m_category;
 }
 
+std::string SyncedAnimation::getTitle()
+{
+	return m_title;
+}
+
 int SyncedAnimation::getLength()
 {
 	int maxLength = 0;
@@ -753,6 +758,18 @@ void initializeSyncedAnimations() {
 
 std::vector<SyncedAnimation> getAllSyncedAnimations() {
 	return gtaSyncedAnimations;
+}
+
+std::vector<SyncedAnimation> getSyncedAnimations(std::string category) {
+	std::vector<SyncedAnimation> syncedAnimations;
+	for (auto syncedAnim : gtaSyncedAnimations) {
+		if (syncedAnim.matchesCategory(category)) {
+			syncedAnimations.push_back(syncedAnim);
+		}
+	}
+
+	//std::sort(syncedAnimations.begin(), syncedAnimations.end());
+	return syncedAnimations;
 }
 
 std::vector<std::string> getAllSyncedAnimationCategories()

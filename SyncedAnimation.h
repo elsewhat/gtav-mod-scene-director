@@ -53,6 +53,7 @@ public:
 	void clearObjectReferences();
 
 	std::string getCategory();
+	std::string getTitle();
 
 	int getLength();
 
@@ -65,6 +66,7 @@ public:
 
 //Get all the synced animation defined in the mod
 std::vector<SyncedAnimation> getAllSyncedAnimations();
+std::vector<SyncedAnimation> getSyncedAnimations(std::string category);
 std::vector<std::string> getAllSyncedAnimationCategories();
 void initializeSyncedAnimations();
 

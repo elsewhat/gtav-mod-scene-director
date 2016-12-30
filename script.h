@@ -71,6 +71,9 @@ enum MENU_ITEM {
 	MENU_ITEM_SYNCEDPREVIEW_CATEGORY13 = 412,
 	MENU_ITEM_SYNCEDPREVIEW_CATEGORY14 = 413,
 	MENU_ITEM_SYNCEDPREVIEW_CATEGORY15 = 414,
+	MENU_ITEM_SYNCEDPREVIEW_BACK=430,
+	MENU_ITEM_SYNCEDPREVIEW_ANIMINDEX_START=2000,
+	MENU_ITEM_SYNCEDPREVIEW_ANIMINDEX_END = 2999,
 	SUBMENU_ITEM_RECORD_PLAYER = 140,
 	SUBMENU_ITEM_REMOVE_FROM_SLOT = 141,
 	SUBMENU_ITEM_SPOT_LIGHT = 142,
@@ -169,6 +172,8 @@ bool menu_select_key_pressed();
 bool menu_delete_key_pressed();
 void menu_action_up();
 void menu_action_down();
+void menu_alt_action_up();
+void menu_alt_action_down();
 void menu_action_left();
 void menu_action_right();
 void menu_action_select();
