@@ -39,6 +39,7 @@ DWORD key_menu_left = VK_NUMPAD4;
 DWORD key_menu_right = VK_NUMPAD6;
 DWORD key_menu_select = VK_NUMPAD5;
 DWORD key_menu_delete = VK_DELETE;
+DWORD key_menu_back = VK_NUMPAD0;
 char key_hud_str[256];
 
 
@@ -120,9 +121,8 @@ bool do_record_reload = false;
 std::vector<RelationshipGroup> modRelationshipGroups;
 
 std::vector<std::string> modSyncedAnimCategories;
-std::string selectedSyncedAnimCategory;
-std::vector<SyncedAnimation> syncedAnimationsForCategory;
-
+std::string currentSyncedAnimCategory;
+std::vector<SyncedAnimation> currentSyncedAnimations;
 
 std::vector<ClipSet> gtaWalkingStyles;
 int index_walking_style = -1;
@@ -734,67 +734,32 @@ void draw_instructional_buttons_animation_sync_preview() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_N");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Next");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_B");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Previous");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(197);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Rotate cam");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(196);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Rotate cam");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_+");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Up");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_-");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Down");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(7);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_A");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Add");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(8);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_L");
-		if (doAnimationLoop) {
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop: On");
-		}
-		else {
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Loop: Off");
-		}
-
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(9);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_F");
-		std::string filterInstruction = "Filter";
-		if (hasAnimationFilter) {
-			filterInstruction += ": " + animationFilterStr;
-		}
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(filterInstruction.c_str()));
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
@@ -1466,9 +1431,28 @@ void draw_menu_synced_anim_preview() {
 	bool doOutlineText = true;
 
 
-	if (selectedSyncedAnimCategory.empty()) {
-		int indexCategory = 0;
+	if (currentSyncedAnimCategory.empty()) {
+		//First add search
+		if (menu_active_index == drawIndex) {
+			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+			doOutlineText = false;
+		}
+		else {
+			textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+			doOutlineText = true;
+		}
+		
+		DRAW_TEXT("Search", 0.02, 0.108 + (0.04)*drawIndex, 0.3, 0.3, 0, doOutlineText, false, false, false, textColorR, textColorG, textColorB, 200);
+		GRAPHICS::DRAW_RECT(0.07, 0.120 + (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+		
+		if (menu_active_index == drawIndex) {
+			menu_active_action = MENU_ITEM_SYNCEDPREVIEW_SEARCH;
+		}
+
+		drawIndex++;
+
 		//loop through the synced anim categories
+		int indexCategory = 0;
 		for (auto strCategory : modSyncedAnimCategories) {
 			if (menu_active_index == drawIndex) {
 				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
@@ -1483,7 +1467,7 @@ void draw_menu_synced_anim_preview() {
 			GRAPHICS::DRAW_RECT(0.07, 0.120 + (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 			if (menu_active_index == drawIndex) {
-				menu_active_action = (MENU_ITEM)(MENU_ITEM_SYNCEDPREVIEW_CATEGORY1 + indexCategory);
+				menu_active_action = (MENU_ITEM)(MENU_ITEM_SYNCEDPREVIEW_CATEGORY1 + indexCategory+1);
 			}
 			drawIndex++;
 			indexCategory++;
@@ -1498,7 +1482,7 @@ void draw_menu_synced_anim_preview() {
 		}
 
 		//loop through the synced animations we have for choosen category
-		for (int i = startIndex; i < syncedAnimationsForCategory.size() && i< startIndex+15; i++) {
+		for (int i = startIndex; i < currentSyncedAnimations.size() && i< startIndex+15; i++) {
 			if (menu_active_index == i) {
 				textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 				doOutlineText = false;
@@ -1507,7 +1491,7 @@ void draw_menu_synced_anim_preview() {
 				textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
 				doOutlineText = true;
 			}
-			DRAW_TEXT(strdup(syncedAnimationsForCategory[i].getTitle().c_str()), 0.02, 0.108 + (0.04)*drawIndex, 0.3, 0.3, 0, doOutlineText, false, false, false, textColorR, textColorG, textColorB, 200);
+			DRAW_TEXT(strdup(currentSyncedAnimations[i].getTitle().c_str()), 0.02, 0.108 + (0.04)*drawIndex, 0.3, 0.3, 0, doOutlineText, false, false, false, textColorR, textColorG, textColorB, 200);
 			GRAPHICS::DRAW_RECT(0.11, 0.120 + (0.04)*drawIndex, 0.193, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
 			if (menu_active_index == i) {
@@ -1517,7 +1501,7 @@ void draw_menu_synced_anim_preview() {
 			drawIndex++;
 		}
 		//back button as last element
-		if (menu_active_index == syncedAnimationsForCategory.size()) {
+		if (menu_active_index == currentSyncedAnimations.size()) {
 			textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 			doOutlineText = false;
 		}
@@ -1528,14 +1512,14 @@ void draw_menu_synced_anim_preview() {
 		DRAW_TEXT("<- Back", 0.02, 0.108 + (0.04)*drawIndex, 0.3, 0.3, 0, doOutlineText, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.11, 0.120 + (0.04)*drawIndex, 0.193, 0.034, bgColorR, bgColorG, bgColorB, 100);
 		
-		if (menu_active_index == syncedAnimationsForCategory.size()) {
+		if (menu_active_index == currentSyncedAnimations.size()) {
 			menu_active_action = MENU_ITEM_SYNCEDPREVIEW_BACK;
 		}
 		
 		drawIndex++;
 
 		//set max index based on the number of synced animations we have for the category
-		menu_max_index = syncedAnimationsForCategory.size();
+		menu_max_index = currentSyncedAnimations.size();
 	}
 
 	if (menu_active_index == -1) {
@@ -4441,6 +4425,7 @@ void action_animation_sync_preview() {
 		set_status_text("Must have at least two actors before starting synced animation preview");
 		return;
 	}
+	menu_active_index = 0;
 
 	Ped actorPed = actors[0].getActorPed();
 
@@ -4457,15 +4442,12 @@ void action_animation_sync_preview() {
 	camOffset.x = (float)sin((startHeading *PI / 180.0f))*6.0f;
 	camOffset.y = (float)cos((startHeading *PI / 180.0f))*6.0f;
 
-
-
 	if (startLocation.x < 0) {
 		camOffset.x = -camOffset.x;
 	}
 	if (startLocation.y < 0) {
 		camOffset.y = -camOffset.y;
 	}
-
 
 	camOffset.z = 0.4;
 
@@ -4479,12 +4461,169 @@ void action_animation_sync_preview() {
 		CAM::RENDER_SCRIPT_CAMS(true, 0, 3000, 1, 0);
 	}
 
-	std::vector<SyncedAnimation> syncedAnimations = getAllSyncedAnimations();
-	set_status_text(std::to_string(syncedAnimations.size()) + " synced animations");
-	log_to_file("Have " + std::to_string(syncedAnimations.size()) + " synced animations");
+	std::vector<SyncedAnimation> gtaSyncedAnimations = getAllSyncedAnimations();
+	set_status_text(std::to_string(gtaSyncedAnimations.size()) + " synced animations");
+	log_to_file("Have " + std::to_string(gtaSyncedAnimations.size()) + " synced animations");
 
 	float currentCamHeading = startHeading;
+
+	bool continuePreviewMode = true;
+	SyncedAnimation currentSyncedAnimation;
+	DWORD ticksLast = GetTickCount();
+	DWORD nextWaitTicksSyncAnim = 0;
+
 	
+	while (continuePreviewMode) {
+		//check for input
+		if (nextWaitTicksSyncAnim == 0 || GetTickCount() - ticksLast >= nextWaitTicksSyncAnim) {
+			nextWaitTicksSyncAnim = 0;
+			ticksLast = GetTickCount();
+
+			if (menu_up_key_pressed()) {
+				menu_alt_action_up();
+				nextWaitTicksSyncAnim = 100;
+			}
+			else if (menu_down_key_pressed()) {
+				menu_alt_action_down();
+				nextWaitTicksSyncAnim = 100;
+			}
+			else if (menu_back_key_pressed()) {
+				currentSyncedAnimCategory.clear();
+				nextWaitTicksSyncAnim = 100;
+			}
+			else if (menu_select_key_pressed()) {//handle menu select
+				if (menu_active_action >= MENU_ITEM_SYNCEDPREVIEW_CATEGORY1 && menu_active_action <= MENU_ITEM_SYNCEDPREVIEW_CATEGORY15) {
+					int categoryIndex = menu_active_action - MENU_ITEM_SYNCEDPREVIEW_CATEGORY1;
+					log_to_file("Index " + std::to_string(categoryIndex));
+
+					currentSyncedAnimCategory = modSyncedAnimCategories[categoryIndex];
+					log_to_file(currentSyncedAnimCategory);
+					currentSyncedAnimations = getSyncedAnimations(currentSyncedAnimCategory);
+					menu_active_index = 0;
+
+				}
+				else if (menu_active_action == MENU_ITEM_SYNCEDPREVIEW_SEARCH) {
+					set_status_text("Enter text to filter synchronized animations on. Operators AND OR NOT can be used");
+					animationFilterStr = actionInputString(100);
+					if (!animationFilterStr.empty()) {
+						int nrMatches = 0;
+						currentSyncedAnimations = std::vector<SyncedAnimation>();
+						for (int i = 0; i < gtaSyncedAnimations.size(); i++) {
+							if (gtaSyncedAnimations[i].matchesFilter(animationFilterStr)) {
+								currentSyncedAnimations.push_back(gtaSyncedAnimations[i]);
+							}
+						}
+						if (nrMatches == 0) {
+							set_status_text("Found no animations matching filter " + animationFilterStr);
+							currentSyncedAnimCategory = "Search";
+						}
+						else {
+							set_status_text("Found " + std::to_string(nrMatches) + " animations matching filter ");
+							currentSyncedAnimCategory.empty();
+						}
+					}
+				}
+				else if (menu_active_action == MENU_ITEM_SYNCEDPREVIEW_BACK) {
+					menu_active_index = 0;
+					currentSyncedAnimCategory.clear();
+				}
+				else if (menu_active_action >= MENU_ITEM_SYNCEDPREVIEW_ANIMINDEX_START && menu_active_action <= MENU_ITEM_SYNCEDPREVIEW_ANIMINDEX_END) {
+					int syncedAnimIndex = menu_active_action - MENU_ITEM_SYNCEDPREVIEW_ANIMINDEX_START;
+
+					//cleanup old synced animation
+					if (!currentSyncedAnimation.isNull()) {
+						currentSyncedAnimation.cleanupAfterExecution(true, true);
+					}
+
+					currentSyncedAnimation = currentSyncedAnimations[syncedAnimIndex];
+					currentSyncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), true, true, 0.0f);
+					log_to_file("Selected synced animation " + currentSyncedAnimation.getTitle());
+				}
+				nextWaitTicksSyncAnim = 200;
+
+			}
+
+			//check for instructional key input
+			if (IsKeyDown(0x43)) {//stop preview
+				if (!currentSyncedAnimation.isNull()) {
+					currentSyncedAnimation.cleanupAfterExecution(true, true);
+				}
+				CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
+				return;
+			}
+			else if (IsKeyDown(VK_LEFT)) {//rotate camera to the left
+				currentCamHeading += 10.0;
+				if (currentCamHeading >= 359.9) {
+					currentCamHeading = 0.0;
+				}
+
+				camOffset.x = (float)sin((currentCamHeading *PI / 180.0f))*6.0f;
+				camOffset.y = (float)cos((currentCamHeading *PI / 180.0f))*6.0f;
+				if (customCamera) {
+					CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+					nextWaitTicksSyncAnim = 100;
+				}
+			}
+			else if (IsKeyDown(VK_RIGHT)) {//rotate camera to the right
+				currentCamHeading -= 10.0;
+				if (currentCamHeading < 0.0) {
+					currentCamHeading += 360.0;
+				}
+
+				camOffset.x = (float)sin((currentCamHeading *PI / 180.0f))*6.0f;
+				camOffset.y = (float)cos((currentCamHeading *PI / 180.0f))*6.0f;
+				if (customCamera) {
+					CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+					nextWaitTicksSyncAnim = 100;
+				}
+			}
+			else if (IsKeyDown(VK_ADD)) {//+
+				log_to_file("UP");
+				if (!currentSyncedAnimation.isNull()) {
+					currentSyncedAnimation.setDeltaZ(currentSyncedAnimation.getDeltaZ() + 0.1);
+					currentSyncedAnimation.cleanupAfterExecution(true, true);
+					currentSyncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop, true, 0.0f);
+				}
+
+				nextWaitTicksSyncAnim = 150;
+			}
+			else if (IsKeyDown(VK_SUBTRACT)) {//-
+				log_to_file("Down");
+				if (!currentSyncedAnimation.isNull()) {
+					currentSyncedAnimation.setDeltaZ(currentSyncedAnimation.getDeltaZ() - 0.1);
+					currentSyncedAnimation.cleanupAfterExecution(true, true);
+					currentSyncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop, true, 0.0f);
+				}
+				nextWaitTicksSyncAnim = 150;
+			}
+			else if (IsKeyDown(0x41)) {//A
+				if (!currentSyncedAnimation.isNull()) {
+					log_to_file("Adding " + currentSyncedAnimation.toString());
+					action_animation_sync_add(currentSyncedAnimation);
+					set_status_text("Added synchronized animation to shortcut");
+				}
+				nextWaitTicksSyncAnim = 150;
+			}
+
+			
+		}
+
+		//draw menus and other elements every tick
+		draw_instructional_buttons_animation_sync_preview();
+		draw_spot_lights();
+		draw_menu_synced_anim_preview();
+
+		//disable all the keys!
+		CONTROLS::DISABLE_ALL_CONTROL_ACTIONS(0);
+
+		//draw name of current synced animation
+		if (!currentSyncedAnimation.isNull()) {
+			DRAW_TEXT(strdup(currentSyncedAnimation.toString().c_str()), 0.0, 0.0, 0.5, 0.5, 0, true, false, false, false, 255, 255, 255, 255);
+		}
+		WAIT(0);
+	}
+
+/*
 	for (int i = 0; i < syncedAnimations.size(); i++) {
 		SyncedAnimation syncedAnimation = syncedAnimations[i];
 
@@ -4662,43 +4801,12 @@ void action_animation_sync_preview() {
 				WAIT(150);
 			}
 
-	
-			/*else if (IsKeyDown(0x47)) {//G - key
-
-				set_status_text("Enter animation code to begin preview");
-				GAMEPLAY::DISPLAY_ONSCREEN_KEYBOARD(true, "FMMC_KEY_TIP8", "", "", "", "", "", 6);
-
-				while (GAMEPLAY::UPDATE_ONSCREEN_KEYBOARD() == 0) {
-					WAIT(0);
-				}
-
-
-				if (GAMEPLAY::IS_STRING_NULL_OR_EMPTY(GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT())) {
-					log_to_file("Got null keyboard value");
-				}
-				else {
-					char * keyboardValue = GAMEPLAY::GET_ONSCREEN_KEYBOARD_RESULT();
-					std::string strAnimationIndex = std::string(keyboardValue);
-					log_to_file("Got keyboard value " + strAnimationIndex);
-
-					Animation animation = getAnimationForShortcutIndex(keyboardValue);
-					i = animation.shortcutIndex - 1;
-					break;
-				}
-			}*/
-
-
-
-			if (GetTickCount() > ticksStart + 60000) {
-				break;
-			}
-
 		}
 		//cleanup objects and teleport back to start
 		syncedAnimation.cleanupAfterExecution(true,true);
 
-		
 	}
+	*/
 
 	//reset cam
 	CAM::RENDER_SCRIPT_CAMS(false, 0, 3000, 1, 0);
@@ -6175,24 +6283,6 @@ void action_menu_active_selected() {
 	}
 	else if (menu_active_action == MENU_ITEM_FIRING_SQUAD) {
 		is_firing_squad_engaged = false;
-	}else if (menu_active_action >= MENU_ITEM_SYNCEDPREVIEW_CATEGORY1 && menu_active_action <= MENU_ITEM_SYNCEDPREVIEW_CATEGORY15) {
-		int categoryIndex = menu_active_action - MENU_ITEM_SYNCEDPREVIEW_CATEGORY1;
-		log_to_file("Index " + std::to_string(categoryIndex));
-
-		selectedSyncedAnimCategory = modSyncedAnimCategories[categoryIndex];
-		log_to_file(selectedSyncedAnimCategory);
-		syncedAnimationsForCategory = getSyncedAnimations(selectedSyncedAnimCategory);
-		menu_active_index = 0;
-
-	}
-	else if (menu_active_action == MENU_ITEM_SYNCEDPREVIEW_BACK) {
-		menu_active_index = 0;
-		selectedSyncedAnimCategory.clear();
-	}
-	else if (menu_active_action >= MENU_ITEM_SYNCEDPREVIEW_ANIMINDEX_START && menu_active_action <= MENU_ITEM_SYNCEDPREVIEW_ANIMINDEX_END) {
-		int syncedAnimIndex = menu_active_action - MENU_ITEM_SYNCEDPREVIEW_ANIMINDEX_START;
-		SyncedAnimation selectedAnimation = syncedAnimationsForCategory[syncedAnimIndex];
-		log_to_file("Selected synced animation " + selectedAnimation.getTitle());
 	}
 
 }
@@ -6616,6 +6706,15 @@ bool menu_delete_key_pressed() {
 	}
 }
 
+bool menu_back_key_pressed() {
+	if (IsKeyDown(key_menu_back)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 
 
 void menu_action_up() {
@@ -6648,10 +6747,8 @@ void menu_alt_action_down() {
 		if (menu_active_index > menu_max_index) {
 			log_to_file("menu_active_index > menu_max_index. Setting menu_active_index = 0");
 			menu_active_index = 0;
-			nextWaitTicks = 200;
 		}
 	}
-	nextWaitTicks = 100;
 }
 
 //alternative menu starts at the top and goes down
@@ -6661,7 +6758,6 @@ void menu_alt_action_up() {
 		if (menu_active_index < 0) {
 			log_to_file("menu_active_index < 0. Setting menu_active_index = menu_max_index");
 			menu_active_index = menu_max_index;
-			nextWaitTicks = 200;
 		}
 	}
 }

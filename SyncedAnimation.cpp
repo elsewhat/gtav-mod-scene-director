@@ -23,6 +23,9 @@ SyncedAnimation::SyncedAnimation(std::string title, std::string category, bool i
 {
 	m_title = title;
 	m_category = category;
+	if (m_category.empty()) {
+		m_category = "<missing category>";
+	}
 	m_isProperSynced = isProperSynced;
 	m_actorAnimations = actorAnimations;
 	m_objectAnimations = objectAnimations;
@@ -331,7 +334,7 @@ bool SyncedAnimation::matchesFilter(std::string filterStr)
 
 bool SyncedAnimation::matchesCategory(std::string categoryStr)
 {
-	if (std::string(m_category).find(categoryStr) == std::string::npos) {
+	if (std::string(m_category).find(categoryStr) == std::string::npos || (categoryStr.empty() && m_category.empty())) {
 		return false;
 	}
 	else {
@@ -763,7 +766,7 @@ std::vector<SyncedAnimation> getAllSyncedAnimations() {
 std::vector<SyncedAnimation> getSyncedAnimations(std::string category) {
 	std::vector<SyncedAnimation> syncedAnimations;
 	for (auto syncedAnim : gtaSyncedAnimations) {
-		if (syncedAnim.matchesCategory(category)) {
+		if (syncedAnim.matchesCategory(category) ) {
 			syncedAnimations.push_back(syncedAnim);
 		}
 	}
