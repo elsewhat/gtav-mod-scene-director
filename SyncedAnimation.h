@@ -54,8 +54,10 @@ public:
 
 	std::string getCategory();
 	std::string getTitle();
+	bool isProperSynced();
 
 	int getLength();
+	int getNrOfActors();
 
 	bool isActive();
 
@@ -67,7 +69,7 @@ public:
 //Get all the synced animation defined in the mod
 std::vector<SyncedAnimation> getAllSyncedAnimations();
 std::vector<SyncedAnimation> getSyncedAnimations(std::string category);
-std::vector<std::string> getAllSyncedAnimationCategories();
+std::vector<std::pair<std::string,int>> getAllSyncedAnimationCategories();
 void initializeSyncedAnimations();
 
 
