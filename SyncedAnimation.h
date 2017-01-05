@@ -37,7 +37,7 @@ public:
 	SyncedAnimation(std::string title, std::vector<Animation>  actorAnimations, float deltaZLocation);
 	SyncedAnimation(std::string title, std::string category, bool isProperSynced, std::vector<Animation>  actorAnimations, std::vector<Animation>  objectAnimations, std::vector<GTAObject>  syncObjects, float deltaZLocation);
 
-	void executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation);
+	void executeSyncedAnimation(bool silent, std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation);
 	void previewSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation);
 	void updateLocationOfScene(Vector3 location);
 	bool isCompleted();

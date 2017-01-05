@@ -12,7 +12,6 @@ private:
 	int scaleForm;
 	float cameraSpeedFactor = 0.1;
 	bool shouldExitMode = false;
-	bool shouldDrawMenu = true;
 	bool shouldDrawRecordingMarkers = true;
 	bool invertedControls = true;
 	int menu_active_index = 0;

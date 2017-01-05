@@ -180,6 +180,7 @@ void menu_action_left();
 void menu_action_right();
 void menu_action_select();
 void menu_action_delete();
+bool should_display_app_hud();
 
 void action_toggle_scene_mode();
 void action_animation_sequence_play(AnimationSequence animSequence);

@@ -1196,7 +1196,7 @@ std::string ActorSyncedAnimationRecordingItem::toString()
 void ActorSyncedAnimationRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
 	log_to_file("ActorSyncedAnimationRecordingItem::executeNativesForRecording");
-	m_syncedAnimation->executeSyncedAnimation(m_actors, m_useActorLocation, m_location, m_doLooping, m_useActorRotation,m_rotation);
+	m_syncedAnimation->executeSyncedAnimation(true,m_actors, m_useActorLocation, m_location, m_doLooping, m_useActorRotation,m_rotation);
 
 
 }
@@ -1288,7 +1288,7 @@ void ActorSyncedAnimationRecordingItem::previewRecording(Actor* actor)
 
 void ActorSyncedAnimationRecordingItem::stopPreviewRecording(Actor* actor)
 {
-	m_syncedAnimation->cleanupAfterExecution(true, false);
+	m_syncedAnimation->cleanupAfterExecution(true, true);
 }
 
 void ActorSyncedAnimationRecordingItem::updatePreviewLocation(Actor* actor,Vector3 location)

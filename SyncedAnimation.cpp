@@ -34,19 +34,20 @@ SyncedAnimation::SyncedAnimation(std::string title, std::string category, bool i
 	m_isNull = false;
 }
 
-void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation)
+void SyncedAnimation::executeSyncedAnimation(bool silent, std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation)
 {
 	log_to_file("SyncedAnimation->executeSyncedAnimation " + toString());
 	DWORD ticksStart = GetTickCount();
 	m_doLooping = doLoop;
 
-	//must be at least as many actors as animations
-	for (int i=0; i < m_actorAnimations.size(); i++) {
-		if (syncActors.size() <= i) {
-			set_status_text("Must have at least " + std::to_string(m_actorAnimations.size()) + " actors");
-			return;
+
+	if (syncActors.size() < m_actorAnimations.size()) {
+		if (!silent) {
+			set_status_text("Missing " + std::to_string(m_actorAnimations.size()- syncActors.size()) + " actor(s) but will still execute synched animation");
 		}
 	}
+
+
 
 	log_to_file("m_objectAnimation ");
 	//must be at least as many objects as object animations
@@ -65,7 +66,7 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
 		{
 			WAIT(0);
-			if (GetTickCount() - ticksStart > 10000) {
+			if (GetTickCount() - ticksStart > 5000) {
 				set_status_text("Failed to load actor animations");
 				return;
 			}
@@ -78,14 +79,13 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 		while (!STREAMING::HAS_ANIM_DICT_LOADED(animation.animLibrary))
 		{
 			WAIT(0);
-			if (GetTickCount() - ticksStart > 10000) {
+			if (GetTickCount() - ticksStart > 5000) {
 				set_status_text("Failed to load object animations");
 				return;
 			}
 		}
 	}
 
-	log_to_file("About to load objects");
 	//load objects
 	for (auto &gtaObject : m_syncObjects) {
 		if (gtaObject.objHash == -1) {
@@ -96,7 +96,7 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 		while (!STREAMING::HAS_MODEL_LOADED(gtaObject.objHash))
 		{
 			WAIT(0);
-			if (GetTickCount() - ticksStart > 10000) {
+			if (GetTickCount() - ticksStart > 5000) {
 				log_to_file("Failed to load GTAObject name:" + std::string(gtaObject.objName) + " Hash:" + std::to_string(gtaObject.objHash));
 				set_status_text("Failed to load objects");
 				return;
@@ -108,15 +108,15 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 	Vector3 sceneLocation = directLocation;
 
 	
-	if (useFirstActorLocation && syncActors.size() > 1) {
+	if (useFirstActorLocation && syncActors.size() >= 1) {
 		sceneLocation = ENTITY::GET_ENTITY_COORDS(syncActors.at(0)->getActorPed(), true);
 	}
 	else {
-		Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(syncActors.at(0)->getActorPed(), true);
-		log_to_file("Difference in location x:" + std::to_string(sceneLocation.x - actorLocation.x) + " y:" + std::to_string(sceneLocation.y - actorLocation.y) + " z:" + std::to_string(sceneLocation.z - actorLocation.z));
+		//Vector3 actorLocation = ENTITY::GET_ENTITY_COORDS(syncActors.at(0)->getActorPed(), true);
+		//log_to_file("Difference in location x:" + std::to_string(sceneLocation.x - actorLocation.x) + " y:" + std::to_string(sceneLocation.y - actorLocation.y) + " z:" + std::to_string(sceneLocation.z - actorLocation.z));
 	}
 	float m_currentRotation =  rotation;
-	if (useFirstActorRotation) {
+	if (useFirstActorRotation  && syncActors.size() >= 1) {
 		m_currentRotation = ENTITY::GET_ENTITY_ROTATION(syncActors.at(0)->getActorPed(), 2).z;
 	}
 
@@ -130,14 +130,19 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 		//Add the animations to the scene
 		int actorIndex = 0;
 		for (auto &animation : m_actorAnimations) {
-			log_to_file("Adding animation to " + std::to_string(syncActors.at(actorIndex)->getActorPed()) + " actor index:" + std::to_string(actorIndex));
-			AI::TASK_SYNCHRONIZED_SCENE(syncActors.at(actorIndex)->getActorPed(), m_sceneId, animation.animLibrary, animation.animName, 1000.0, -4.0, 64, 0, 0x447a0000, 0);
-			m_pedsInScene.push_back(syncActors.at(actorIndex)->getActorPed());
+			if (syncActors.size() > actorIndex) {
+				log_to_file("Adding animation to " + std::to_string(syncActors.at(actorIndex)->getActorPed()) + " actor index:" + std::to_string(actorIndex));
+				AI::TASK_SYNCHRONIZED_SCENE(syncActors.at(actorIndex)->getActorPed(), m_sceneId, animation.animLibrary, animation.animName, 1000.0, -4.0, 64, 0, 0x447a0000, 0);
+				m_pedsInScene.push_back(syncActors.at(actorIndex)->getActorPed());
 
-			m_pedsInSceneStartLocation.push_back(ENTITY::GET_ENTITY_COORDS(syncActors.at(actorIndex)->getActorPed(), true));
-			m_pedsInSceneStartHeading.push_back(ENTITY::GET_ENTITY_HEADING(syncActors.at(actorIndex)->getActorPed()));
+				m_pedsInSceneStartLocation.push_back(ENTITY::GET_ENTITY_COORDS(syncActors.at(actorIndex)->getActorPed(), true));
+				m_pedsInSceneStartHeading.push_back(ENTITY::GET_ENTITY_HEADING(syncActors.at(actorIndex)->getActorPed()));
 
-			actorIndex++;
+				actorIndex++;
+			}
+			else {
+				log_to_file("Too few actors, so skipping animation " + animation.strShortcutIndex);
+			}
 		}
 
 		log_to_file("About to add animations for objects");
@@ -163,17 +168,22 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 		m_ticksStarted = GetTickCount();
 		int actorIndex = 0;
 		for (auto &animation : m_actorAnimations) {
-			int duration = animation.duration;
-			if (doLoop) {
-				duration = -1;
-			}
-			AI::TASK_PLAY_ANIM(syncActors.at(actorIndex)->getActorPed(), animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, getDefaultAnimationFlag().id, 8.0f, 0, 0, 0);
-			
-			m_pedsInScene.push_back(syncActors.at(actorIndex)->getActorPed());
-			m_pedsInSceneStartLocation.push_back(ENTITY::GET_ENTITY_COORDS(syncActors.at(actorIndex)->getActorPed(), true));
-			m_pedsInSceneStartHeading.push_back(ENTITY::GET_ENTITY_HEADING(syncActors.at(actorIndex)->getActorPed()));
+			if (syncActors.size() > actorIndex) {
+				int duration = animation.duration;
+				if (doLoop) {
+					duration = -1;
+				}
+				AI::TASK_PLAY_ANIM(syncActors.at(actorIndex)->getActorPed(), animation.animLibrary, animation.animName, 8.0f, -8.0f, duration, getDefaultAnimationFlag().id, 8.0f, 0, 0, 0);
 
-			actorIndex++;
+				m_pedsInScene.push_back(syncActors.at(actorIndex)->getActorPed());
+				m_pedsInSceneStartLocation.push_back(ENTITY::GET_ENTITY_COORDS(syncActors.at(actorIndex)->getActorPed(), true));
+				m_pedsInSceneStartHeading.push_back(ENTITY::GET_ENTITY_HEADING(syncActors.at(actorIndex)->getActorPed()));
+
+				actorIndex++;
+			}
+			else {
+				log_to_file("Too few actors, so skipping animation " + animation.strShortcutIndex);
+			}
 		}
 
 	}
@@ -181,7 +191,7 @@ void SyncedAnimation::executeSyncedAnimation(std::vector<Actor*> syncActors, boo
 
 void SyncedAnimation::previewSyncedAnimation(std::vector<Actor*> syncActors, bool useFirstActorLocation, Vector3 directLocation, bool doLoop, bool useFirstActorRotation, float rotation)
 {
-	executeSyncedAnimation(syncActors, useFirstActorLocation, directLocation, true, useFirstActorLocation, rotation);
+	executeSyncedAnimation(false,syncActors, useFirstActorLocation, directLocation, true, useFirstActorLocation, rotation);
 	PED::SET_SYNCHRONIZED_SCENE_RATE(m_sceneId, 0.1f);
 }
 
@@ -486,10 +496,10 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Sarcastic (female - male)", "Celebration", true, std::vector<Animation> {getAnimationForShortcutIndex(1825),getAnimationForShortcutIndex(1827),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Sarcastic (female - female)", "Celebration", true, std::vector<Animation> {getAnimationForShortcutIndex(1805),getAnimationForShortcutIndex(1807),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Sarcastic (male - male)", "Celebration", true, std::vector<Animation> {getAnimationForShortcutIndex(1843),getAnimationForShortcutIndex(1845),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("Cougar takedown back", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(3812),getAnimationForShortcutIndex(3820),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Cougar takedown front", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(3814),getAnimationForShortcutIndex(3821),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Retriever takedown back", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(43873),getAnimationForShortcutIndex(43872),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Retriever takedown front", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(4426),getAnimationForShortcutIndex(43875),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Cougar takedown back", "Animal", false, std::vector<Animation> {getAnimationForShortcutIndex(3812),getAnimationForShortcutIndex(3820),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Cougar takedown front", "Animal", false, std::vector<Animation> {getAnimationForShortcutIndex(3814),getAnimationForShortcutIndex(3821),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Retriever takedown back", "Animal", false, std::vector<Animation> {getAnimationForShortcutIndex(43873),getAnimationForShortcutIndex(43872),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Retriever takedown front", "Animal", false, std::vector<Animation> {getAnimationForShortcutIndex(4426),getAnimationForShortcutIndex(43875),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Motorcycle knockout passenger (Franklin)", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(5191),getAnimationForShortcutIndex(5192),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Vehicle knockout passenger (Franklin)", "Vehicle", false, std::vector<Animation> {getAnimationForShortcutIndex(5188),getAnimationForShortcutIndex(5189),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Hatchet takedown front", "Melee", false, std::vector<Animation> {getAnimationForShortcutIndex(5792),getAnimationForShortcutIndex(5795),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
@@ -567,18 +577,17 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Remove parachute #5 (female)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(22479),}, std::vector<Animation> {getAnimationForShortcutIndex(1734),}, std::vector<GTAObject> {getGTAObjectFromObjName("hei_p_parachute_s_female"),}, 0),
 		SyncedAnimation("Remove parachute #6 (female)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(22478),}, std::vector<Animation> {getAnimationForShortcutIndex(1736),}, std::vector<GTAObject> {getGTAObjectFromObjName("hei_p_parachute_s_female"),}, 0),
 		SyncedAnimation("Lapdance (Wade)", "Explicit", true, std::vector<Animation> {getAnimationForShortcutIndex(7161),getAnimationForShortcutIndex(7160),getAnimationForShortcutIndex(7159),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0.2),
-		SyncedAnimation("Thrown out", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(7158),getAnimationForShortcutIndex(7155),getAnimationForShortcutIndex(7156),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Thrown out", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(7158),getAnimationForShortcutIndex(7155),getAnimationForShortcutIndex(7156),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.35),
 		SyncedAnimation("Sign in", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(7620),getAnimationForShortcutIndex(7621),}, std::vector<Animation> {getAnimationForShortcutIndex(7619),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_amb_clipboard_01"),}, -0.58),
 		SyncedAnimation("Dodge car (crowd 1)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(7707),getAnimationForShortcutIndex(7708),getAnimationForShortcutIndex(7709),getAnimationForShortcutIndex(7710),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Dodge car (crowd 2)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(7711),getAnimationForShortcutIndex(7712),getAnimationForShortcutIndex(7713),getAnimationForShortcutIndex(7714),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Dodge car (crowd 3)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(7715),getAnimationForShortcutIndex(7716),getAnimationForShortcutIndex(7717),getAnimationForShortcutIndex(7718),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("Dodge car (push)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(7719),getAnimationForShortcutIndex(7720),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("Open garage door", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(7755),}, std::vector<Animation> {getAnimationForShortcutIndex(7754),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_gar_door_03"),}, 0),
+		SyncedAnimation("Dodge car (push)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(7719),getAnimationForShortcutIndex(7720),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.2),
 		SyncedAnimation("Gun to driver head (intro)", "Vehicle", false, std::vector<Animation> {getAnimationForShortcutIndex(7794),getAnimationForShortcutIndex(7795),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Gun to driver head (loop)", "Vehicle", false, std::vector<Animation> {getAnimationForShortcutIndex(7801),getAnimationForShortcutIndex(7802),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Tennis coach (practice swing)", "Sports", true, std::vector<Animation> {getAnimationForShortcutIndex(7806),getAnimationForShortcutIndex(7810),}, std::vector<Animation> {getAnimationForShortcutIndex(7807),getAnimationForShortcutIndex(7808),getAnimationForShortcutIndex(7809),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_tennis_rack_01"),getGTAObjectFromObjName("prop_tennis_rack_01b"),getGTAObjectFromObjName("p_tennis_bag_01_s"),}, 0.2),
 		SyncedAnimation("Close vault door", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(7930),}, std::vector<Animation> {getAnimationForShortcutIndex(7931),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_fin_vaultdoor_s"),}, -0.2),
-		SyncedAnimation("Take crate from van", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(7977),}, std::vector<Animation> {getAnimationForShortcutIndex(7939),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_ld_gold_chest"),}, 0),
+		SyncedAnimation("Take crate from van", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(7937),}, std::vector<Animation> {getAnimationForShortcutIndex(7939),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_ld_gold_chest"),}, 0),
 		SyncedAnimation("Exit car with rifles", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(7995),getAnimationForShortcutIndex(7996),}, std::vector<Animation> {getAnimationForShortcutIndex(7994),}, std::vector<GTAObject> {getGTAObjectFromObjName("dubsta"),}, -1.1),
 		SyncedAnimation("Gathered around laptop", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8013),getAnimationForShortcutIndex(8014),getAnimationForShortcutIndex(8017),}, std::vector<Animation> {getAnimationForShortcutIndex(8015),getAnimationForShortcutIndex(8016),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_laptop_02_s"),getGTAObjectFromObjName("p_laptop_02_s"),}, -0.4),
 		SyncedAnimation("Get in passenger seat", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(8040),getAnimationForShortcutIndex(8043),}, std::vector<Animation> {getAnimationForShortcutIndex(8042),}, std::vector<GTAObject> {getGTAObjectFromObjName("asea"),}, -0.5),
@@ -586,14 +595,14 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Chad Hug #1", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8105),getAnimationForShortcutIndex(8106),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Chad Hug #2", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8101),getAnimationForShortcutIndex(8102),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Chad Hug #3", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8103),getAnimationForShortcutIndex(8104),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("Hang and throw over ledge", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8127),getAnimationForShortcutIndex(8128),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -9),
+		SyncedAnimation("Hang and throw over ledge", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8127),getAnimationForShortcutIndex(8128),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -8.3),
 		SyncedAnimation("Blowjob, kneeling", "Explicit", true, std::vector<Animation> {getAnimationForShortcutIndex(8132),getAnimationForShortcutIndex(8130),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.9),
 		SyncedAnimation("Sex, standing", "Explicit", true, std::vector<Animation> {getAnimationForShortcutIndex(8134),getAnimationForShortcutIndex(8133),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Throw grenade launcher", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(8238),getAnimationForShortcutIndex(8237),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Drunken fist fight", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8253),getAnimationForShortcutIndex(8258),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Car flips", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(8424),getAnimationForShortcutIndex(8427),}, std::vector<Animation> {getAnimationForShortcutIndex(8426),}, std::vector<GTAObject> {getGTAObjectFromObjName("dubsta"),}, -1),
-		SyncedAnimation("Hold dog by collar", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(8434),getAnimationForShortcutIndex(8435),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("Let go of dog collar", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(8433),getAnimationForShortcutIndex(8432),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Hold dog by collar", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(8434),getAnimationForShortcutIndex(8435),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.1),
+		SyncedAnimation("Let go of dog collar", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(8433),getAnimationForShortcutIndex(8432),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.1),
 		SyncedAnimation("Yacht fight 1 (1/3)", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8533),getAnimationForShortcutIndex(8534),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -3),
 		SyncedAnimation("Yacht fight 1 (2/3)", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8535),getAnimationForShortcutIndex(8536),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -3),
 		SyncedAnimation("Yacht fight 1 (3/3)", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8537),getAnimationForShortcutIndex(8538),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -3),
@@ -601,7 +610,7 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Yacht fight 2 (2/3)", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8544),getAnimationForShortcutIndex(8545),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -2.5),
 		SyncedAnimation("Yacht fight 2 (3/3 failure)", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8539),getAnimationForShortcutIndex(8540),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -2.5),
 		SyncedAnimation("Yacht fight 2 (3/3 success)", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8547),getAnimationForShortcutIndex(8548),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -2.5),
-		SyncedAnimation("Pull over ledge", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8572),getAnimationForShortcutIndex(8573),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.5),
+		SyncedAnimation("Pull over ledge", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(8572),getAnimationForShortcutIndex(8573),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -2.6),
 		SyncedAnimation("Seated, touching hands", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8609),getAnimationForShortcutIndex(8611),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Open door #3 (double doors)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(8618),}, std::vector<Animation> {getAnimationForShortcutIndex(8617),getAnimationForShortcutIndex(8616),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_mm_doorm_r"),getGTAObjectFromObjName("v_ilev_mm_doorm_l"),}, -1),
 		SyncedAnimation("Jimmy drugs michael #1", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(8653),getAnimationForShortcutIndex(8651),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.3),
@@ -611,7 +620,7 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Ear piercing #2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8744),getAnimationForShortcutIndex(8743),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Ear piercing #3", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8751),getAnimationForShortcutIndex(8750),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Enter car panicked", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(8817),}, std::vector<Animation> {getAnimationForShortcutIndex(8816),}, std::vector<GTAObject> {getGTAObjectFromObjName("asea"),}, -0.5),
-		SyncedAnimation("Interrogate", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8921),getAnimationForShortcutIndex(8923),}, std::vector<Animation> {getAnimationForShortcutIndex(8920),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_off_chair_04"),}, 0),
+		SyncedAnimation("Interrogate", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(8921),getAnimationForShortcutIndex(8923),}, std::vector<Animation> {getAnimationForShortcutIndex(8920),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_corp_offchair"),}, 0),
 		SyncedAnimation("Group talking", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9086),getAnimationForShortcutIndex(9087),getAnimationForShortcutIndex(9088),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Torture, stab in chest", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9174),getAnimationForShortcutIndex(9177),}, std::vector<Animation> {getAnimationForShortcutIndex(9171),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_torture_ch_01"),}, -0.6),
 		SyncedAnimation("Torture, tooth pull (intro)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9198),getAnimationForShortcutIndex(9201),}, std::vector<Animation> {getAnimationForShortcutIndex(9200),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_pliers_01"),}, -0.6),
@@ -627,10 +636,10 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Rollercoaster hands-up start", "Sports", true, std::vector<Animation> {getAnimationForShortcutIndex(2420),getAnimationForShortcutIndex(2421),}, std::vector<Animation> {getAnimationForShortcutIndex(2422),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_roller_car_01"),}, -0.9),
 		SyncedAnimation("Rollercoaster hands-up idle", "Sports", true, std::vector<Animation> {getAnimationForShortcutIndex(2426),getAnimationForShortcutIndex(30746),}, std::vector<Animation> {getAnimationForShortcutIndex(2427),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_roller_car_01"),}, -0.9),
 		SyncedAnimation("Rollercoaster hands-up end", "Sports", true, std::vector<Animation> {getAnimationForShortcutIndex(2423),getAnimationForShortcutIndex(2424),}, std::vector<Animation> {getAnimationForShortcutIndex(2425),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_roller_car_01"),}, -0.9),
-		SyncedAnimation("Drink beer at safehouse #1", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2446),}, std::vector<Animation> {getAnimationForShortcutIndex(2448),getAnimationForShortcutIndex(2447),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_beer_pissh_01"),getGTAObjectFromObjName("prop_beer_box_01"),}, -1),
-		SyncedAnimation("Drink beer at safehouse #2", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2449),}, std::vector<Animation> {getAnimationForShortcutIndex(2451),getAnimationForShortcutIndex(2450),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_beer_pissh_01"),getGTAObjectFromObjName("prop_beer_box_01"),}, -1),
-		SyncedAnimation("Drink beer at safehouse #3", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(22905),}, std::vector<Animation> {getAnimationForShortcutIndex(2453),getAnimationForShortcutIndex(2454),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_beer_pissh_01"),getGTAObjectFromObjName("prop_beer_box_01"),}, -1),
-		SyncedAnimation("Drink beer at safehouse #4", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2454),}, std::vector<Animation> {getAnimationForShortcutIndex(2456),getAnimationForShortcutIndex(2455),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_beer_pissh_01"),getGTAObjectFromObjName("prop_beer_box_01"),}, -1),
+		SyncedAnimation("Drink beer at safehouse #1", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2446),}, std::vector<Animation> {getAnimationForShortcutIndex(2447),getAnimationForShortcutIndex(2448),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_beer_pissh_01"),getGTAObjectFromObjName("prop_beer_box_01"),}, -1),
+		SyncedAnimation("Drink beer at safehouse #2", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2449),}, std::vector<Animation> {getAnimationForShortcutIndex(2450),getAnimationForShortcutIndex(2451),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_beer_pissh_01"),getGTAObjectFromObjName("prop_beer_box_01"),}, -1),
+		SyncedAnimation("Drink beer at safehouse #3", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(22905),}, std::vector<Animation> {getAnimationForShortcutIndex(2454),getAnimationForShortcutIndex(2453),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_beer_pissh_01"),getGTAObjectFromObjName("prop_beer_box_01"),}, -1),
+		SyncedAnimation("Drink beer at safehouse #4", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2454),}, std::vector<Animation> {getAnimationForShortcutIndex(2455),getAnimationForShortcutIndex(2456),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_beer_pissh_01"),getGTAObjectFromObjName("prop_beer_box_01"),}, -1),
 		SyncedAnimation("Smoke bong at safehouse #1", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2457),}, std::vector<Animation> {getAnimationForShortcutIndex(22904),getAnimationForShortcutIndex(2458),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_bong_01"),getGTAObjectFromObjName("p_cs_lighter_01"),}, -1),
 		SyncedAnimation("Smoke bong beer at safehouse #2", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2459),}, std::vector<Animation> {getAnimationForShortcutIndex(22903),getAnimationForShortcutIndex(22902),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_bong_01"),getGTAObjectFromObjName("v_res_tt_lighter"),}, -1),
 		SyncedAnimation("Smoke bong beer at safehouse #3", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(2460),}, std::vector<Animation> {getAnimationForShortcutIndex(22898),getAnimationForShortcutIndex(22900),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_sh_bong_01"),getGTAObjectFromObjName("ex_prop_exec_lighter_01"),}, -1),
@@ -648,14 +657,14 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Motorcycle knockout", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(5191),getAnimationForShortcutIndex(5192),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Arm wrestling winner #1", "Sports", false, std::vector<Animation> {getAnimationForShortcutIndex(6206),getAnimationForShortcutIndex(6208),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Arm wrestling winner #2", "Sports", false, std::vector<Animation> {getAnimationForShortcutIndex(6210),getAnimationForShortcutIndex(6212),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("CPR", "Other", false, std::vector<Animation> {getAnimationForShortcutIndex(10902),getAnimationForShortcutIndex(10903),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("CPR Cower", "Other", false, std::vector<Animation> {getAnimationForShortcutIndex(10904),getAnimationForShortcutIndex(10905),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("CPR", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10902),getAnimationForShortcutIndex(10903),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("CPR Cower", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10904),getAnimationForShortcutIndex(10905),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Miss switch in car", "Vehicle", false, std::vector<Animation> {getAnimationForShortcutIndex(12031),getAnimationForShortcutIndex(12032),getAnimationForShortcutIndex(12030),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("mid_mission_inside_helicopter_lester ", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(12036),getAnimationForShortcutIndex(12037),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("shop_ig_4_customer", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(12042),getAnimationForShortcutIndex(12045),}, std::vector<Animation> {getAnimationForShortcutIndex(12043),getAnimationForShortcutIndex(12044),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_ta_door"),getGTAObjectFromObjName("v_ilev_ta_tatgun"),}, -1),
-		SyncedAnimation("artist_finishes_up_his_tattoo_artist", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(12055),getAnimationForShortcutIndex(1253),}, std::vector<Animation> {getAnimationForShortcutIndex(12054),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_ta_door"),}, -1),
+		SyncedAnimation("shop_ig_4_customer", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(12042),getAnimationForShortcutIndex(12045),}, std::vector<Animation> {getAnimationForShortcutIndex(12043),getAnimationForShortcutIndex(12044),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_ta_door"),getGTAObjectFromObjName("v_ilev_ta_tatgun"),}, -2),
+		SyncedAnimation("artist_finishes_up_his_tattoo_artist", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(12055),getAnimationForShortcutIndex(1253),}, std::vector<Animation> {getAnimationForShortcutIndex(12054),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_ta_door"),}, -2),
 		SyncedAnimation("Enter shop", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(12058),getAnimationForShortcutIndex(12059),}, std::vector<Animation> {getAnimationForShortcutIndex(12060),getAnimationForShortcutIndex(12057),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_ta_door"),getGTAObjectFromObjName("v_ilev_ta_door"),}, -1),
-		SyncedAnimation("Tattoo #2", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(14856),getAnimationForShortcutIndex(14857),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Tattoo #2", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(14856),getAnimationForShortcutIndex(14857),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.9),
 		SyncedAnimation("Enter home #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(12062),}, std::vector<Animation> {getAnimationForShortcutIndex(12064),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, 0.1),
 		SyncedAnimation("Enter home #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(12066),}, std::vector<Animation> {getAnimationForShortcutIndex(12069),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, 0.1),
 		SyncedAnimation("threaten_ortega_trev", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(12107),getAnimationForShortcutIndex(12106),getAnimationForShortcutIndex(12105),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
@@ -679,7 +688,6 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Purchase beerbox", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13113),}, std::vector<Animation> {getAnimationForShortcutIndex(13112),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ret_ml_beerjak2"),}, 0),
 		SyncedAnimation("Purchase chocbar", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13115),}, std::vector<Animation> {getAnimationForShortcutIndex(13114),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_choc_ego"),}, 0),
 		SyncedAnimation("Purchase cigarette", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13117),}, std::vector<Animation> {getAnimationForShortcutIndex(13116),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_fag_packet_01"),}, 0),
-		SyncedAnimation("Purchase energydrink", "Individual w/props", true, std::vector<Animation> {}, std::vector<Animation> {getAnimationForShortcutIndex(13118),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_ecola_can"),}, 0),
 		SyncedAnimation("Lap dance", "Explicit", true, std::vector<Animation> {getAnimationForShortcutIndex(13124),getAnimationForShortcutIndex(13123),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Arrest back-left", "Aggressive interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(13158),getAnimationForShortcutIndex(13172),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Arrest back-right", "Aggressive interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(13159),getAnimationForShortcutIndex(13173),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
@@ -691,7 +699,6 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Arrest on floor front-right", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13192),getAnimationForShortcutIndex(13193),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Car bomb install", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13235),}, std::vector<Animation> {getAnimationForShortcutIndex(13234),}, std::vector<GTAObject> {getGTAObjectFromObjName("w_ex_pe"),}, 0),
 		SyncedAnimation("Buzz in friend", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13392),getAnimationForShortcutIndex(13393),}, std::vector<Animation> {getAnimationForShortcutIndex(13391),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, 0.1),
-		SyncedAnimation("Enter house", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13339),getAnimationForShortcutIndex(13402),getAnimationForShortcutIndex(13403),}, std::vector<Animation> {getAnimationForShortcutIndex(13401),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, -1),
 		SyncedAnimation("Enter door left #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13411),}, std::vector<Animation> {getAnimationForShortcutIndex(13410),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, 0.1),
 		SyncedAnimation("Enter door left #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13414),}, std::vector<Animation> {getAnimationForShortcutIndex(13413),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, 0.1),
 		SyncedAnimation("Enter door right", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13418),}, std::vector<Animation> {getAnimationForShortcutIndex(13417),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, 0.1),
@@ -699,8 +706,6 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Exit door right", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13426),}, std::vector<Animation> {getAnimationForShortcutIndex(13425),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_fh_door02"),}, 0.1),
 		SyncedAnimation("Lamar's introduction to multiplayer female", "Friendly interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(13528),getAnimationForShortcutIndex(13529),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.5),
 		SyncedAnimation("Lamar's introduction to multiplayer male", "Friendly interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(13530),getAnimationForShortcutIndex(13531),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.5),
-		SyncedAnimation("Heist ruralbank", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13617),getAnimationForShortcutIndex(13618),}, std::vector<Animation> {getAnimationForShortcutIndex(13619),getAnimationForShortcutIndex(13620),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_cbankcountdoor01"),getGTAObjectFromObjName("v_ilev_cbankvauldoor01"),}, -0.9),
-		SyncedAnimation("Walk into vault", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13627),}, std::vector<Animation> {getAnimationForShortcutIndex(13628),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_cbankvauldoor01"),}, -0.9),
 		SyncedAnimation("Shoot out", "Aggressive interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(13633),getAnimationForShortcutIndex(13634),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Handshake", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13669),getAnimationForShortcutIndex(13670),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("High five", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13672),getAnimationForShortcutIndex(13673),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
@@ -708,59 +713,55 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Kisses", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13678),getAnimationForShortcutIndex(13679),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Prison break", "Explicit", true, std::vector<Animation> {getAnimationForShortcutIndex(13750),getAnimationForShortcutIndex(13748),getAnimationForShortcutIndex(13747),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Lap dance safehouse", "Explicit", true, std::vector<Animation> {getAnimationForShortcutIndex(13764),getAnimationForShortcutIndex(13765),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("Drink whiskey #1 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13952),}, std::vector<Animation> {getAnimationForShortcutIndex(13957),getAnimationForShortcutIndex(13959),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("prop_sh_shot_glass"),}, 0),
-		SyncedAnimation("Drink whiskey #2 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13968),}, std::vector<Animation> {getAnimationForShortcutIndex(13973),getAnimationForShortcutIndex(13975),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("prop_sh_shot_glass"),}, 0),
-		SyncedAnimation("Drink whiskey #3 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13980),}, std::vector<Animation> {getAnimationForShortcutIndex(13985),getAnimationForShortcutIndex(13987),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("prop_sh_shot_glass"),}, 0),
-		SyncedAnimation("Drink whiskey #4 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13960),}, std::vector<Animation> {getAnimationForShortcutIndex(13965),getAnimationForShortcutIndex(13967),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("prop_sh_shot_glass"),}, 0),
-		SyncedAnimation("Drink whiskey #5 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13944),}, std::vector<Animation> {getAnimationForShortcutIndex(13949),getAnimationForShortcutIndex(13951),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("prop_sh_shot_glass"),}, 0),
-		SyncedAnimation("Torture, wrench intro", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9485),getAnimationForShortcutIndex(9487),}, std::vector<Animation> {getAnimationForShortcutIndex(9482),getAnimationForShortcutIndex(9488),}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Torture, wrench #1", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9458),getAnimationForShortcutIndex(9460),}, std::vector<Animation> {getAnimationForShortcutIndex(9455),getAnimationForShortcutIndex(9462),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_torture_ch_01"),getGTAObjectFromObjName("prop_tool_wrench"),}, 0),
-		SyncedAnimation("Torture, wrench #2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9467),getAnimationForShortcutIndex(9469),}, std::vector<Animation> {getAnimationForShortcutIndex(9464),getAnimationForShortcutIndex(9471),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_torture_ch_01"),getGTAObjectFromObjName("prop_tool_wrench"),}, 0),
-		SyncedAnimation("Torture, wrench #3", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9476),getAnimationForShortcutIndex(9478),}, std::vector<Animation> {getAnimationForShortcutIndex(9473),getAnimationForShortcutIndex(9480),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_torture_ch_01"),getGTAObjectFromObjName("prop_tool_wrench"),}, 0),
-		SyncedAnimation("Take off mask", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9508),}, std::vector<Animation> {getAnimationForShortcutIndex(9509),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_balaclavamichael_s"),}, 0),
+		SyncedAnimation("Drink whiskey #1 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13952),}, std::vector<Animation> {getAnimationForShortcutIndex(13957),getAnimationForShortcutIndex(13959),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("ex_p_ex_tumbler_01_s"),}, 0),
+		SyncedAnimation("Drink whiskey #2 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13968),}, std::vector<Animation> {getAnimationForShortcutIndex(13973),getAnimationForShortcutIndex(13975),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("ex_p_ex_tumbler_01_s"),}, 0),
+		SyncedAnimation("Drink whiskey #3 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13980),}, std::vector<Animation> {getAnimationForShortcutIndex(13985),getAnimationForShortcutIndex(13987),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("ex_p_ex_tumbler_01_s"),}, 0),
+		SyncedAnimation("Drink whiskey #4 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13960),}, std::vector<Animation> {getAnimationForShortcutIndex(13965),getAnimationForShortcutIndex(13967),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("ex_p_ex_tumbler_01_s"),}, 0),
+		SyncedAnimation("Drink whiskey #5 shot", "Drinking/drugs", true, std::vector<Animation> {getAnimationForShortcutIndex(13944),}, std::vector<Animation> {getAnimationForShortcutIndex(13949),getAnimationForShortcutIndex(13951),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_whiskey_bottle"),getGTAObjectFromObjName("ex_p_ex_tumbler_01_s"),}, 0),
+		SyncedAnimation("Torture, wrench intro", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9485),getAnimationForShortcutIndex(9487),}, std::vector<Animation> {getAnimationForShortcutIndex(9482),getAnimationForShortcutIndex(9488),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_torture_ch_01"),getGTAObjectFromObjName("prop_cs_wrench"),}, 0),
+		SyncedAnimation("Torture, wrench #1", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9458),getAnimationForShortcutIndex(9460),}, std::vector<Animation> {getAnimationForShortcutIndex(9455),getAnimationForShortcutIndex(9462),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_torture_ch_01"),getGTAObjectFromObjName("prop_cs_wrench"),}, -0.65),
+		SyncedAnimation("Torture, wrench #2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9467),getAnimationForShortcutIndex(9469),}, std::vector<Animation> {getAnimationForShortcutIndex(9464),getAnimationForShortcutIndex(9471),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_torture_ch_01"),getGTAObjectFromObjName("prop_cs_wrench"),}, -0.65),
+		SyncedAnimation("Torture, wrench #3", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9476),getAnimationForShortcutIndex(9478),}, std::vector<Animation> {getAnimationForShortcutIndex(9473),getAnimationForShortcutIndex(9480),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_torture_ch_01"),getGTAObjectFromObjName("prop_cs_wrench"),}, -0.65),
+		SyncedAnimation("Take off mask", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9508),}, std::vector<Animation> {getAnimationForShortcutIndex(9509),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_mask_ballistic"),}, 0),
 		SyncedAnimation("Driver crying #1", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(9562),getAnimationForShortcutIndex(9560),}, std::vector<Animation> {getAnimationForShortcutIndex(9558),}, std::vector<GTAObject> {getGTAObjectFromObjName("bodhi"),}, 0),
 		SyncedAnimation("Driver crying #2", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(9563),getAnimationForShortcutIndex(9561),}, std::vector<Animation> {getAnimationForShortcutIndex(9559),}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Holdup (humane elevator #1)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9564),getAnimationForShortcutIndex(9569),getAnimationForShortcutIndex(9565),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Holdup (humane elevator #2)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9570),getAnimationForShortcutIndex(9567),getAnimationForShortcutIndex(9571),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Move through labs #1", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9575),getAnimationForShortcutIndex(9576),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Scientists working base", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9583),getAnimationForShortcutIndex(9584),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Scientists working #1", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9579),getAnimationForShortcutIndex(9580),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Scientists working #2", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9581),getAnimationForShortcutIndex(9582),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Scientists working #3", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9585),getAnimationForShortcutIndex(9586),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Holdup (humane elevator #1)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9564),getAnimationForShortcutIndex(9569),getAnimationForShortcutIndex(9565),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Holdup (humane elevator #2)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9570),getAnimationForShortcutIndex(9567),getAnimationForShortcutIndex(9571),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Move through labs #1", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9575),getAnimationForShortcutIndex(9576),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Scientists working base", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9583),getAnimationForShortcutIndex(9584),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.8),
+		SyncedAnimation("Scientists working #1", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9579),getAnimationForShortcutIndex(9580),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.8),
+		SyncedAnimation("Scientists working #2", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9581),getAnimationForShortcutIndex(9582),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.8),
+		SyncedAnimation("Scientists working #3", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9585),getAnimationForShortcutIndex(9586),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.8),
 		SyncedAnimation("Holdup (scientists working #1)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9587),getAnimationForShortcutIndex(9590),getAnimationForShortcutIndex(9591),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Holdup (scientist walking #1)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9598),getAnimationForShortcutIndex(9601),getAnimationForShortcutIndex(9599),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Driver sad, push passenger away", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(9603),getAnimationForShortcutIndex(9602),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Driver tells passenger to stop", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(9605),getAnimationForShortcutIndex(9604),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Move through labs #2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9606),getAnimationForShortcutIndex(9607),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Holdup (use keycard)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9608),getAnimationForShortcutIndex(9610),getAnimationForShortcutIndex(9609),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Holdup (scientist walking #2)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9622),getAnimationForShortcutIndex(9621),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Holdup (press button)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9625),getAnimationForShortcutIndex(9627),getAnimationForShortcutIndex(9626),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Driver sad, push passenger away", "Vehicle", false, std::vector<Animation> {getAnimationForShortcutIndex(9603),getAnimationForShortcutIndex(9602),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Driver tells passenger to stop", "Vehicle", false, std::vector<Animation> {getAnimationForShortcutIndex(9605),getAnimationForShortcutIndex(9604),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Move through labs #2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9606),getAnimationForShortcutIndex(9607),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Holdup (use keycard)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9608),getAnimationForShortcutIndex(9610),getAnimationForShortcutIndex(9609),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Holdup (scientist walking)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9622),getAnimationForShortcutIndex(9621),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Holdup (press button)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9625),getAnimationForShortcutIndex(9627),getAnimationForShortcutIndex(9626),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Take chemical", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9632),}, std::vector<Animation> {getAnimationForShortcutIndex(9634),getAnimationForShortcutIndex(9635),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_vial_01"),getGTAObjectFromObjName("p_chem_vial_02b_s"),}, -0.4),
 		SyncedAnimation("Insert chemical", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9667),}, std::vector<Animation> {getAnimationForShortcutIndex(9668),getAnimationForShortcutIndex(9669),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_vial_01"),getGTAObjectFromObjName("p_chem_vial_02b_s"),}, -0.4),
-		SyncedAnimation("Double doors (two actors)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9683),getAnimationForShortcutIndex(9684),}, std::vector<Animation> {getAnimationForShortcutIndex(9685),getAnimationForShortcutIndex(9686),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_bl_door_l"),getGTAObjectFromObjName("v_ilev_bl_door_r"),}, 0),
-		SyncedAnimation("Eating chips on couch #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(50036),}, std::vector<Animation> {getAnimationForShortcutIndex(50037),getAnimationForShortcutIndex(50039),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_bowl_crisps"),getGTAObjectFromObjName("prop_crisp"),}, 0),
-		SyncedAnimation("Eating chips on couch #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(50077),}, std::vector<Animation> {getAnimationForShortcutIndex(50076),getAnimationForShortcutIndex(50079),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_bowl_crisps"),getGTAObjectFromObjName("prop_crisp"),}, 0),
-		SyncedAnimation("Eating from bowl", "Individual w/props", false, std::vector<Animation> {getAnimationForShortcutIndex(82595),}, std::vector<Animation> {getAnimationForShortcutIndex(82596),getAnimationForShortcutIndex(82594),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_cs_bowl_01b_s"),getGTAObjectFromObjName("prop_cs_fork"),}, -2),
-		SyncedAnimation("Door kick #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11026),}, std::vector<Animation> {getAnimationForShortcutIndex(11029),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_cbankvaulgate01"),}, 0),
-		SyncedAnimation("Mopping (wash mop)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9716),}, std::vector<Animation> {getAnimationForShortcutIndex(9715),}, std::vector<GTAObject> {getGTAObjectFromObjName("mop"),getGTAObjectFromObjName("bucket"),}, 0),
-		SyncedAnimation("Mopping (scrub)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9731),}, std::vector<Animation> {getAnimationForShortcutIndex(9732),}, std::vector<GTAObject> {}, 0),
-		SyncedAnimation("Mopping (scrub small)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9735),}, std::vector<Animation> {getAnimationForShortcutIndex(9734),}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Double doors (two actors)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9683),getAnimationForShortcutIndex(9684),}, std::vector<Animation> {getAnimationForShortcutIndex(9685),getAnimationForShortcutIndex(9686),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_bl_door_l"),getGTAObjectFromObjName("v_ilev_bl_door_r"),}, 1.3),
+		SyncedAnimation("Door kick #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11026),}, std::vector<Animation> {getAnimationForShortcutIndex(11029),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_cbankvaulgate01"),}, -1),
+		SyncedAnimation("Mopping (wash mop)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9716),}, std::vector<Animation> {getAnimationForShortcutIndex(9715),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_mop_s"),getGTAObjectFromObjName("prop_cs_mopbucket_01"),}, -1),
+		SyncedAnimation("Mopping (scrub)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9731),}, std::vector<Animation> {getAnimationForShortcutIndex(9732),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_mop_s"),getGTAObjectFromObjName("prop_cs_mopbucket_01"),}, -1),
+		SyncedAnimation("Mopping (scrub small)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9735),}, std::vector<Animation> {getAnimationForShortcutIndex(9734),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_mop_s"),getGTAObjectFromObjName("prop_cs_mopbucket_01"),}, -1),
 		SyncedAnimation("Show ID", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(9740),getAnimationForShortcutIndex(9739),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Michael's death (hanging)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9824),getAnimationForShortcutIndex(9826),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.2),
 		SyncedAnimation("Michael's death (dropped)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9820),getAnimationForShortcutIndex(9821),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.2),
 		SyncedAnimation("Michael's death (headbutt)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(9822),getAnimationForShortcutIndex(9823),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.2),
-		SyncedAnimation("Devin hide in box #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9837),}, std::vector<Animation> {getAnimationForShortcutIndex(9836),getAnimationForShortcutIndex(9838),}, std::vector<GTAObject> {getGTAObjectFromObjName("box"),getGTAObjectFromObjName("tablet"),}, 0),
-		SyncedAnimation("Devin hide in box #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9840),}, std::vector<Animation> {getAnimationForShortcutIndex(9839),getAnimationForShortcutIndex(9841),}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Devin hide in box #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9837),}, std::vector<Animation> {getAnimationForShortcutIndex(9836),getAnimationForShortcutIndex(9838),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_devin_box_01_s"),getGTAObjectFromObjName("prop_cs_tablet"),}, 0),
+		SyncedAnimation("Devin hide in box #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9840),}, std::vector<Animation> {getAnimationForShortcutIndex(9839),getAnimationForShortcutIndex(9841),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_devin_box_01_s"),getGTAObjectFromObjName("prop_cs_tablet"),}, 0),
 		SyncedAnimation("Push car", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(9846),getAnimationForShortcutIndex(9847),getAnimationForShortcutIndex(9848),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.5),
 		SyncedAnimation("Dogs humping enter", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(9961),getAnimationForShortcutIndex(9962),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.55),
 		SyncedAnimation("Dogs humping loop", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(9969),getAnimationForShortcutIndex(9970),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.55),
 		SyncedAnimation("Dogs humping exit #1", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(9963),getAnimationForShortcutIndex(9964),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.55),
 		SyncedAnimation("Dogs humping exit #2", "Animal", true, std::vector<Animation> {getAnimationForShortcutIndex(9966),getAnimationForShortcutIndex(9968),getAnimationForShortcutIndex(9967),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.55),
 		SyncedAnimation("Get in back of van with dog", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(9988),getAnimationForShortcutIndex(9987),}, std::vector<Animation> {getAnimationForShortcutIndex(9989),}, std::vector<GTAObject> {getGTAObjectFromObjName("speedo"),}, -0.2),
-		SyncedAnimation("Wheelchair - turn right", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9889),}, std::vector<Animation> {getAnimationForShortcutIndex(9890),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.4),
-		SyncedAnimation("Wheelchair - stationary", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9893),}, std::vector<Animation> {getAnimationForShortcutIndex(9894),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.4),
-		SyncedAnimation("Wheelchair - turn left", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9895),}, std::vector<Animation> {getAnimationForShortcutIndex(9896),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.4),
-		SyncedAnimation("Wheelchair - use computer", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9897),}, std::vector<Animation> {getAnimationForShortcutIndex(9898),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.4),
+		SyncedAnimation("Wheelchair - turn right", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9889),}, std::vector<Animation> {getAnimationForShortcutIndex(9890),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.35),
+		SyncedAnimation("Wheelchair - stationary", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9893),}, std::vector<Animation> {getAnimationForShortcutIndex(9894),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.35),
+		SyncedAnimation("Wheelchair - turn left", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9895),}, std::vector<Animation> {getAnimationForShortcutIndex(9896),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.35),
+		SyncedAnimation("Wheelchair - use computer", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(9897),}, std::vector<Animation> {getAnimationForShortcutIndex(9898),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.35),
 		SyncedAnimation("Throw passengers phone", "Vehicle", false, std::vector<Animation> {getAnimationForShortcutIndex(9915),getAnimationForShortcutIndex(9916),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Get out of van (injured)", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(9910),}, std::vector<Animation> {getAnimationForShortcutIndex(9912),}, std::vector<GTAObject> {getGTAObjectFromObjName("speedo"),}, -0.2),
 		SyncedAnimation("Get out of van with dog", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(9924),getAnimationForShortcutIndex(9923),getAnimationForShortcutIndex(9925),}, std::vector<Animation> {getAnimationForShortcutIndex(9926),}, std::vector<GTAObject> {getGTAObjectFromObjName("speedo"),}, -0.2),
@@ -769,17 +770,17 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Hairdressers sitdown", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10044),getAnimationForShortcutIndex(10037),}, std::vector<Animation> {getAnimationForShortcutIndex(10052),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_serv_bs_scissors"),}, -1),
 		SyncedAnimation("Hairdressers haircut", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10086),getAnimationForShortcutIndex(10075),}, std::vector<Animation> {getAnimationForShortcutIndex(10096),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_serv_bs_scissors"),}, -1),
 		SyncedAnimation("Throw helmet", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(10160),getAnimationForShortcutIndex(10159),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.7),
-		SyncedAnimation("Break door axe #1", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10190),getAnimationForShortcutIndex(10188),getAnimationForShortcutIndex(10189),}, std::vector<Animation> {getAnimationForShortcutIndex(10187),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_tool_fireaxe"),}, -1),
-		SyncedAnimation("Break door axe #2", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10199),getAnimationForShortcutIndex(10198),getAnimationForShortcutIndex(10197),}, std::vector<Animation> {getAnimationForShortcutIndex(10196),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_tool_fireaxe"),}, -1),
+		SyncedAnimation("Break door axe #1", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10190),getAnimationForShortcutIndex(10188),getAnimationForShortcutIndex(10189),}, std::vector<Animation> {getAnimationForShortcutIndex(10187),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_ld_fireaxe"),}, -1),
+		SyncedAnimation("Break door axe #2", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10199),getAnimationForShortcutIndex(10198),getAnimationForShortcutIndex(10197),}, std::vector<Animation> {getAnimationForShortcutIndex(10196),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_ld_fireaxe"),}, -1),
 		SyncedAnimation("Idle at computer #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10249),}, std::vector<Animation> {getAnimationForShortcutIndex(10244),getAnimationForShortcutIndex(10245),getAnimationForShortcutIndex(10248),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_clb_officechair_s"),getGTAObjectFromObjName("prop_cs_keyboard_01"),getGTAObjectFromObjName("prop_cs_mouse_01"),}, -1),
 		SyncedAnimation("Idle at computer #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10261),}, std::vector<Animation> {getAnimationForShortcutIndex(10256),getAnimationForShortcutIndex(10257),getAnimationForShortcutIndex(10260),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_clb_officechair_s"),getGTAObjectFromObjName("prop_cs_keyboard_01"),getGTAObjectFromObjName("prop_cs_mouse_01"),}, -1),
 		SyncedAnimation("Idle at computer #3", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10267),}, std::vector<Animation> {getAnimationForShortcutIndex(10262),getAnimationForShortcutIndex(10263),getAnimationForShortcutIndex(10266),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_clb_officechair_s"),getGTAObjectFromObjName("prop_cs_keyboard_01"),getGTAObjectFromObjName("prop_cs_mouse_01"),}, -1),
 		SyncedAnimation("Pull to feet (alive)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10363),getAnimationForShortcutIndex(10361),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Pull to feet (dead)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10372),getAnimationForShortcutIndex(10370),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("Rocking chair #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10526),}, std::vector<Animation> {getAnimationForShortcutIndex(10527),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_old_deck_chair"),}, -0.6),
-		SyncedAnimation("Rocking chair #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10528),}, std::vector<Animation> {getAnimationForShortcutIndex(10529),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_old_deck_chair"),}, -0.6),
-		SyncedAnimation("Rocking chair #3", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10530),}, std::vector<Animation> {getAnimationForShortcutIndex(10531),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_old_deck_chair"),}, -0.6),
-		SyncedAnimation("Rocking chair #4", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10532),}, std::vector<Animation> {getAnimationForShortcutIndex(10533),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_old_deck_chair"),}, -0.6),
+		SyncedAnimation("Rocking chair #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10526),}, std::vector<Animation> {getAnimationForShortcutIndex(10527),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_off_chair_01"),}, -0.6),
+		SyncedAnimation("Rocking chair #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10528),}, std::vector<Animation> {getAnimationForShortcutIndex(10529),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_off_chair_01"),}, -0.6),
+		SyncedAnimation("Rocking chair #3", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10530),}, std::vector<Animation> {getAnimationForShortcutIndex(10531),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_off_chair_01"),}, -0.6),
+		SyncedAnimation("Rocking chair #4", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10532),}, std::vector<Animation> {getAnimationForShortcutIndex(10533),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_off_chair_01"),}, -0.6),
 		SyncedAnimation("Stab guard", "Advanced Melee", true, std::vector<Animation> {getAnimationForShortcutIndex(10563),getAnimationForShortcutIndex(10562),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
 		SyncedAnimation("Enterboat action", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10573),}, std::vector<Animation> {getAnimationForShortcutIndex(10575),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_po1_01_doorm_s"),}, 0),
 		SyncedAnimation("Enterboat stealth", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10576),}, std::vector<Animation> {getAnimationForShortcutIndex(10578),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_po1_01_doorm_s"),}, 0),
@@ -787,12 +788,79 @@ void initializeSyncedAnimations() {
 		SyncedAnimation("Leg massage", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(10609),getAnimationForShortcutIndex(10608),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Dock beatup #1", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(10665),getAnimationForShortcutIndex(10666),getAnimationForShortcutIndex(10667),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
 		SyncedAnimation("Dock beatup #2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(10672),getAnimationForShortcutIndex(10673),getAnimationForShortcutIndex(10674),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
-		SyncedAnimation("Grab money, duffel (enter)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(1461),}, std::vector<Animation> {getAnimationForShortcutIndex(25701),getAnimationForShortcutIndex(25700),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_ld_heist_bag_s_1"),getGTAObjectFromObjName("prop_cs_heist_bag_strap_01"),}, -1),
-		SyncedAnimation("Grab money, duffel (loop)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(1463),}, std::vector<Animation> {getAnimationForShortcutIndex(1464),getAnimationForShortcutIndex(1467),getAnimationForShortcutIndex(1465),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_ld_heist_bag_s_1"),getGTAObjectFromObjName("prop_cs_heist_bag_strap_01"),getGTAObjectFromObjName("prop_cash_pile_02"),}, -1),
-		SyncedAnimation("Grab money, duffel (exit)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(25702),}, std::vector<Animation> {getAnimationForShortcutIndex(25699),getAnimationForShortcutIndex(1462),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_ld_heist_bag_s_1"),getGTAObjectFromObjName("prop_cs_heist_bag_strap_01"),}, -1),
-		SyncedAnimation("Wheelchair idle", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11397),}, std::vector<Animation> {getAnimationForShortcutIndex(11398),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.4),
-		SyncedAnimation("Wheelchair backwards", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(63487),}, std::vector<Animation> {getAnimationForShortcutIndex(63485),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.4),
-};
+		SyncedAnimation("Grab money, duffel (enter)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(1461),}, std::vector<Animation> {getAnimationForShortcutIndex(25701),getAnimationForShortcutIndex(25700),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_ld_heist_bag_s_1"),getGTAObjectFromObjName("p_csh_strap_01_s"),}, -1),
+		SyncedAnimation("Grab money, duffel (loop)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(1463),}, std::vector<Animation> {getAnimationForShortcutIndex(1464),getAnimationForShortcutIndex(1467),getAnimationForShortcutIndex(1465),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_ld_heist_bag_s_1"),getGTAObjectFromObjName("p_csh_strap_01_s"),getGTAObjectFromObjName("hei_prop_heist_cash_pile"),}, -1),
+		SyncedAnimation("Grab money, duffel (exit)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(25702),}, std::vector<Animation> {getAnimationForShortcutIndex(25699),getAnimationForShortcutIndex(1462),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_ld_heist_bag_s_1"),getGTAObjectFromObjName("p_csh_strap_01_s"),}, -1),
+		SyncedAnimation("Wheelchair idle", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11397),}, std::vector<Animation> {getAnimationForShortcutIndex(11398),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_wheelchair_01_s"),}, -0.35),
+		SyncedAnimation("Push up stairs", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(10699),getAnimationForShortcutIndex(10700),getAnimationForShortcutIndex(10698),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1.2),
+		SyncedAnimation("Box falls", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10734),getAnimationForShortcutIndex(10733),getAnimationForShortcutIndex(10732),getAnimationForShortcutIndex(10731),}, std::vector<Animation> {getAnimationForShortcutIndex(10730),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_cs_package_01"),}, -1),
+		SyncedAnimation("Chatting leaning on wall (enter)", "Friendly interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(10741),getAnimationForShortcutIndex(10742),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Chatting leaning on wall (base)", "Friendly interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(10739),getAnimationForShortcutIndex(10740),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Chatting leaning on wall (exit)", "Friendly interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(10743),getAnimationForShortcutIndex(10744),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Exit car with stick and argue #1", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(10805),getAnimationForShortcutIndex(10806),}, std::vector<Animation> {getAnimationForShortcutIndex(10804),}, std::vector<GTAObject> {getGTAObjectFromObjName("asea"),}, -0.35),
+		SyncedAnimation("Exit car with stick and argue #2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(10802),getAnimationForShortcutIndex(10803),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.35),
+		SyncedAnimation("Catch bag", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(10923),getAnimationForShortcutIndex(10926),}, std::vector<Animation> {getAnimationForShortcutIndex(10922),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_ld_heist_bag_s_1"),}, -1),
+		SyncedAnimation("Unlock door #1", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10941),}, std::vector<Animation> {getAnimationForShortcutIndex(10940),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_janitor_frontdoor"),}, -1),
+		SyncedAnimation("Unlock door #2", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(10939),}, std::vector<Animation> {getAnimationForShortcutIndex(10938),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_janitor_frontdoor"),}, -1),
+		SyncedAnimation("Exit tank", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(10956),getAnimationForShortcutIndex(10957),getAnimationForShortcutIndex(10958),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Chopper crash TEST", "Other", true, std::vector<Animation> {}, std::vector<Animation> {getAnimationForShortcutIndex(10991),}, std::vector<GTAObject> {getGTAObjectFromObjName("maverick"),}, 0),
+		SyncedAnimation("Exit van (bank heist)", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(10996),getAnimationForShortcutIndex(10993),}, std::vector<Animation> {getAnimationForShortcutIndex(10999),}, std::vector<GTAObject> {getGTAObjectFromObjName("burrito"),}, -0.2),
+		SyncedAnimation("Ready to enter (bank heist)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11003),getAnimationForShortcutIndex(11000),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.9),
+		SyncedAnimation("Blowtorch door intro (bank heist)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11016),}, std::vector<Animation> {getAnimationForShortcutIndex(11018),getAnimationForShortcutIndex(11015),getAnimationForShortcutIndex(11019),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_welding_mask_01_s"),getGTAObjectFromObjName("prop_tool_blowtorch"),getGTAObjectFromObjName("v_ilev_cbankvaulgate01"),}, -1),
+		SyncedAnimation("Blowtorch door loop (bank heist)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11021),}, std::vector<Animation> {getAnimationForShortcutIndex(11023),getAnimationForShortcutIndex(11020),getAnimationForShortcutIndex(11024),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_welding_mask_01_s"),getGTAObjectFromObjName("prop_tool_blowtorch"),getGTAObjectFromObjName("v_ilev_cbankvaulgate01"),}, -1),
+		SyncedAnimation("Blowtorch door exit (bank heist)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(11013),getAnimationForShortcutIndex(11026),}, std::vector<Animation> {getAnimationForShortcutIndex(11012),getAnimationForShortcutIndex(11025),getAnimationForShortcutIndex(11029),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_tool_blowtorch"),getGTAObjectFromObjName("prop_welding_mask_01_s"),getGTAObjectFromObjName("v_ilev_cbankvaulgate01"),}, -1),
+		SyncedAnimation("Empty safe exit (bank heist)", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(11041),getAnimationForShortcutIndex(11044),}, std::vector<Animation> {getAnimationForShortcutIndex(11042),getAnimationForShortcutIndex(11045),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_ld_heist_bag_s_1"),getGTAObjectFromObjName("p_ld_heist_bag_s_1"),}, -1),
+		SyncedAnimation("Walk in bank, gunmen (bank heist)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11112),getAnimationForShortcutIndex(11097),}, std::vector<Animation> {getAnimationForShortcutIndex(11094),getAnimationForShortcutIndex(11095),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_bank4door02"),getGTAObjectFromObjName("v_ilev_bank4door01"),}, -0.9),
+		SyncedAnimation("Walk in bank, hostages (bank heist)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11096),getAnimationForShortcutIndex(11108),getAnimationForShortcutIndex(11109),getAnimationForShortcutIndex(11110),getAnimationForShortcutIndex(11111),}, std::vector<Animation> {getAnimationForShortcutIndex(11093),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_cbankcountdoor01"),}, -0.9),
+		SyncedAnimation("Hide behind door (bank heist)", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11116),}, std::vector<Animation> {getAnimationForShortcutIndex(11117),}, std::vector<GTAObject> {getGTAObjectFromObjName("v_ilev_cf_officedoor"),}, 0),
+		SyncedAnimation("Cops investigate bank #1", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11132),getAnimationForShortcutIndex(11129),getAnimationForShortcutIndex(11130),getAnimationForShortcutIndex(11131),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 2.6),
+		SyncedAnimation("Cops investigate bank #2", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11140),getAnimationForShortcutIndex(11142),getAnimationForShortcutIndex(11143),getAnimationForShortcutIndex(11137),getAnimationForShortcutIndex(11138),getAnimationForShortcutIndex(11139),}, std::vector<Animation> {getAnimationForShortcutIndex(11141),}, std::vector<GTAObject> {getGTAObjectFromObjName("police"),}, 2.6),
+		SyncedAnimation("Shoot target on floor", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11175),getAnimationForShortcutIndex(11174),getAnimationForShortcutIndex(11176),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Throw paperball", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11360),}, std::vector<Animation> {getAnimationForShortcutIndex(11361),getAnimationForShortcutIndex(11362),}, std::vector<GTAObject> {getGTAObjectFromObjName("prop_off_chair_01"),getGTAObjectFromObjName("prop_paper_ball"),}, 0),
+		SyncedAnimation("Climb from plane wreckage", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(11521),getAnimationForShortcutIndex(11522),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -0.2),
+		SyncedAnimation("Knife struggle (top wins)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11609),getAnimationForShortcutIndex(11610),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Knife struggle (tackle)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11614),getAnimationForShortcutIndex(11616),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Knife struggle (loop)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11617),getAnimationForShortcutIndex(11618),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+		SyncedAnimation("Read newspaper", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11633),}, std::vector<Animation> {getAnimationForShortcutIndex(11633),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_cs_newspaper_s"),}, -1),
+		SyncedAnimation("Close newspaper", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11635),}, std::vector<Animation> {getAnimationForShortcutIndex(11636),}, std::vector<GTAObject> {getGTAObjectFromObjName("p_cs_newspaper_s"),}, -1),
+		SyncedAnimation("Run from heli crash", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11649),getAnimationForShortcutIndex(11650),getAnimationForShortcutIndex(11648),}, std::vector<Animation> {getAnimationForShortcutIndex(11646),}, std::vector<GTAObject> {getGTAObjectFromObjName("buzzard"),}, 0),
+		SyncedAnimation("Throw passport from car", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(11749),getAnimationForShortcutIndex(11750),}, std::vector<Animation> {getAnimationForShortcutIndex(11751),}, std::vector<GTAObject> {getGTAObjectFromObjName("passport"),}, 0),
+		SyncedAnimation("Yankton hostages loop (prologue)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11756),getAnimationForShortcutIndex(11761),getAnimationForShortcutIndex(11758),getAnimationForShortcutIndex(11759),getAnimationForShortcutIndex(11760),getAnimationForShortcutIndex(11757),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Yankton hostages enter (prologue)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11762),getAnimationForShortcutIndex(11772),getAnimationForShortcutIndex(11768),getAnimationForShortcutIndex(11770),getAnimationForShortcutIndex(11771),getAnimationForShortcutIndex(11766),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Push hostage (prologue)", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11796),getAnimationForShortcutIndex(11797),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Shut door with rifle", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11800),}, std::vector<Animation> {getAnimationForShortcutIndex(11801),}, std::vector<GTAObject> {getGTAObjectFromObjName("yankton closet door"),}, 0),
+		SyncedAnimation("Human shield loop", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11811),getAnimationForShortcutIndex(11813),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Human shield exit", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11817),getAnimationForShortcutIndex(11818),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Pick up bag with rifle", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11816),}, std::vector<Animation> {getAnimationForShortcutIndex(11815),}, std::vector<GTAObject> {getGTAObjectFromObjName("prologue duffle"),}, 0),
+		SyncedAnimation("Remove balaclava", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(11838),}, std::vector<Animation> {getAnimationForShortcutIndex(11839),}, std::vector<GTAObject> {getGTAObjectFromObjName("Prologue ballie"),}, 0),
+		SyncedAnimation("Kick down hostage", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11850),getAnimationForShortcutIndex(11849),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("IAA human shield intro", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11942),getAnimationForShortcutIndex(11943),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("IAA human shield crouched loop", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11939),getAnimationForShortcutIndex(11940),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("IAA human shield standing loop", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11938),getAnimationForShortcutIndex(11941),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Roughen up, grab shirt intro", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11955),getAnimationForShortcutIndex(11957),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Roughen up, grab shirt shake", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11958),getAnimationForShortcutIndex(11960),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Run out of car with film", "Vehicle", true, std::vector<Animation> {getAnimationForShortcutIndex(11970),}, std::vector<Animation> {getAnimationForShortcutIndex(11969),}, std::vector<GTAObject> {getGTAObjectFromObjName("asea"),}, 0),
+		SyncedAnimation("Tracey human shield intro", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11974),getAnimationForShortcutIndex(11975),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Tracey human shield idle 1", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11983),getAnimationForShortcutIndex(11984),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Tracey human shield idle 2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11986),getAnimationForShortcutIndex(11987),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Tracey human shield idle 3", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11989),getAnimationForShortcutIndex(11990),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Tracey human shield killed", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(11980),getAnimationForShortcutIndex(11981),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Amanda human shield idle 1", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(12007),getAnimationForShortcutIndex(12006),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Amanda human shield idle 2", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(12009),getAnimationForShortcutIndex(12008),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Amanda human shield idle 3", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(12011),getAnimationForShortcutIndex(12010),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Amanda human shield idle 3", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(12013),getAnimationForShortcutIndex(12012),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Amanda human shield killed", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(12003),getAnimationForShortcutIndex(12002),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Amanda human shield freed", "Aggressive interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(12005),getAnimationForShortcutIndex(12004),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Crying over dead body", "Other", true, std::vector<Animation> {getAnimationForShortcutIndex(12089),getAnimationForShortcutIndex(12090),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Neck snap", "Aggressive interaction", false, std::vector<Animation> {getAnimationForShortcutIndex(13275),getAnimationForShortcutIndex(13276),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Pass package across counter", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13294),getAnimationForShortcutIndex(13295),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Pass pistol across counter", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13296),getAnimationForShortcutIndex(13297),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("Pass rifle across counter", "Friendly interaction", true, std::vector<Animation> {getAnimationForShortcutIndex(13298),getAnimationForShortcutIndex(13299),}, std::vector<Animation> {}, std::vector<GTAObject> {}, 0),
+		SyncedAnimation("MP intro plane flying", "Individual w/props", true, std::vector<Animation> {}, std::vector<Animation> {getAnimationForShortcutIndex(13514),}, std::vector<GTAObject> {getGTAObjectFromObjName("MP Plane"),}, 0),
+		SyncedAnimation("MP intro plane landing", "Individual w/props", true, std::vector<Animation> {}, std::vector<Animation> {getAnimationForShortcutIndex(13516),}, std::vector<GTAObject> {getGTAObjectFromObjName("MP Plane"),}, 0),
+		SyncedAnimation("Mp intro plane look out window", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13519),}, std::vector<Animation> {getAnimationForShortcutIndex(13518),}, std::vector<GTAObject> {getGTAObjectFromObjName("MP Plane"),}, 0),
+		SyncedAnimation("Pin photo to wall", "Individual w/props", true, std::vector<Animation> {getAnimationForShortcutIndex(13821),}, std::vector<Animation> {getAnimationForShortcutIndex(13822),}, std::vector<GTAObject> {getGTAObjectFromObjName("photo printout planning"),}, 0),
+ };
 }
 
 std::vector<SyncedAnimation> getAllSyncedAnimations() {

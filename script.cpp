@@ -4174,13 +4174,15 @@ void action_animations_preview(){
 							for (int j = i+1; j < animations.size(); j++) {
 								if (animations[j].matchesFilter(animationFilterStr)) {
 									i = j;
-									WAIT(50);
+									WAIT(100);
 									break;
 								}
 							}
 						}
 						else {
-							i = i +1;
+							if (doAnimationLoop) {
+								i = i + 1;
+							}
 							WAIT(50);
 						}
 						break;
@@ -4196,7 +4198,13 @@ void action_animations_preview(){
 							}
 						}
 						else {
-							i = i - 2;
+							if (doAnimationLoop) {
+								i = i -1;
+							}
+							else {
+								i = i - 2;
+							}
+							
 							WAIT(50);
 						}
 						
@@ -4396,7 +4404,7 @@ void action_animation_sync_play(SyncedAnimation syncedAnimation, bool clearObjec
 	if (clearObjectReferences) {
 		syncedAnimation.clearObjectReferences();
 	}
-	syncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), false, true, 0.0f);
+	syncedAnimation.executeSyncedAnimation(false,getActorPointers(), true, Vector3(), false, true, 0.0f);
 	DWORD ticksStart = GetTickCount();
 
 	while (!syncedAnimation.isCompleted()) {
@@ -4429,8 +4437,8 @@ void action_animation_sync_add(SyncedAnimation syncedAnimation) {
 
 void action_animation_sync_preview() {
 	log_to_file("action_animation_sync_execute");
-	if (actors[0].isNullActor() || actors[1].isNullActor()) {
-		set_status_text("Must have at least two actors before starting synced animation preview");
+	if (actors[0].isNullActor()) {
+		set_status_text("Must have at least one actor before starting synchronized animation preview");
 		return;
 	}
 	menu_active_index = 0;
@@ -4475,8 +4483,8 @@ void action_animation_sync_preview() {
 
 
 
-	set_status_text(std::to_string(gtaSyncedAnimations.size()) + " synced animations");
-	log_to_file("Have " + std::to_string(gtaSyncedAnimations.size()) + " synced animations");
+	set_status_text(std::to_string(gtaSyncedAnimations.size()) + " synchronized animations (with help from MuzTube)");
+	log_to_file("Have " + std::to_string(gtaSyncedAnimations.size()) + " synchronized animations");
 
 	float currentCamHeading = startHeading;
 
@@ -4550,7 +4558,7 @@ void action_animation_sync_preview() {
 					}
 
 					currentSyncedAnimation = currentSyncedAnimations[syncedAnimIndex];
-					currentSyncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), true, true, 0.0f);
+					currentSyncedAnimation.executeSyncedAnimation(false,getActorPointers(), true, Vector3(), true, true, 0.0f);
 					log_to_file("Selected synced animation " + currentSyncedAnimation.getTitle());
 				}
 				nextWaitTicksSyncAnim = 200;
@@ -4596,7 +4604,7 @@ void action_animation_sync_preview() {
 				if (!currentSyncedAnimation.isNull()) {
 					currentSyncedAnimation.setDeltaZ(currentSyncedAnimation.getDeltaZ() + 0.1);
 					currentSyncedAnimation.cleanupAfterExecution(true, true);
-					currentSyncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop, true, 0.0f);
+					currentSyncedAnimation.executeSyncedAnimation(false,getActorPointers(), true, Vector3(), doAnimationLoop, true, 0.0f);
 				}
 
 				nextWaitTicksSyncAnim = 150;
@@ -4606,7 +4614,7 @@ void action_animation_sync_preview() {
 				if (!currentSyncedAnimation.isNull()) {
 					currentSyncedAnimation.setDeltaZ(currentSyncedAnimation.getDeltaZ() - 0.1);
 					currentSyncedAnimation.cleanupAfterExecution(true, true);
-					currentSyncedAnimation.executeSyncedAnimation(getActorPointers(), true, Vector3(), doAnimationLoop, true, 0.0f);
+					currentSyncedAnimation.executeSyncedAnimation(false,getActorPointers(), true, Vector3(), doAnimationLoop, true, 0.0f);
 				}
 				nextWaitTicksSyncAnim = 150;
 			}
@@ -6978,12 +6986,28 @@ void main()
 				activeMode = MODE_STANDARD;
 				birdsEyeController.onExitMode();
 			}
+
+			if (hud_toggle_key_pressed()) {
+				if (should_display_hud == true) {
+					should_display_hud = false;
+					WAIT(70);
+				}
+				else {
+					should_display_hud = true;
+					WAIT(70);
+				}
+			}
+
+
 			//Wait for next tick
 			WAIT(0);
 		}
 	}
 
 }
+
+
+
 
 void ScriptMain()
 {

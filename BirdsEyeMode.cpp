@@ -12,7 +12,6 @@
 BirdsEyeMode::BirdsEyeMode()
 {
 	shouldExitMode = false;
-	shouldDrawMenu = true;
 	shouldDrawRecordingMarkers = true;
 	cameraSpeedFactor = 0.1;
 	camLastPos = {};
@@ -29,7 +28,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 	if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
 		nextWaitTicks = 0;
 		shouldExitMode = false;
-		if (shouldDrawMenu) {
+		if (should_display_app_hud()) {
 			if (menu_up_key_pressed()) {
 				if (submenu_active_index != -1) {
 					submenu_active_index++;
@@ -67,6 +66,10 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 			else if (menu_right_key_pressed()) {
 				submenu_active_index = -1;
 				//cancel edit location and highlighted
+				std::shared_ptr<Actor> activeActor = getActiveActor();
+				if (highlightedRecording != nullptr && activeActor != nullptr) {//stop old preview
+					highlightedRecording->stopPreviewRecording(activeActor.get());
+				}
 				selectedRecording = nullptr;
 				selectedActor = nullptr;
 				highlightedRecording = nullptr;
@@ -118,7 +121,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 	}
 	checkInputRotation();
 
-	if (shouldDrawMenu) {
+	if (should_display_app_hud()) {
 		drawMenu();
 		drawSubMenuEdit();
 		drawInstructions();
@@ -681,6 +684,7 @@ void BirdsEyeMode::actionMenuSelected() {
 		else {
 			sceneMode = SCENE_MODE_ACTIVE;
 		}
+
 		action_toggle_scene_mode();
 	}
 	else if (menu_active_action == MENU_ITEM_EXIT_BIRDS_EYE_MODE) {
@@ -725,6 +729,10 @@ void BirdsEyeMode::actionSubMenuEditSelected()
 			}
 			log_to_file("actionSubMenuEditSelected before starting new preview");
 			highlightedRecording->previewRecording(activeActor.get());
+
+			//recalc submenu_max_index
+			drawSubMenuEdit();
+			submenu_active_index = submenu_max_index;
 		}
 	}
 	else if (submenu_active_action == SUBMENU_ITEM_EDIT_LOCATION) {
