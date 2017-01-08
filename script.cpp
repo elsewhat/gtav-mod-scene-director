@@ -5650,6 +5650,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					syncedAnimCopy->clearObjectReferences();
 
 					float actorRotation = ENTITY::GET_ENTITY_ROTATION(actorPed, 2).z;
+					actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
 
 					ActorSyncedAnimationRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, getActorPointers(), actorLocation, actorRotation, syncedAnimCopy);
 					
@@ -6384,19 +6385,6 @@ void action_copy_player_actions() {
 					}
 					nextWaitTicks = 100;
 				}
-
-				/* Will not update heading
-				float actorHeading = ENTITY::GET_ENTITY_HEADING(playerPed);
-				if (actorHeading != previousHeading) {
-				//log_to_file("Changing heading to " + std::to_string(actorHeading));
-				previousHeading = actorHeading;
-				for (int i = 1; i < sizeof(actorShortcut) / sizeof(Ped); i++) {
-				if (actorShortcut[i] != 0 && actorShortcut[i]!= playerPed) {
-				//log_to_file("Changing heading to " + std::to_string(actorHeading) + " for actor " + std::to_string(actorShortcut[i]));
-				PED::SET_PED_DESIRED_HEADING(actorShortcut[i], actorHeading);
-				}
-				}
-				}*/
 
 				//Copy scenarios applied to player to other actors
 				//No way of retrieving which scenario is active, so we have to brute force it over the 458 scenarios which exist

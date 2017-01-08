@@ -116,8 +116,10 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 
 	}
 	else if (lastChangedRecordingLocation) {//Update the recording preview once there has been no movement
-		selectedRecording->updatePreviewLocation(selectedActor.get(),selectedRecording->getLocation());
-		lastChangedRecordingLocation = false;
+		if (selectedRecording != nullptr) {
+			selectedRecording->updatePreviewLocation(selectedActor.get(), selectedRecording->getLocation());
+			lastChangedRecordingLocation = false;
+		}
 	}
 	checkInputRotation();
 
