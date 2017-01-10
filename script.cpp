@@ -190,7 +190,7 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.3 beta3 by elsewhat");
+	set_status_text("Scene director 3.4 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
 	set_status_text("Scene is setup mode");
 }
@@ -3452,10 +3452,11 @@ void action_teleport_to_start_locations() {
 	}
 
 	//update setting for all actors
+	DWORD ticksStartAllActors = GetTickCount();
 	for (auto & actor : actors) {
 		if (actor.isNullActor() == false && actor.isCurrentlyPlayingRecording()) {
 			ActorRecordingPlayback & otherActorRecordingPlayback = actor.getRecordingPlayback();
-			otherActorRecordingPlayback.setHasTeleportedToStartLocation(GetTickCount());
+			otherActorRecordingPlayback.setHasTeleportedToStartLocation(ticksStartAllActors);
 
 			if (actor.hasRecordingWithGunFire() && actor.isActorThisPed(PLAYER::PLAYER_PED_ID())) {
 				set_status_text("Switch actor in order for gun fire recording to be playbacked correctly!");

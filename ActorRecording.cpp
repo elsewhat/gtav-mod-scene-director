@@ -758,6 +758,7 @@ std::string ActorAnimationSequenceRecordingItem::toString()
 
 void ActorAnimationSequenceRecordingItem::executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)
 {
+	//log_to_file("START ActorAnimationSequenceRecordingItem::executeNativesForRecording " + std::to_string(GetTickCount()));
 	//load animation dicts
 	for (auto &animation : m_animationSequence.animationsInSequence) {
 		STREAMING::REQUEST_ANIM_DICT(animation.animLibrary);
@@ -787,6 +788,8 @@ void ActorAnimationSequenceRecordingItem::executeNativesForRecording(Actor actor
 	AI::CLOSE_SEQUENCE_TASK(task_seq);
 	AI::TASK_PERFORM_SEQUENCE(actor.getActorPed(), task_seq);
 	AI::CLEAR_SEQUENCE_TASK(&task_seq);
+
+	//log_to_file("END ActorAnimationSequenceRecordingItem::executeNativesForRecording " + std::to_string(GetTickCount()));
 
 }
 

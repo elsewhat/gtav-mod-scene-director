@@ -472,7 +472,7 @@ void Actor::update_tick_recording_replay(Actor & actor) {
 		log_to_file("update_tick_recording_replay - Initiate telport to start location for all actors");
 		action_teleport_to_start_locations();
 
-		recordingPlayback.setHasTeleportedToStartLocation(ticksNow);
+		//recordingPlayback.setHasTeleportedToStartLocation(ticksNow);
 		return;
 	}
 
@@ -482,6 +482,8 @@ void Actor::update_tick_recording_replay(Actor & actor) {
 		if (ticksNow >= recordingPlayback.getTicksTeleportedToStartLocation() + 2000) {
 			DWORD ticksPlaybackStart = recordingPlayback.getTicksPlaybackStarted();
 			DWORD ticksDeltaStartFirst = recordingItem->getTicksAfterRecordStart();
+
+			//log_to_file(actor.getName() + " Ticks now:" + std::to_string(ticksNow) + " ticksPlaybackStart: " + std::to_string(ticksPlaybackStart) + " ticksDeltaStartFirst:"+ std::to_string(ticksDeltaStartFirst) + " actor.getRecordingDelay() " + std::to_string(actor.getRecordingDelay()));
 
 			if (ticksNow < ticksPlaybackStart + ticksDeltaStartFirst + actor.getRecordingDelay()) {
 				return;
