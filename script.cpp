@@ -190,7 +190,7 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.4 by elsewhat");
+	set_status_text("Scene director 3.3 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
 	set_status_text("Scene is setup mode");
 }
