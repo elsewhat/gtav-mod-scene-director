@@ -1,0 +1,48 @@
+Version 43 30
+{
+	Type BoundComposite
+	AABBMin -0.0103380 -0.0128945 -0.0060048
+	AABBMax 0.0096620 0.0132369 0.0048192
+	Radius 0.0173206
+	Centroid -0.0003380 0.0001712 -0.0005928
+	CG -0.0003380 0.0001712 -0.0005928
+	VertexColors null
+	MaterialColors null
+	ChildTransforms 1
+	{
+		Matrix 0
+		{
+			1.0000000 0.0000000 0.0000000
+			0.0000000 -0.9238784 0.3826864
+			0.0000000 -0.3826864 -0.9238784
+			-0.0003380 0.0001712 -0.0005928
+		}
+	}
+	ChildFlags 1
+	{
+		0x7F3BEC00000003E
+	}
+	Children 1
+	{
+		phBound
+		{
+			Type BoundBox
+			AABBMin -0.0100000 -0.0100000 -0.0100001
+			AABBMax 0.0100000 0.0100000 0.0100001
+			Radius 0.0173206
+			Centroid 0.0000000 0.0000000 0.0000000
+			CG 0.0000000 0.0000000 0.0000000
+			Margin -0.00250003
+			Material
+			{
+				Index 55
+				f1 0
+				f2 0
+				Flags 18
+				MaterialColorIndex 0
+			}
+			VertexColors null
+			MaterialColors null
+		}
+	}
+}

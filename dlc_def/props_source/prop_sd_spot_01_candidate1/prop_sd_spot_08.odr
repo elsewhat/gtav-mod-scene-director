@@ -1,0 +1,31 @@
+Version 165 30
+{
+	Shaders
+	{
+		default.sps
+		{
+			DiffuseSampler Prop_Spotlight_01
+			HardAlphaBlend 1.0000000
+			useTessellation 0.0000000
+			wetnessMultiplier 1.0000000
+		}
+	}
+	Skeleton prop_sd_spot_common\prop_sd_spot_01.skel
+	LodGroup
+	{
+		High 9998.0
+		{
+			prop_sd_spot_common\prop_sd_spot_01_high.mesh 0
+		}
+		Med 9998.0
+		Low 9998.0
+		Vlow 9998.0
+		AABBMin -0.0005576 -0.0008051 0.0019583
+		AABBMax -0.0002493 0.0016363 0.0021883
+		Radius 0.00123576
+		Center -0.0004035 0.0004156 0.0020733
+	}
+	Light prop_sd_spot_08.light
+	Bound prop_sd_spot_common\prop_sd_spot_01.bound
+	Joints null
+}
