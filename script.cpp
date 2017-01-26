@@ -17,6 +17,7 @@
 #include "GTAObject.h"
 #include "SyncedAnimation.h"
 #include "tinyxml2.h"
+#include "StageLight.h"
 
 #include <string>
 #include <ctime>
@@ -145,6 +146,10 @@ std::string saveFileName = "SceneDirector_save.xml";
 Ped lastPlayerPed = 0;
 
 BirdsEyeMode birdsEyeController;
+
+std::vector<StageLight> sceneStageLights;
+
+
 
 TaskSequence currentTaskSequence = 100;
 
@@ -3404,7 +3409,7 @@ void action_teleport_to_start_locations() {
 			possess_ped(actorPed);
 			WAIT(250);
 			if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
-
+				log_to_file("Setting vehicle back to drivable for actor " + std::to_string(actorPed));
 				Vehicle teleportedVehicle = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 				VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(teleportedVehicle);
 				VEHICLE::SET_VEHICLE_ALARM(teleportedVehicle, false);
@@ -6969,7 +6974,7 @@ void main()
 			WAIT(0);
 		}else if (activeMode == MODE_BIRDS_EYE_VIEW) {
 
-			bool exitMode = birdsEyeController.actionOnTick(GetTickCount(), actors);
+			bool exitMode = birdsEyeController.actionOnTick(GetTickCount(), actors, sceneStageLights);
 			if (exitMode) {
 				log_to_file("Exiting birds eye mode");
 				activeMode = MODE_STANDARD;

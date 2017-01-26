@@ -21,6 +21,7 @@
     <ClCompile Include="relationship.cpp" />
     <ClCompile Include="scenario.cpp" />
     <ClCompile Include="script.cpp" />
+    <ClCompile Include="StageLight.cpp" />
     <ClCompile Include="SyncedAnimation.cpp" />
     <ClCompile Include="tinyxml2.cpp" />
     <ClCompile Include="utils.cpp" />
@@ -45,6 +46,7 @@
     <ClInclude Include="relationship.h" />
     <ClInclude Include="scenario.h" />
     <ClInclude Include="script.h" />
+    <ClInclude Include="StageLight.h" />
     <ClInclude Include="SyncedAnimation.h" />
     <ClInclude Include="tinyxml2.h" />
     <ClInclude Include="utils.h" />

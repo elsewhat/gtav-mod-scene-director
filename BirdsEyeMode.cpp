@@ -20,7 +20,7 @@ BirdsEyeMode::BirdsEyeMode()
 * Main loop which is called for each tick from script.cpp
 * Returns false if BirdsEyeMode is finished
 */
-bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
+bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::vector<StageLight> & sceneStageLights)
 {
 	disableControls();
 
@@ -78,6 +78,29 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors)
 			}
 			else if (is_key_pressed_for_inverted_cam()) {
 				invertedControls = !invertedControls;
+				nextWaitTicks = 150;
+			}
+			else if (is_key_pressed_for_add_stage_light()) {
+				GTAObject lightObject = getDefaultSceneDirectorLightObject();
+				Vector3 cameraPosition = CAM::GET_CAM_COORD(cameraHandle);
+				Vector3 cameraRotation = CAM::GET_CAM_ROT(cameraHandle, 2);
+				Vector3 cameraDirection = {};
+				cameraDirection = MathUtils::rotationToDirection(cameraRotation);
+
+				float headingDeg = atan2(cameraDirection.y, cameraDirection.x) * 180 / PI;
+				//props are 90 degrees rotated?
+				headingDeg += 90; 
+
+				sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, headingDeg, lightObject));
+				log_to_file("Created light with heading " + std::to_string(headingDeg) + " rotation (" + std::to_string(cameraRotation.x) + ", " + std::to_string(cameraRotation.y) + ", " + std::to_string(cameraRotation.z) + ")");
+				nextWaitTicks = 150;
+			}
+			else if (is_key_pressed_for_clear_all_stage_lights()) {
+				for (auto stageLight : sceneStageLights) {
+					stageLight.removeLightObject();
+				}
+				log_to_file("Clearing " + std::to_string(sceneStageLights.size()) + " lights");
+				sceneStageLights.clear();
 				nextWaitTicks = 150;
 			}
 		}
@@ -1401,6 +1424,26 @@ bool BirdsEyeMode::is_key_pressed_for_crouch() {
 bool  BirdsEyeMode::is_key_pressed_for_inverted_cam() {
 	//D
 	if (IsKeyDown(0x49)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_add_stage_light() {
+	//L
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x4C)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_clear_all_stage_lights() {
+	//L
+	if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {
 		return true;
 	}
 	else {

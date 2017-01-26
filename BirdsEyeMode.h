@@ -5,6 +5,7 @@
 #include <vector>
 #include "script.h"
 #include "actor.h"
+#include "StageLight.h"
 
 class BirdsEyeMode {
 private:
@@ -68,9 +69,11 @@ private:
 	bool is_key_pressed_for_run();
 	bool is_key_pressed_for_crouch();
 	bool is_key_pressed_for_inverted_cam();
+	bool is_key_pressed_for_add_stage_light();
+	bool is_key_pressed_for_clear_all_stage_lights();
 public:
 	BirdsEyeMode();
 	void onEnterMode(SCENE_MODE aSceneMode);
 	void onExitMode();
-	bool actionOnTick(DWORD tick, std::vector<Actor> & actors);
+	bool actionOnTick(DWORD tick, std::vector<Actor> & actors, std::vector<StageLight> & sceneStageLights);
 };

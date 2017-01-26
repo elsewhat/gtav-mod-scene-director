@@ -19,6 +19,7 @@
     <ClCompile Include="BirdsEyeMode.cpp" />
     <ClCompile Include="SyncedAnimation.cpp" />
     <ClCompile Include="GTAObject.cpp" />
+    <ClCompile Include="StageLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\enums.h">
@@ -51,6 +52,7 @@
     <ClInclude Include="Prop.h" />
     <ClInclude Include="SyncedAnimation.h" />
     <ClInclude Include="GTAObject.h" />
+    <ClInclude Include="StageLight.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
