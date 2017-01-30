@@ -93,7 +93,7 @@ void StageLight::swapLightObject(GTAObject newLightObject)
 
 }
 
-StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, float lightHeading, GTAObject lightObject)
+StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject lightObject)
 {
 	m_lightPosition = lightPosition;
 	m_lightRotation = lightRotation; 
@@ -120,10 +120,7 @@ StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, float light
 		int newObjectRef = OBJECT::CREATE_OBJECT(m_lightObject.objHash, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, true, true, false);
 		m_lightObject.objReference = newObjectRef;
 
-		//ENTITY::SET_ENTITY_HEADING(newObjectRef, lightHeading);
 		ENTITY::SET_ENTITY_ROTATION(newObjectRef, lightRotation.x+180, 0, lightRotation.z, 2, true);
-
-
 	}
 }
 

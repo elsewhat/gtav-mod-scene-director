@@ -6,9 +6,6 @@
 #include <vector>
 #include <string>
 
-
-
-
 BirdsEyeMode::BirdsEyeMode()
 {
 	shouldExitMode = false;
@@ -28,7 +25,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 	if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
 		nextWaitTicks = 0;
 		shouldExitMode = false;
-		if (should_display_app_hud()) {
+		if (should_display_app_hud() && !addLightMode) {
 			if (menu_up_key_pressed()) {
 				if (submenu_active_index != -1) {
 					submenu_active_index++;
@@ -51,10 +48,10 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			}
 			else if (menu_select_key_pressed()) {
 				if (submenu_active_index != -1) {
-					actionSubMenuEditSelected();
+					actionSubMenuEditSelected(actors, sceneStageLights);
 				}
 				else {
-					actionMenuSelected();
+					actionMenuSelected(actors, sceneStageLights);
 				}
 
 				nextWaitTicks = 150;
@@ -87,12 +84,8 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 				Vector3 cameraDirection = {};
 				cameraDirection = MathUtils::rotationToDirection(cameraRotation);
 
-				float headingDeg = atan2(cameraDirection.y, cameraDirection.x) * 180 / PI;
-				//props are 90 degrees rotated?
-				headingDeg += 90; 
-
-				sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, headingDeg, lightObject));
-				log_to_file("Created light with heading " + std::to_string(headingDeg) + " rotation (" + std::to_string(cameraRotation.x) + ", " + std::to_string(cameraRotation.y) + ", " + std::to_string(cameraRotation.z) + ")");
+				sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, lightObject));
+				log_to_file("Created light with rotation (" + std::to_string(cameraRotation.x) + ", " + std::to_string(cameraRotation.y) + ", " + std::to_string(cameraRotation.z) + ")");
 				nextWaitTicks = 150;
 			}
 			else if (is_key_pressed_for_clear_all_stage_lights()) {
@@ -113,7 +106,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 
 	if (checkInputMovement()) {
 		//we have camera movement. Updated selected recording accordingly
-		if (selectedRecording != nullptr) {
+		if (selectedRecording != nullptr && !addLightMode) {
 			log_to_file("#Cam pos vs last  (" + std::to_string(camNewPos.x) + ", " + std::to_string(camNewPos.y) + ", " + std::to_string(camNewPos.z) + ")(" + std::to_string(camLastPos.x) + ", " + std::to_string(camLastPos.y) + ", " + std::to_string(camLastPos.z) + ")");
 
 			Vector3 deltaPos = {};
@@ -136,20 +129,41 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			lastChangedRecordingLocation = true;
 			//log_to_file("#New location of recording (" + std::to_string(recordingLocation.x) + ", " + std::to_string(recordingLocation.y) + ", " + std::to_string(recordingLocation.z) + ")");
 		}
+		else if (addLightMode) {
+			lastChangedRecordingLocation = true;
+		}
 
 	}
 	else if (lastChangedRecordingLocation) {//Update the recording preview once there has been no movement
-		if (selectedRecording != nullptr) {
+		if (selectedRecording != nullptr && !addLightMode) {
 			selectedRecording->updatePreviewLocation(selectedActor.get(), selectedRecording->getLocation());
 			lastChangedRecordingLocation = false;
+		}
+		else if (addLightMode && currentStageLight!=nullptr) {
+			GTAObject lightObject = getDefaultSceneDirectorLightObject();
+			Vector3 cameraPosition = CAM::GET_CAM_COORD(cameraHandle);
+			Vector3 cameraRotation = CAM::GET_CAM_ROT(cameraHandle, 2);
+			Vector3 cameraDirection = {};
+			cameraDirection = MathUtils::rotationToDirection(cameraRotation);
+
+			currentStageLight->moveLight(cameraPosition, cameraRotation);
 		}
 	}
 	checkInputRotation();
 
-	if (should_display_app_hud()) {
+	if (should_display_app_hud() && !addLightMode) {
 		drawMenu();
 		drawSubMenuEdit();
 		drawInstructions();
+	}
+	else if (addLightMode) {
+		drawAddLightInstructions();
+		if (is_key_pressed_for_light_change_type()) {
+			if (currentStageLight != nullptr) {
+				currentSceneDirectorLightObject = getNextSceneDirectorLightObject(currentSceneDirectorLightObject);
+				currentStageLight->swapLightObject(currentSceneDirectorLightObject);
+			}
+		}
 	}
 
 
@@ -179,8 +193,10 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 		submenu_is_active = true;
 	}
 
+	if (!addLightMode) {
+		drawRecordingMarkers(actors);
+	}
 
-	drawRecordingMarkers(actors);
 
 	//update any recording playback
 	for (auto & actor : actors) {
@@ -385,6 +401,38 @@ void BirdsEyeMode::drawMenu() {
 		DRAW_TEXT("Edit nearest recording", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 		GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
+	}
+
+	drawIndex++;
+
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Add light", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_ADD_LIGHT;
+	}
+
+	drawIndex++;
+
+	if (menu_active_index == drawIndex) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+	DRAW_TEXT("Clear all lights", 0.88, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.93, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	if (menu_active_index == drawIndex) {
+		menu_active_action = MENU_ITEM_REMOVE_LIGHTS;
 	}
 
 
@@ -699,7 +747,7 @@ void BirdsEyeMode::drawSubMenuEdit() {
 	submenu_max_index = submenu_index;
 }
 
-void BirdsEyeMode::actionMenuSelected() {
+void BirdsEyeMode::actionMenuSelected(std::vector<Actor> & actors, std::vector<StageLight> & sceneStageLights) {
 	
 	if (menu_active_action == MENU_ITEM_SCENE_MODE) {
 		nextWaitTicks = 200;
@@ -724,9 +772,20 @@ void BirdsEyeMode::actionMenuSelected() {
 		nextWaitTicks = 200;
 		showDisabled = !showDisabled;
 	}
+	else if (menu_active_action == MENU_ITEM_ADD_LIGHT) {
+		nextWaitTicks = 200;
+	}
+	else if (menu_active_action == MENU_ITEM_REMOVE_LIGHTS) {
+		for (auto stageLight : sceneStageLights) {
+			stageLight.removeLightObject();
+		}
+		log_to_file("Clearing " + std::to_string(sceneStageLights.size()) + " lights");
+		sceneStageLights.clear();
+		nextWaitTicks = 200;
+	}
 }
 
-void BirdsEyeMode::actionSubMenuEditSelected()
+void BirdsEyeMode::actionSubMenuEditSelected(std::vector<Actor> & actors, std::vector<StageLight> & sceneStageLights)
 {
 	if (submenu_active_action == SUBMENU_ITEM_NEXT_RECORDING) {
 		nextWaitTicks = 150;
@@ -1046,6 +1105,18 @@ void BirdsEyeMode::actionInputAnimationRecording() {
 	}
 }
 
+void BirdsEyeMode::actionStartAddLightMode()
+{
+	addLightMode = true;
+	GTAObject lightObject = getDefaultSceneDirectorLightObject();
+	Vector3 cameraPosition = CAM::GET_CAM_COORD(cameraHandle);
+	Vector3 cameraRotation = CAM::GET_CAM_ROT(cameraHandle, 2);
+	Vector3 cameraDirection = {};
+	cameraDirection = MathUtils::rotationToDirection(cameraRotation);
+
+	currentStageLight = std::make_shared<StageLight>(cameraPosition, cameraRotation, currentSceneDirectorLightObject);
+}
+
 
 void BirdsEyeMode::drawInstructions() {
 	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
@@ -1122,6 +1193,104 @@ void BirdsEyeMode::drawInstructions() {
 		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
 	}
 }
+
+
+void BirdsEyeMode::drawAddLightInstructions() {
+	if (GRAPHICS::HAS_SCALEFORM_MOVIE_LOADED(scaleForm)) {
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CLEAR_ALL");
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "TOGGLE_MOUSE_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_BOOL(0);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::CALL_SCALEFORM_MOVIE_METHOD(scaleForm, "CREATE_CONTAINER");
+
+		char* altControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 19, 1);
+		char* mouseLeftButton = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 330, 1);
+		char* mouseRightButton = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 329, 1);
+		char* spaceControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 22, 1);
+		char* shiftControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 21, 1);
+		char* ctrlControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 36, 1);
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_D");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_A");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_S");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_W");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Move camera");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
+		GRAPHICS::_0xE83A3E3557A56640(shiftControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Increase camera speed");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
+		GRAPHICS::_0xE83A3E3557A56640(ctrlControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Decrease camera speed");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_0xE83A3E3557A56640(mouseLeftButton);
+		GRAPHICS::_0xE83A3E3557A56640(mouseRightButton);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera up/down");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_I");
+		if (invertedControls) {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera control: Inverted");
+		}
+		else {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera control: Standard");
+		}
+
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
+		GRAPHICS::_0xE83A3E3557A56640(spaceControlKey);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Save light");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
+		GRAPHICS::_0xE83A3E3557A56640("t_C");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Change light:" + currentSceneDirectorLightObject.title).c_str()));
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(7);
+		GRAPHICS::_0xE83A3E3557A56640("t_F");
+		if (currentLightFollowActor) {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Follow actor:" + std::to_string(currentLightFollowActorIndex)).c_str()));
+		}
+		else {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Follow actor");
+		}
+
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(-1);
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::DRAW_SCALEFORM_MOVIE_FULLSCREEN(scaleForm, 255, 255, 255, 255, 1);
+	}
+	else {
+		log_to_file("Scaleform has not loaded. scaleForm has value " + std::to_string(scaleForm));
+	}
+}
+
 
 bool BirdsEyeMode::checkInputRotation()
 {
@@ -1444,6 +1613,28 @@ bool BirdsEyeMode::is_key_pressed_for_add_stage_light() {
 bool BirdsEyeMode::is_key_pressed_for_clear_all_stage_lights() {
 	//L
 	if (IsKeyDown(VK_MENU) && IsKeyDown(0x43)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_light_change_type()
+{
+	//C
+	if (IsKeyDown(0x43)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_light_follow_actor()
+{
+	//D
+	if (IsKeyDown(0x46)) {
 		return true;
 	}
 	else {

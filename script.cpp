@@ -44,9 +44,6 @@ DWORD key_menu_back = VK_NUMPAD0;
 char key_hud_str[256];
 
 
-
-
-
 enum SCENE_DIRECTOR_MODES {
 	MODE_STANDARD=1,
 	MODE_BIRDS_EYE_VIEW = 2,
