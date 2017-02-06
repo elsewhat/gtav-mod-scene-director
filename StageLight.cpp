@@ -34,7 +34,7 @@ GTAObject getNextSceneDirectorLightObject(GTAObject lightObject) {
 	//int foundIndex = find(spotLightColors.begin(), spotLightColors.end(), lightObject) - spotLightColors.begin();
 	//see http://stackoverflow.com/questions/14225932/search-for-a-struct-item-in-a-vector-by-member-data
 	int foundIndex = std::find_if(sceneDirectorLightObject.begin(), sceneDirectorLightObject.end(), [=](GTAObject const& aLightObject) {
-		return (aLightObject.title.compare(lightObject.title) ==0) ;
+		return (aLightObject.title.compare(lightObject.title) == 0);
 	}) - sceneDirectorLightObject.begin();
 	if (foundIndex + 1 >= sceneDirectorLightObject.size()) {//aLightObject not found or in last element
 		return sceneDirectorLightObject[0];
@@ -93,12 +93,12 @@ void StageLight::swapLightObject(GTAObject newLightObject)
 
 }
 
-StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, float lightHeading, GTAObject lightObject)
+StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject lightObject)
 {
 	m_lightPosition = lightPosition;
-	m_lightRotation = lightRotation; 
+	m_lightRotation = lightRotation;
 	m_lightObject = lightObject;
-	
+
 	//create object
 	if (m_lightObject.objReference == 0) {
 		if (m_lightObject.objHash == -1) {
@@ -120,10 +120,7 @@ StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, float light
 		int newObjectRef = OBJECT::CREATE_OBJECT(m_lightObject.objHash, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, true, true, false);
 		m_lightObject.objReference = newObjectRef;
 
-		//ENTITY::SET_ENTITY_HEADING(newObjectRef, lightHeading);
-		ENTITY::SET_ENTITY_ROTATION(newObjectRef, lightRotation.x+180, 0, lightRotation.z, 2, true);
-
-
+		ENTITY::SET_ENTITY_ROTATION(newObjectRef, lightRotation.x + 180, 0, lightRotation.z, 2, true);
 	}
 }
 
@@ -164,7 +161,7 @@ bool StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
 {
 	if (m_doTrackPed) {
 		Vector3 currentActorPosition = ENTITY::GET_ENTITY_COORDS(m_trackPedId, true);
-		
+
 		Vector3 newLightPosition;
 
 		newLightPosition.x = currentActorPosition.x + m_trackOffset.x;
