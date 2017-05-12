@@ -50,7 +50,8 @@ void StageLight::moveLight(Vector3 lightPosition, Vector3 lightRotation)
 	m_lightPosition = lightPosition;
 	m_lightRotation = lightRotation;
 	//update current position and rotation
-	if (m_lightObject.objReference == 0) {
+	if (m_lightObject.objReference != 0) {
+		log_to_file("Moving light");
 		ENTITY::SET_ENTITY_COORDS_NO_OFFSET(m_lightObject.objReference, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, 0, 0, 1);
 	}
 }
@@ -67,30 +68,27 @@ void StageLight::swapLightObject(GTAObject newLightObject)
 		OBJECT::DELETE_OBJECT(&m_lightObject.objReference);
 	}
 	m_lightObject = newLightObject;
+
 	//create object
-	if (m_lightObject.objReference == 0) {
-		if (m_lightObject.objHash == -1) {
-			m_lightObject.objHash = GAMEPLAY::GET_HASH_KEY(m_lightObject.objName);
-		}
-
-		STREAMING::REQUEST_MODEL(m_lightObject.objHash);
-		DWORD ticksStart = GetTickCount();
-		while (!STREAMING::HAS_MODEL_LOADED(m_lightObject.objHash))
-		{
-			WAIT(0);
-			if (GetTickCount() - ticksStart > 5000) {
-				log_to_file("Failed to load GTAObject name:" + std::string(m_lightObject.objName) + " Hash:" + std::to_string(m_lightObject.objHash));
-				set_status_text("Failed to load objects");
-				return;
-			}
-		}
-
-		int newObjectRef = OBJECT::CREATE_OBJECT(m_lightObject.objHash, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, true, true, false);
-		m_lightObject.objReference = newObjectRef;
+	if (m_lightObject.objHash == -1) {
+		m_lightObject.objHash = GAMEPLAY::GET_HASH_KEY(m_lightObject.objName);
 	}
 
+	STREAMING::REQUEST_MODEL(m_lightObject.objHash);
+	DWORD ticksStart = GetTickCount();
+	while (!STREAMING::HAS_MODEL_LOADED(m_lightObject.objHash))
+	{
+		WAIT(0);
+		if (GetTickCount() - ticksStart > 5000) {
+			log_to_file("Failed to load GTAObject name:" + std::string(m_lightObject.objName) + " Hash:" + std::to_string(m_lightObject.objHash));
+			set_status_text("Failed to load objects");
+			return;
+		}
+	}
 
-
+	int newObjectRef = OBJECT::CREATE_OBJECT(m_lightObject.objHash, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, true, true, false);
+	ENTITY::SET_ENTITY_ROTATION(newObjectRef, m_lightRotation.x + 180, 0, m_lightRotation.z, 2, true);
+	m_lightObject.objReference = newObjectRef;
 }
 
 StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject lightObject)
@@ -120,7 +118,7 @@ StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject l
 		int newObjectRef = OBJECT::CREATE_OBJECT(m_lightObject.objHash, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, true, true, false);
 		m_lightObject.objReference = newObjectRef;
 
-		ENTITY::SET_ENTITY_ROTATION(newObjectRef, lightRotation.x+180, 0, lightRotation.z, 2, true);
+		ENTITY::SET_ENTITY_ROTATION(newObjectRef, m_lightRotation.x+180, 0, m_lightRotation.z, 2, true);
 	}
 }
 

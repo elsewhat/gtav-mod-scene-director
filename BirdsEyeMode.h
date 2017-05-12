@@ -78,6 +78,7 @@ private:
 	bool is_key_pressed_for_crouch();
 	bool is_key_pressed_for_inverted_cam();
 	bool is_key_pressed_for_add_stage_light();
+	bool is_key_pressed_for_save_light();
 	bool is_key_pressed_for_clear_all_stage_lights();
 	bool is_key_pressed_for_light_change_type();
 	bool is_key_pressed_for_light_follow_actor();

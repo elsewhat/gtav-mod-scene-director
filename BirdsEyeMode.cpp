@@ -130,16 +130,19 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			//log_to_file("#New location of recording (" + std::to_string(recordingLocation.x) + ", " + std::to_string(recordingLocation.y) + ", " + std::to_string(recordingLocation.z) + ")");
 		}
 		else if (addLightMode) {
+			log_to_file("addLightMode lastChangedRecordingLocation");
 			lastChangedRecordingLocation = true;
 		}
 
 	}
 	else if (lastChangedRecordingLocation) {//Update the recording preview once there has been no movement
+		log_to_file("lastChangedRecordingLocation do update " + std::to_string(addLightMode));
 		if (selectedRecording != nullptr && !addLightMode) {
 			selectedRecording->updatePreviewLocation(selectedActor.get(), selectedRecording->getLocation());
 			lastChangedRecordingLocation = false;
 		}
 		else if (addLightMode && currentStageLight!=nullptr) {
+			log_to_file("addLightMode && currentStageLight!=nullptr");
 			GTAObject lightObject = getDefaultSceneDirectorLightObject();
 			Vector3 cameraPosition = CAM::GET_CAM_COORD(cameraHandle);
 			Vector3 cameraRotation = CAM::GET_CAM_ROT(cameraHandle, 2);
@@ -147,6 +150,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			cameraDirection = MathUtils::rotationToDirection(cameraRotation);
 
 			currentStageLight->moveLight(cameraPosition, cameraRotation);
+			lastChangedRecordingLocation = false;
 		}
 	}
 	checkInputRotation();
@@ -158,11 +162,31 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 	}
 	else if (addLightMode) {
 		drawAddLightInstructions();
-		if (is_key_pressed_for_light_change_type()) {
-			if (currentStageLight != nullptr) {
-				currentSceneDirectorLightObject = getNextSceneDirectorLightObject(currentSceneDirectorLightObject);
-				currentStageLight->swapLightObject(currentSceneDirectorLightObject);
+
+		/* ACTIONS WHICH MAY REQUIRE A WAIT PERIODE iN TICKS AFTERWAREDS */
+		if (nextWaitTicks == 0 || GetTickCount() - mainTickLast >= nextWaitTicks) {
+			nextWaitTicks = 0;
+
+			if (is_key_pressed_for_light_change_type()) {
+				//log_to_file("Change light type");
+				if (currentStageLight != nullptr) {
+					currentSceneDirectorLightObject = getNextSceneDirectorLightObject(currentSceneDirectorLightObject);
+					currentStageLight->swapLightObject(currentSceneDirectorLightObject);
+					nextWaitTicks = 100;
+				}
 			}
+			else if (is_key_pressed_for_save_light()) {
+				log_to_file("Saving light");
+				addLightMode = false;
+				currentStageLight = nullptr;
+				nextWaitTicks = 200;
+			}
+			else if (is_key_pressed_for_light_follow_actor()) {
+				set_status_text("Follow actor not implemented yet!");
+				nextWaitTicks = 200;
+			}
+
+			mainTickLast = GetTickCount();
 		}
 	}
 
@@ -773,6 +797,18 @@ void BirdsEyeMode::actionMenuSelected(std::vector<Actor> & actors, std::vector<S
 		showDisabled = !showDisabled;
 	}
 	else if (menu_active_action == MENU_ITEM_ADD_LIGHT) {
+		log_to_file("Adding light");
+		
+		actionStartAddLightMode();
+		/*GTAObject lightObject = getDefaultSceneDirectorLightObject();
+		Vector3 cameraPosition = CAM::GET_CAM_COORD(cameraHandle);
+		Vector3 cameraRotation = CAM::GET_CAM_ROT(cameraHandle, 2);
+		Vector3 cameraDirection = {};
+		cameraDirection = MathUtils::rotationToDirection(cameraRotation);
+
+		sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, lightObject));
+		log_to_file("Created light with rotation (" + std::to_string(cameraRotation.x) + ", " + std::to_string(cameraRotation.y) + ", " + std::to_string(cameraRotation.z) + ")");
+		*/
 		nextWaitTicks = 200;
 	}
 	else if (menu_active_action == MENU_ITEM_REMOVE_LIGHTS) {
@@ -1254,7 +1290,7 @@ void BirdsEyeMode::drawAddLightInstructions() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
-		GRAPHICS::_0xE83A3E3557A56640(spaceControlKey);
+		GRAPHICS::_0xE83A3E3557A56640("t_X");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Save light");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
@@ -1641,5 +1677,17 @@ bool BirdsEyeMode::is_key_pressed_for_light_follow_actor()
 		return false;
 	}
 }
+
+bool BirdsEyeMode::is_key_pressed_for_save_light()
+{
+	if (IsKeyDown(0x58)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+
 
 
