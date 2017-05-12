@@ -92,7 +92,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 				//props are 90 degrees rotated?
 				headingDeg += 90; 
 
-				sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, lightObject));
+				sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, headingDeg, lightObject));
 				log_to_file("Created light with heading " + std::to_string(headingDeg) + " rotation (" + std::to_string(cameraRotation.x) + ", " + std::to_string(cameraRotation.y) + ", " + std::to_string(cameraRotation.z) + ")");
 				nextWaitTicks = 150;
 			}
@@ -1048,14 +1048,24 @@ void BirdsEyeMode::actionInputAnimationRecording() {
 }
 
 void BirdsEyeMode::actionStartAddLightMode()
+<<<<<<< HEAD
  {
 	addLightMode = true;
 	//GTAObject lightObject = getDefaultSceneDirectorLightObject();
+=======
+{
+	addLightMode = true;
+	GTAObject lightObject = getDefaultSceneDirectorLightObject();
+>>>>>>> origin/corrupt_build_troubleshoot
 	Vector3 cameraPosition = CAM::GET_CAM_COORD(cameraHandle);
 	Vector3 cameraRotation = CAM::GET_CAM_ROT(cameraHandle, 2);
 	Vector3 cameraDirection = {};
 	cameraDirection = MathUtils::rotationToDirection(cameraRotation);
+<<<<<<< HEAD
 	
+=======
+
+>>>>>>> origin/corrupt_build_troubleshoot
 	//currentStageLight = std::make_shared<StageLight>(cameraPosition, cameraRotation, currentSceneDirectorLightObject);
 }
 
@@ -1232,6 +1242,10 @@ void BirdsEyeMode::drawAddLightInstructions() {
 	}
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/corrupt_build_troubleshoot
 bool BirdsEyeMode::checkInputRotation()
 {
 
@@ -1561,6 +1575,7 @@ bool BirdsEyeMode::is_key_pressed_for_clear_all_stage_lights() {
 }
 
 bool BirdsEyeMode::is_key_pressed_for_light_change_type()
+<<<<<<< HEAD
  {
 		//C
 	if (IsKeyDown(0x43)) {
@@ -1575,11 +1590,29 @@ bool BirdsEyeMode::is_key_pressed_for_light_follow_actor()
 {
 	//D
 	if (IsKeyDown(0x46)) {
+=======
+{
+	//C
+	if (IsKeyDown(0x43)) {
+>>>>>>> origin/corrupt_build_troubleshoot
 		return true;
 	}
 	else {
 		return false;
 	}
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/corrupt_build_troubleshoot
 
+bool BirdsEyeMode::is_key_pressed_for_light_follow_actor()
+{
+	//D
+	if (IsKeyDown(0x46)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}

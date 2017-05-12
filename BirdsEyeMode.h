@@ -33,7 +33,13 @@ private:
 
 	bool addLightMode = false;
 
+<<<<<<< HEAD
 	GTAObject currentSceneDirectorLightObject;
+=======
+	GTAObject currentSceneDirectorLightObject = getDefaultSceneDirectorLightObject();
+	/*std::shared_ptr<StageLight> currentStageLight = nullptr;
+	*/
+>>>>>>> origin/corrupt_build_troubleshoot
 	bool currentLightFollowActor = false;
 	int currentLightFollowActorIndex = -1;
 
