@@ -91,7 +91,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 				//props are 90 degrees rotated?
 				headingDeg += 90; 
 
-				sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, lightObject));
+				sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, headingDeg, lightObject));
 				log_to_file("Created light with heading " + std::to_string(headingDeg) + " rotation (" + std::to_string(cameraRotation.x) + ", " + std::to_string(cameraRotation.y) + ", " + std::to_string(cameraRotation.z) + ")");
 				nextWaitTicks = 150;
 			}
