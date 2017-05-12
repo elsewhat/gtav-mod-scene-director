@@ -26,7 +26,7 @@ std::vector<GTAObject> getSceneDirectorLightObject() {
 }
 
 GTAObject getDefaultSceneDirectorLightObject() {
-	return sceneDirectorLightObject[0];
+	return getGTAObjectFromObjName("prop_sd_spot_01");
 }
 
 GTAObject getNextSceneDirectorLightObject(GTAObject lightObject) {
