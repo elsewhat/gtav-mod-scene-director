@@ -31,6 +31,12 @@ private:
 	bool lastChangedRecordingLocation = false;
 	bool showDisabled = true;
 
+	bool addLightMode = false;
+
+	GTAObject currentSceneDirectorLightObject;
+	bool currentLightFollowActor = false;
+	int currentLightFollowActorIndex = -1;
+
 	std::shared_ptr<ActorRecordingItem> nearestRecording=nullptr;
 	std::shared_ptr<Actor> nearestActor = nullptr;
 	std::shared_ptr<ActorRecordingItem> highlightedRecording = nullptr;
@@ -39,6 +45,7 @@ private:
 	int selectedRecordingIndex = 0;
 	std::shared_ptr<Actor> selectedActor = nullptr;
 	void drawInstructions();
+	void drawAddLightInstructions();
 	std::shared_ptr<ActorRecordingItem> getNearestRecording(std::vector<Actor> & actors);
 	void drawRecordingMarkers(std::vector<Actor> & actors);
 	void drawMenu();
@@ -55,6 +62,7 @@ private:
 	void actionInputDeltaCheck();
 	void actionInputNrAttemptsBeforeSkipping();
 	void actionInputAnimationRecording();
+	void actionStartAddLightMode();
 	bool checkInputAction();
 	bool checkInputMovement();
 	bool checkInputRotation();
@@ -71,6 +79,8 @@ private:
 	bool is_key_pressed_for_inverted_cam();
 	bool is_key_pressed_for_add_stage_light();
 	bool is_key_pressed_for_clear_all_stage_lights();
+	bool is_key_pressed_for_light_change_type();
+	bool is_key_pressed_for_light_follow_actor();
 public:
 	BirdsEyeMode();
 	void onEnterMode(SCENE_MODE aSceneMode);
