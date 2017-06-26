@@ -51,7 +51,6 @@ void StageLight::moveLight(Vector3 lightPosition, Vector3 lightRotation)
 	m_lightRotation = lightRotation;
 	//update current position and rotation
 	if (m_lightObject.objReference != 0) {
-		log_to_file("Moving light");
 		ENTITY::SET_ENTITY_COORDS_NO_OFFSET(m_lightObject.objReference, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, 0, 0, 1);
 	}
 }
@@ -117,6 +116,7 @@ StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject l
 
 		int newObjectRef = OBJECT::CREATE_OBJECT(m_lightObject.objHash, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, true, true, false);
 		m_lightObject.objReference = newObjectRef;
+		ENTITY::SET_ENTITY_AS_MISSION_ENTITY(newObjectRef, true, true);
 
 		ENTITY::SET_ENTITY_ROTATION(newObjectRef, m_lightRotation.x+180, 0, m_lightRotation.z, 2, true);
 	}
@@ -139,8 +139,13 @@ void StageLight::stopTrackActor()
 {
 	m_doTrackPed = false;
 	m_trackPedId = 0;
-	m_trackActorIndex = 0;
+	m_trackActorIndex = -1;
 	m_trackOffset = Vector3();
+}
+
+int StageLight::getTrackedActorIndex()
+{
+	return m_trackActorIndex;
 }
 
 bool StageLight::isTrackingActor()
@@ -155,16 +160,22 @@ void StageLight::removeLightObject()
 	}
 }
 
-bool StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
+void StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
 {
 	if (m_doTrackPed) {
 		Vector3 currentActorPosition = ENTITY::GET_ENTITY_COORDS(m_trackPedId, true);
-		
 		Vector3 newLightPosition;
 
 		newLightPosition.x = currentActorPosition.x + m_trackOffset.x;
 		newLightPosition.y = currentActorPosition.y + m_trackOffset.y;
 		newLightPosition.z = currentActorPosition.z + m_trackOffset.z;
-		moveLight(newLightPosition, m_lightRotation);
+
+		if (newLightPosition.x != m_trackActorLastPos.x || newLightPosition.y != m_trackActorLastPos.y || newLightPosition.z != m_trackActorLastPos.z) {
+			moveLight(newLightPosition, m_lightRotation);
+		}
+
+		m_trackActorLastPos.x = newLightPosition.x;
+		m_trackActorLastPos.y = newLightPosition.y;
+		m_trackActorLastPos.z = newLightPosition.z;
 	}
 }

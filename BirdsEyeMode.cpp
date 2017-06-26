@@ -177,12 +177,41 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			}
 			else if (is_key_pressed_for_save_light()) {
 				log_to_file("Saving light");
+				sceneStageLights.push_back(*currentStageLight);
+				log_to_file("Have now " + std::to_string(sceneStageLights.size()) + " lights");
+
 				addLightMode = false;
 				currentStageLight = nullptr;
 				nextWaitTicks = 200;
 			}
 			else if (is_key_pressed_for_light_follow_actor()) {
-				set_status_text("Follow actor not implemented yet!");
+				if (currentStageLight != nullptr) {
+					if (!currentStageLight->isTrackingActor()) {
+						if (actors[0].isNullActor()) {
+							set_status_text("Add actors before enabling light tracking");
+						}
+						else {
+							log_to_file("Started tracking actor");
+							currentStageLight->startTrackActor(actors[0], 0);
+						}
+					}
+					else {
+						bool isTrackingNew = false;
+						int newTrackedActorIndex = currentStageLight->getTrackedActorIndex() + 1;
+						while (isTrackingNew==false && newTrackedActorIndex < actors.size()) {
+							if (!actors[newTrackedActorIndex].isNullActor()) {
+								log_to_file("Started tracking next actor");
+								currentStageLight->startTrackActor(actors[newTrackedActorIndex], newTrackedActorIndex);
+								isTrackingNew = true;
+							}
+							newTrackedActorIndex++;
+						}
+						if (!isTrackingNew) {
+							log_to_file("Stopped tracking actor");
+							currentStageLight->stopTrackActor();
+						}
+					}	
+				}
 				nextWaitTicks = 200;
 			}
 
@@ -1248,71 +1277,29 @@ void BirdsEyeMode::drawAddLightInstructions() {
 		char* shiftControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 21, 1);
 		char* ctrlControlKey = CONTROLS::_GET_CONTROL_ACTION_NAME(2, 36, 1);
 
+
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(0);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_D");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_A");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_S");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_W");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Move camera");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
-		GRAPHICS::_0xE83A3E3557A56640(shiftControlKey);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Increase camera speed");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
-		GRAPHICS::_0xE83A3E3557A56640(ctrlControlKey);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Decrease camera speed");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
-		GRAPHICS::_0xE83A3E3557A56640(mouseLeftButton);
-		GRAPHICS::_0xE83A3E3557A56640(mouseRightButton);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera up/down");
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("t_I");
-		if (invertedControls) {
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera control: Inverted");
-		}
-		else {
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Camera control: Standard");
-		}
-
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
 		GRAPHICS::_0xE83A3E3557A56640("t_X");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Save light");
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
 		GRAPHICS::_0xE83A3E3557A56640("t_C");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Change light:" + currentSceneDirectorLightObject.title).c_str()));
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(7);
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
 		GRAPHICS::_0xE83A3E3557A56640("t_F");
-		if (currentLightFollowActor) {
-			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Follow actor:" + std::to_string(currentLightFollowActorIndex)).c_str()));
+		if (currentStageLight != nullptr && currentStageLight->isTrackingActor()) {
+			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Following actor " + std::to_string(currentStageLight->getTrackedActorIndex()+1)).c_str()));
 		}
 		else {
 			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Follow actor");
 		}
-
-		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
-
 
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
@@ -1669,7 +1656,7 @@ bool BirdsEyeMode::is_key_pressed_for_light_change_type()
 
 bool BirdsEyeMode::is_key_pressed_for_light_follow_actor()
 {
-	//D
+	//F
 	if (IsKeyDown(0x46)) {
 		return true;
 	}

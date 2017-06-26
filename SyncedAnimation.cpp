@@ -475,7 +475,7 @@ std::vector<SyncedAnimation> gtaSyncedAnimations;
 
 void initializeSyncedAnimations() {
 	gtaSyncedAnimations = { 
-		SyncedAnimation("Manly handshake (female - female)", "Celebration", true, std::vector<Animation> {getAnimationForShortcutIndex(1801),getAnimationForShortcutIndex(1803),}, std::vector<Animation> {}, std::vector<GTAObject> {}, -1),
+
  };
 }
 

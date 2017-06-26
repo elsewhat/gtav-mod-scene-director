@@ -145,6 +145,7 @@ Ped lastPlayerPed = 0;
 BirdsEyeMode birdsEyeController;
 
 std::vector<StageLight> sceneStageLights;
+DWORD lastStageLightsTick = 0;
 
 
 
@@ -6967,6 +6968,13 @@ void main()
 				}
 			}
 
+			//check if any spot lights should be moved
+			if (GetTickCount() - lastStageLightsTick > 20) {
+				for (auto & stageLight : sceneStageLights) {
+					stageLight.actionOnTick(GetTickCount(), actors);
+				}
+			}
+
 			//Wait for next tick
 			WAIT(0);
 		}else if (activeMode == MODE_BIRDS_EYE_VIEW) {
@@ -6976,6 +6984,11 @@ void main()
 				log_to_file("Exiting birds eye mode");
 				activeMode = MODE_STANDARD;
 				birdsEyeController.onExitMode();
+
+				for (auto & stageLight : sceneStageLights) {
+					log_to_file("Stage light " + std::to_string(stageLight.isTrackingActor()) + " actor"+ std::to_string(stageLight.getTrackedActorIndex())); ;
+				}
+
 			}
 
 			if (hud_toggle_key_pressed()) {
