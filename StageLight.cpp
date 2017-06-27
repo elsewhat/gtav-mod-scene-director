@@ -49,7 +49,7 @@ void StageLight::moveLight(Vector3 lightPosition, Vector3 lightRotation)
 {
 	m_lightPosition = lightPosition;
 	m_lightRotation = lightRotation;
-	//update current position and rotation
+	//update current position (rotation ignored for now)
 	if (m_lightObject.objReference != 0) {
 		ENTITY::SET_ENTITY_COORDS_NO_OFFSET(m_lightObject.objReference, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, 0, 0, 1);
 	}
@@ -135,6 +135,16 @@ void StageLight::startTrackActor(Actor actor, int actorIndex)
 
 }
 
+void StageLight::startTrackActor(Actor actor, int actorIndex, Vector3 trackOffset)
+{
+	m_doTrackPed = true;
+	m_trackPedId = actor.getActorPed();
+	m_trackActorIndex = actorIndex;
+
+
+	m_trackOffset = trackOffset;
+}
+
 void StageLight::stopTrackActor()
 {
 	m_doTrackPed = false;
@@ -172,10 +182,32 @@ void StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
 
 		if (newLightPosition.x != m_trackActorLastPos.x || newLightPosition.y != m_trackActorLastPos.y || newLightPosition.z != m_trackActorLastPos.z) {
 			moveLight(newLightPosition, m_lightRotation);
+
+			m_trackActorLastPos.x = newLightPosition.x;
+			m_trackActorLastPos.y = newLightPosition.y;
+			m_trackActorLastPos.z = newLightPosition.z;
 		}
 
-		m_trackActorLastPos.x = newLightPosition.x;
-		m_trackActorLastPos.y = newLightPosition.y;
-		m_trackActorLastPos.z = newLightPosition.z;
+
 	}
+}
+
+Vector3 StageLight::getLightPosition()
+{
+	return m_lightPosition;
+}
+
+Vector3 StageLight::getLightRotation()
+{
+	return  m_lightRotation;
+}
+
+GTAObject StageLight::getLightObject()
+{
+	return m_lightObject;
+}
+
+Vector3 StageLight::getTrackedActorOffset()
+{
+	return m_trackOffset;
 }

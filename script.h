@@ -110,6 +110,9 @@ enum MENU_ITEM {
 	SUBMENU_ITEM_ACTOR_PROP_ADD = 181,
 	SUBMENU_ITEM_SAVE_ACTORS = 190,
 	SUBMENU_ITEM_LOAD_ACTORS = 191,
+	SUBMENU_ITEM_SAVE_STAGELIGHTS = 192,
+	SUBMENU_ITEM_LOAD_STAGELIGHTS = 193,
+	SUBMENU_ITEM_CLEAR_STAGELIGHTS = 194,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_0 = 200,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_1 = 201,
 	SUBMENU_ITEM_ANIMATION_SEQUENCE_2 = 202,
@@ -187,3 +190,6 @@ bool should_display_app_hud();
 
 void action_toggle_scene_mode();
 void action_animation_sequence_play(AnimationSequence animSequence);
+
+void action_save_stagelights();
+void action_load_stagelights();

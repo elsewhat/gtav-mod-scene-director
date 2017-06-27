@@ -107,7 +107,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 	if (checkInputMovement()) {
 		//we have camera movement. Updated selected recording accordingly
 		if (selectedRecording != nullptr && !addLightMode) {
-			log_to_file("#Cam pos vs last  (" + std::to_string(camNewPos.x) + ", " + std::to_string(camNewPos.y) + ", " + std::to_string(camNewPos.z) + ")(" + std::to_string(camLastPos.x) + ", " + std::to_string(camLastPos.y) + ", " + std::to_string(camLastPos.z) + ")");
+			//log_to_file("#Cam pos vs last  (" + std::to_string(camNewPos.x) + ", " + std::to_string(camNewPos.y) + ", " + std::to_string(camNewPos.z) + ")(" + std::to_string(camLastPos.x) + ", " + std::to_string(camLastPos.y) + ", " + std::to_string(camLastPos.z) + ")");
 
 			Vector3 deltaPos = {};
 			deltaPos.x = camNewPos.x - camLastPos.x;
@@ -118,7 +118,6 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 				deltaPos.z = camNewPos.z - camLastPos.z;
 			}
 
-			//log_to_file("#Delta location (" + std::to_string(deltaPos.x) + ", " + std::to_string(deltaPos.y) + ", " + std::to_string(deltaPos.z) + ")");
 
 			Vector3 recordingLocation = selectedRecording->getLocation();
 			recordingLocation.x += deltaPos.x;
@@ -127,22 +126,18 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			
 			selectedRecording->setLocation(recordingLocation);
 			lastChangedRecordingLocation = true;
-			//log_to_file("#New location of recording (" + std::to_string(recordingLocation.x) + ", " + std::to_string(recordingLocation.y) + ", " + std::to_string(recordingLocation.z) + ")");
 		}
 		else if (addLightMode) {
-			log_to_file("addLightMode lastChangedRecordingLocation");
 			lastChangedRecordingLocation = true;
 		}
 
 	}
 	else if (lastChangedRecordingLocation) {//Update the recording preview once there has been no movement
-		log_to_file("lastChangedRecordingLocation do update " + std::to_string(addLightMode));
 		if (selectedRecording != nullptr && !addLightMode) {
 			selectedRecording->updatePreviewLocation(selectedActor.get(), selectedRecording->getLocation());
 			lastChangedRecordingLocation = false;
 		}
 		else if (addLightMode && currentStageLight!=nullptr) {
-			log_to_file("addLightMode && currentStageLight!=nullptr");
 			GTAObject lightObject = getDefaultSceneDirectorLightObject();
 			Vector3 cameraPosition = CAM::GET_CAM_COORD(cameraHandle);
 			Vector3 cameraRotation = CAM::GET_CAM_ROT(cameraHandle, 2);
@@ -180,6 +175,13 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 				sceneStageLights.push_back(*currentStageLight);
 				log_to_file("Have now " + std::to_string(sceneStageLights.size()) + " lights");
 
+				addLightMode = false;
+				currentStageLight = nullptr;
+				nextWaitTicks = 200;
+			}
+			else if (is_key_pressed_for_cancel_light()) {
+				log_to_file("Cancel add light");
+				currentStageLight->removeLightObject();
 				addLightMode = false;
 				currentStageLight = nullptr;
 				nextWaitTicks = 200;
@@ -1286,14 +1288,20 @@ void BirdsEyeMode::drawAddLightInstructions() {
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(1);
+		GRAPHICS::_0xE83A3E3557A56640("t_Z");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Cancel");
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
 		GRAPHICS::_0xE83A3E3557A56640("t_C");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Change light:" + currentSceneDirectorLightObject.title).c_str()));
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Change type:" + currentSceneDirectorLightObject.title).c_str()));
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
-		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(2);
-		GRAPHICS::_0xE83A3E3557A56640("t_F");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(3);
+		GRAPHICS::_0xE83A3E3557A56640("t_G");
 		if (currentStageLight != nullptr && currentStageLight->isTrackingActor()) {
 			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Following actor " + std::to_string(currentStageLight->getTrackedActorIndex()+1)).c_str()));
 		}
@@ -1656,8 +1664,8 @@ bool BirdsEyeMode::is_key_pressed_for_light_change_type()
 
 bool BirdsEyeMode::is_key_pressed_for_light_follow_actor()
 {
-	//F
-	if (IsKeyDown(0x46)) {
+	//G
+	if (IsKeyDown(0x47)) {
 		return true;
 	}
 	else {
@@ -1668,6 +1676,16 @@ bool BirdsEyeMode::is_key_pressed_for_light_follow_actor()
 bool BirdsEyeMode::is_key_pressed_for_save_light()
 {
 	if (IsKeyDown(0x58)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_cancel_light()
+{
+	if (IsKeyDown(0x5A)) {
 		return true;
 	}
 	else {

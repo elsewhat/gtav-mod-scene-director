@@ -138,6 +138,7 @@ DWORD nextWaitTicks = 0;
 int forceSlotIndexOverWrite = -1;
 
 std::string saveFileName = "SceneDirector_save.xml";
+std::string saveFileNameStageLights = "SceneDirectorStageLights_save.xml";
 
 //used to automatically switch over current actor over to new Ped in check_player_model
 Ped lastPlayerPed = 0;
@@ -193,8 +194,9 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.3 by elsewhat");
+	set_status_text("Scene director 3.4 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
+	set_status_text("Latest feature: Stage lights");
 	set_status_text("Scene is setup mode");
 }
 
@@ -1095,6 +1097,7 @@ void draw_submenu_save_load(int drawIndex) {
 	//colors for swapping from active to inactive... messy
 	int textColorR = 255, textColorG = 255, textColorB = 255;
 	int bgColorR = 0, bgColorG = 0, bgColorB = 0;
+
 	if (submenu_is_active && submenu_active_index == submenu_index) {
 		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
 		submenu_active_action = SUBMENU_ITEM_SAVE_ACTORS;
@@ -1122,8 +1125,55 @@ void draw_submenu_save_load(int drawIndex) {
 	DRAW_TEXT("Load actors", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
 	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
 
-	submenu_max_index = submenu_index;
+	drawIndex++;
+	submenu_index++;
 
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_SAVE_STAGELIGHTS;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Save stage lights", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_LOAD_STAGELIGHTS;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Load stage lights", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+
+	if (submenu_is_active && submenu_active_index == submenu_index) {
+		textColorR = 0, textColorG = 0, textColorB = 0, bgColorR = 255, bgColorG = 255, bgColorB = 255;
+		submenu_active_action = SUBMENU_ITEM_CLEAR_STAGELIGHTS;
+	}
+	else {
+		textColorR = 255, textColorG = 255, textColorB = 255, bgColorR = 0, bgColorG = 0, bgColorB = 0;
+	}
+
+
+	DRAW_TEXT("Clear stage lights", 0.76, 0.888 - (0.04)*drawIndex, 0.3, 0.3, 0, false, false, false, false, textColorR, textColorG, textColorB, 200);
+	GRAPHICS::DRAW_RECT(0.81, 0.900 - (0.04)*drawIndex, 0.113, 0.034, bgColorR, bgColorG, bgColorB, 100);
+
+	drawIndex++;
+	submenu_index++;
+
+	submenu_max_index = submenu_index;
 }
 
 
@@ -3025,6 +3075,125 @@ void action_load_actors() {
 
 
 	set_status_text("Loaded actors from " + saveFileName);
+}
+
+void action_save_stagelights() {
+	log_to_file("action_save_stagelights");
+	tinyxml2::XMLDocument* doc = new tinyxml2::XMLDocument();
+	tinyxml2::XMLNode* rootElement = doc->InsertEndChild(doc->NewElement("SceneDirector"));
+
+	if (sceneStageLights.size() == 0) {
+		set_status_text("No stage lights to save");
+		return;
+	}
+
+	for (auto & stageLight : sceneStageLights) {
+			tinyxml2::XMLElement* stagelightElement = doc->NewElement("StageLight");
+
+			Vector3 lightPosition = stageLight.getLightPosition();
+			stagelightElement->SetAttribute("lightPositionX", lightPosition.x);
+			stagelightElement->SetAttribute("lightPositionY", lightPosition.y);
+			stagelightElement->SetAttribute("lightPositionZ", lightPosition.z);
+
+			Vector3 lightRotation = stageLight.getLightRotation();
+			stagelightElement->SetAttribute("lightRotationX", lightRotation.x);
+			stagelightElement->SetAttribute("lightRotationY", lightRotation.y);
+			stagelightElement->SetAttribute("lightRotationZ", lightRotation.z);
+
+			GTAObject gtaObject = stageLight.getLightObject();
+			stagelightElement->SetAttribute("propName", gtaObject.objName);
+
+			if (stageLight.isTrackingActor()) {
+				stagelightElement->SetAttribute("isTrackingActor", true);
+				stagelightElement->SetAttribute("TrackingActorIndex", stageLight.getTrackedActorIndex());
+				
+				Vector3 trackOffset = stageLight.getTrackedActorOffset();
+				stagelightElement->SetAttribute("trackOffsetX", trackOffset.x);
+				stagelightElement->SetAttribute("trackOffsetY", trackOffset.y);
+				stagelightElement->SetAttribute("trackOffsetZ", trackOffset.z);
+			}
+			else {
+				stagelightElement->SetAttribute("isTrackingActor", false);
+			}
+
+			rootElement->InsertEndChild(stagelightElement);
+	}
+
+	log_to_file("action_save_stagelights: about to save");
+
+	doc->SaveFile(saveFileNameStageLights.c_str());
+	set_status_text("Saved StageLights to " + saveFileNameStageLights);
+
+	delete doc;
+}
+
+
+void action_load_stagelights() {
+	log_to_file("action_load_actors");
+
+	tinyxml2::XMLDocument doc = new tinyxml2::XMLDocument();
+	doc.LoadFile(saveFileNameStageLights.c_str());
+	if (doc.Error()) {
+		set_status_text("Save file " + saveFileNameStageLights + " could not be loaded. Error: " + doc.ErrorName());
+		return;
+	}
+
+	tinyxml2::XMLElement* sceneDirectorElement = doc.RootElement();
+	int lightsLoaded = 0;
+	for (tinyxml2::XMLElement* stagelightElement = sceneDirectorElement->FirstChildElement("StageLight");
+	stagelightElement;
+		stagelightElement = stagelightElement->NextSiblingElement())
+	{
+
+		Vector3 lightPosition;
+		lightPosition.x = stagelightElement->FloatAttribute("lightPositionX");
+		lightPosition.y = stagelightElement->FloatAttribute("lightPositionY");
+		lightPosition.z = stagelightElement->FloatAttribute("lightPositionZ");
+
+		log_to_file("lightPosition (" + std::to_string(lightPosition.x) + ", " + std::to_string(lightPosition.y) + ", " + std::to_string(lightPosition.z) + ")");
+
+		Vector3 lightRotation;
+		lightRotation.x = stagelightElement->FloatAttribute("lightRotationX");
+		lightRotation.y = stagelightElement->FloatAttribute("lightRotationY");
+		lightRotation.z = stagelightElement->FloatAttribute("lightRotationZ");
+
+		log_to_file("lightRotation (" + std::to_string(lightRotation.x) + ", " + std::to_string(lightRotation.y) + ", " + std::to_string(lightRotation.z) + ")");
+
+		const char* propName = stagelightElement->Attribute("propName");
+		log_to_file("propName=" + std::string(propName));
+
+		bool isTrackingActor = stagelightElement->BoolAttribute("isTrackingActor");
+		int trackedActorIndex;
+		Vector3 trackOffset;
+		if (isTrackingActor) {
+			trackedActorIndex = stagelightElement->IntAttribute("TrackingActorIndex");
+			log_to_file("trackedActorIndex=" + std::to_string(trackedActorIndex));
+
+			
+			trackOffset.x = stagelightElement->FloatAttribute("trackOffsetX");
+			trackOffset.y = stagelightElement->FloatAttribute("trackOffsetY");
+			trackOffset.z = stagelightElement->FloatAttribute("trackOffsetZ");
+			log_to_file("trackOffset (" + std::to_string(trackOffset.x) + ", " + std::to_string(trackOffset.y) + ", " + std::to_string(trackOffset.z) + ")");
+		}
+
+		GTAObject lightObject = getGTAObjectFromObjName(std::string(propName));
+
+		StageLight loadedStageLight = StageLight(lightPosition, lightRotation, lightObject);
+		if (isTrackingActor) {
+			if (actors[trackedActorIndex].isNullActor()) {
+				set_status_text("No actor for light to track");
+			}
+			else {
+				loadedStageLight.startTrackActor(actors[trackedActorIndex], trackedActorIndex, trackOffset);
+			}
+		}
+
+		sceneStageLights.push_back(loadedStageLight);
+		lightsLoaded++;
+	}
+
+	set_status_text("Loaded " + std::to_string(lightsLoaded) + " stagelights from " + saveFileNameStageLights);
+
 }
 
 void action_vehicle_chase() {
@@ -6196,9 +6365,19 @@ void action_submenu_active_selected() {
 	else if (submenu_active_action == SUBMENU_ITEM_LOAD_ACTORS) {
 		action_load_actors();
 	}
-
-	
-
+	else if (submenu_active_action == SUBMENU_ITEM_SAVE_STAGELIGHTS) {
+		action_save_stagelights();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_LOAD_STAGELIGHTS) {
+		action_load_stagelights();
+	}
+	else if (submenu_active_action == SUBMENU_ITEM_CLEAR_STAGELIGHTS) {
+		set_status_text("Clearing " + std::to_string(sceneStageLights.size()) + " lights");
+		for (auto stageLight : sceneStageLights) {
+			stageLight.removeLightObject();
+		}
+		sceneStageLights.clear();
+	}
 }
 
 

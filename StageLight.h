@@ -18,6 +18,7 @@ private:
 public:
 	StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject lightObject);
 	void startTrackActor(Actor actor, int actorIndex);
+	void startTrackActor(Actor actor, int actorIndex, Vector3 trackOffset);
 	void stopTrackActor();
 	int getTrackedActorIndex();
 	bool isTrackingActor();
@@ -26,6 +27,10 @@ public:
 	void swapLightObject(GTAObject newLightObject);
 
 	void actionOnTick(DWORD tick, std::vector<Actor> & actors);
+	Vector3 getLightPosition();
+	Vector3 getLightRotation();
+	GTAObject getLightObject();
+	Vector3 getTrackedActorOffset();
 };
 
 
