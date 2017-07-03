@@ -70,7 +70,7 @@ public:
 std::vector<SyncedAnimation> getAllSyncedAnimations();
 std::vector<SyncedAnimation> getSyncedAnimations(std::string category);
 std::vector<std::pair<std::string,int>> getAllSyncedAnimationCategories();
-void initializeSyncedAnimations();
+bool initializeSyncedAnimations();
 
 
 //lazy workaround. Could have have made a good interface to both instance instead but will not prioritize refactoring now

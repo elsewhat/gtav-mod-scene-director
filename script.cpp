@@ -140,6 +140,7 @@ int forceSlotIndexOverWrite = -1;
 std::string saveFileName = "SceneDirector_save.xml";
 std::string saveFileNameStageLights = "SceneDirectorStageLights_save.xml";
 
+
 //used to automatically switch over current actor over to new Ped in check_player_model
 Ped lastPlayerPed = 0;
 
@@ -148,6 +149,7 @@ BirdsEyeMode birdsEyeController;
 std::vector<StageLight> sceneStageLights;
 DWORD lastStageLightsTick = 0;
 
+bool hasOutdatedGTA = false;
 
 
 TaskSequence currentTaskSequence = 100;
@@ -3188,6 +3190,33 @@ void action_load_stagelights() {
 			}
 		}
 
+		bool hasFlicker = stagelightElement->BoolAttribute("hasFlicker");
+		if (hasFlicker) {
+			std::vector<StageLightFlicker> flickerEvents;
+
+			for (tinyxml2::XMLElement* flickerElement = stagelightElement->FirstChildElement("Flicker");
+			flickerElement;
+				flickerElement = flickerElement->NextSiblingElement("Flicker"))
+			{
+				StageLightFlicker flickerEvent;
+				flickerEvent.isOn = true;
+				int length = 10000;
+				tinyxml2::XMLError result = flickerElement->QueryIntAttribute("on", &length );
+				if (result == tinyxml2::XML_NO_ATTRIBUTE) {
+					tinyxml2::XMLError result = flickerElement->QueryIntAttribute("off", &length);
+					flickerEvent.isOn = false;
+				}
+				flickerEvent.length = length;
+				flickerEvents.push_back(flickerEvent);
+			}
+
+			if (flickerEvents.size() > 0) {
+				log_to_file("SceneLight has " + std::to_string(flickerEvents.size()) + " flicker events");
+				loadedStageLight.setHasFlicker(flickerEvents);
+			}
+		}
+
+
 		sceneStageLights.push_back(loadedStageLight);
 		lightsLoaded++;
 	}
@@ -3195,6 +3224,8 @@ void action_load_stagelights() {
 	set_status_text("Loaded " + std::to_string(lightsLoaded) + " stagelights from " + saveFileNameStageLights);
 
 }
+
+
 
 void action_vehicle_chase() {
 	log_to_file("action_vehicle_chase");
@@ -6161,28 +6192,35 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 			}
 
 			//check for rocket boost or vehicle parachute
-			if (PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
+			if (!hasOutdatedGTA && PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 				Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
-				if (VEHICLE::_HAS_VEHICLE_ROCKET_BOOST(actorVeh) && VEHICLE::_IS_VEHICLE_ROCKET_BOOST_ACTIVE(actorVeh)){
-					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
-					if (pedDriver == actorPed && (hasRecordedRocketBoost ==false || ticksSinceStart > lastRocketBoost + 5500)) {
-						ActorVehicleRocketBoostRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
-						actorRecording.push_back(std::make_shared<ActorVehicleRocketBoostRecordingItem>(recordingItem));
-						log_to_file(recordingItem.toString());
-						lastRocketBoost = ticksSinceStart;
-						hasRecordedRocketBoost = true;
+				
+				try {
+					if (VEHICLE::_HAS_VEHICLE_ROCKET_BOOST(actorVeh) && VEHICLE::_IS_VEHICLE_ROCKET_BOOST_ACTIVE(actorVeh)) {
+						Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
+						if (pedDriver == actorPed && (hasRecordedRocketBoost == false || ticksSinceStart > lastRocketBoost + 5500)) {
+							ActorVehicleRocketBoostRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
+							actorRecording.push_back(std::make_shared<ActorVehicleRocketBoostRecordingItem>(recordingItem));
+							log_to_file(recordingItem.toString());
+							lastRocketBoost = ticksSinceStart;
+							hasRecordedRocketBoost = true;
+						}
+					}
+
+					if (VEHICLE::_HAS_VEHICLE_PARACHUTE(actorVeh) && VEHICLE::_CAN_VEHICLE_PARACHUTE_BE_ACTIVATED(actorVeh)) {
+						Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
+						if (pedDriver == actorPed && hasRecordedVehParachute == false) {
+							ActorVehicleParachuteRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
+							actorRecording.push_back(std::make_shared<ActorVehicleParachuteRecordingItem>(recordingItem));
+							log_to_file(recordingItem.toString());
+							hasRecordedVehParachute = true;
+							vehicleParachute = actorVeh;
+						}
 					}
 				}
-
-				if (VEHICLE::_HAS_VEHICLE_PARACHUTE(actorVeh) && VEHICLE::_CAN_VEHICLE_PARACHUTE_BE_ACTIVATED(actorVeh)) {
-					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
-					if (pedDriver == actorPed && hasRecordedVehParachute == false) {
-						ActorVehicleParachuteRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
-						actorRecording.push_back(std::make_shared<ActorVehicleParachuteRecordingItem>(recordingItem));
-						log_to_file(recordingItem.toString());
-						hasRecordedVehParachute = true;
-						vehicleParachute = actorVeh;
-					}
+				catch (...) {
+					set_status_text("Upgrade GTA V to rocket boost recording");
+					hasOutdatedGTA = true;
 				}
 
 			}
@@ -7147,7 +7185,7 @@ void main()
 				}
 			}
 
-			//check if any spot lights should be moved
+			//check if any spot lights should be moved or flickered
 			if (GetTickCount() - lastStageLightsTick > 20) {
 				for (auto & stageLight : sceneStageLights) {
 					stageLight.actionOnTick(GetTickCount(), actors);
@@ -7226,7 +7264,6 @@ void ScriptMain()
 
 	initializeSyncedAnimations();
 	modSyncedAnimCategories = getAllSyncedAnimationCategories();
-
 
 	create_relationship_groups();
 	log_to_file("Screen Director initialized");

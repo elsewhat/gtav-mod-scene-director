@@ -90,6 +90,17 @@ void StageLight::swapLightObject(GTAObject newLightObject)
 	m_lightObject.objReference = newObjectRef;
 }
 
+void StageLight::setHasFlicker(std::vector<StageLightFlicker> flickerEvents)
+{
+	m_hasFlicker = true;
+	m_flickerEvents = flickerEvents;
+}
+
+void StageLight::stopFlicker()
+{
+	m_hasFlicker = false;
+}
+
 StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject lightObject)
 {
 	m_lightPosition = lightPosition;
@@ -163,10 +174,33 @@ bool StageLight::isTrackingActor()
 	return m_doTrackPed;
 }
 
+bool StageLight::hasFlicker()
+{
+	return m_hasFlicker;
+}
+
 void StageLight::removeLightObject()
 {	//delete old object
 	if (m_lightObject.objReference != 0) {
 		OBJECT::DELETE_OBJECT(&m_lightObject.objReference);
+	}
+}
+
+void StageLight::turnOff()
+{
+	if (m_lightObject.objReference != 0) {
+		//ENTITY::SET_ENTITY_ALPHA(m_lightObject.objReference, 0, false);
+		ENTITY::SET_ENTITY_VISIBLE(m_lightObject.objReference, false, false);
+		//log_to_file("Light off");
+	}
+}
+
+void StageLight::turnOn()
+{
+	if (m_lightObject.objReference != 0) {
+		//ENTITY::SET_ENTITY_ALPHA(m_lightObject.objReference, 255, false);
+		ENTITY::SET_ENTITY_VISIBLE(m_lightObject.objReference, true, false);
+		//log_to_file("Light on");
 	}
 }
 
@@ -189,6 +223,36 @@ void StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
 		}
 
 
+	}
+
+	if (m_hasFlicker) {
+		if (m_flickerStart == 0) {
+			m_flickerStart = tick;
+			m_flickerIndex = 0;
+		}
+
+		if (m_flickerIndex < m_flickerEvents.size()) {
+			StageLightFlicker flickerEvent = m_flickerEvents[m_flickerIndex];
+			
+			if (tick - flickerEvent.length > m_flickerStart) {
+				m_flickerIndex++;
+				if (m_flickerIndex >= m_flickerEvents.size()) {
+					m_flickerIndex = 0;
+				}
+				m_flickerStart = tick;
+				flickerEvent = m_flickerEvents[m_flickerIndex];
+				if (flickerEvent.isOn) {
+					
+					turnOn();
+				}
+				else {
+					turnOff();
+				}
+			}
+			else {
+				//log_to_file("Light not changed " + std::to_string(tick) + " vs " + std::to_string(m_flickerStart + flickerEvent.length));
+			}
+		}
 	}
 }
 
