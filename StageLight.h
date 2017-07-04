@@ -10,6 +10,21 @@ public:
 	DWORD length;
 };
 
+class StageLightRotation {
+public:
+	float pitch;
+	float yaw;
+	bool hasPitch;
+	bool hasYaw;
+	DWORD length;
+};
+
+class StageLightMovement {
+public:
+	Vector3 movementDelta;
+	DWORD length;
+};
+
 class StageLight {
 private:
 	Vector3 m_lightPosition;
@@ -17,6 +32,8 @@ private:
 	GTAObject m_lightObject;
 	bool m_doTrackPed = false;
 	bool m_hasFlicker = false;
+	bool m_hasRotation = false;
+	bool m_hasMovement = false;
 	Ped m_trackPedId = 0;
 	int m_trackActorIndex = -1;
 	Vector3 m_trackOffset;
@@ -24,6 +41,12 @@ private:
 	int m_flickerIndex = 0;
 	DWORD m_flickerStart=0;
 	std::vector<StageLightFlicker> m_flickerEvents;
+	int m_rotationIndex = 0;
+	DWORD m_rotationStart = 0;
+	std::vector<StageLightRotation> m_rotationEvents;
+	int m_movementIndex = 0;
+	DWORD m_movementStart = 0;
+	std::vector<StageLightMovement> m_movementEvents;
 
 public:
 	StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject lightObject);
@@ -32,15 +55,27 @@ public:
 	void stopTrackActor();
 	int getTrackedActorIndex();
 	bool isTrackingActor();
-	bool hasFlicker();
 	void removeLightObject();
 	void turnOff();
 	void turnOn();
-	void moveLight(Vector3 lightPosition, Vector3 lightRotation);
+	void moveLight(Vector3 lightPosition);
+	void rotateLight(Vector3 lightRotation);
 	void swapLightObject(GTAObject newLightObject);
 
+	bool hasFlicker();
 	void setHasFlicker(std::vector<StageLightFlicker> flickerEvents);
+	std::vector<StageLightFlicker> getFlickerEvents();
 	void stopFlicker();
+
+	bool hasRotation();
+	void setHasRotation(std::vector<StageLightRotation> rotationEvents);
+	std::vector<StageLightRotation> getRotationEvents();
+	void stopRotation();
+
+	bool hasMovement();
+	void setHasMovement(std::vector<StageLightMovement> movementEvents);
+	std::vector<StageLightMovement> getMovementEvents();
+	void stopMovement();
 
 	void actionOnTick(DWORD tick, std::vector<Actor> & actors);
 	Vector3 getLightPosition();

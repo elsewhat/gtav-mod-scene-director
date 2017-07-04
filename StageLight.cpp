@@ -45,13 +45,22 @@ GTAObject getNextSceneDirectorLightObject(GTAObject lightObject) {
 }
 
 
-void StageLight::moveLight(Vector3 lightPosition, Vector3 lightRotation)
+void StageLight::moveLight(Vector3 lightPosition)
 {
 	m_lightPosition = lightPosition;
-	m_lightRotation = lightRotation;
 	//update current position (rotation ignored for now)
 	if (m_lightObject.objReference != 0) {
 		ENTITY::SET_ENTITY_COORDS_NO_OFFSET(m_lightObject.objReference, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, 0, 0, 1);
+	}
+}
+
+void StageLight::rotateLight(Vector3 lightRotation)
+{
+	m_lightRotation = lightRotation;
+	//update current position (rotation ignored for now)
+	if (m_lightObject.objReference != 0) {
+		ENTITY::SET_ENTITY_ROTATION(m_lightObject.objReference, m_lightRotation.x + 180, 0, m_lightRotation.z, 2, true);
+		//log_to_file("Rotating light pitch:" + std::to_string(m_lightRotation.x + 180) + " yaw:"+ std::to_string(m_lightRotation.z));
 	}
 }
 
@@ -87,6 +96,7 @@ void StageLight::swapLightObject(GTAObject newLightObject)
 
 	int newObjectRef = OBJECT::CREATE_OBJECT(m_lightObject.objHash, m_lightPosition.x, m_lightPosition.y, m_lightPosition.z, true, true, false);
 	ENTITY::SET_ENTITY_ROTATION(newObjectRef, m_lightRotation.x + 180, 0, m_lightRotation.z, 2, true);
+
 	m_lightObject.objReference = newObjectRef;
 }
 
@@ -94,6 +104,11 @@ void StageLight::setHasFlicker(std::vector<StageLightFlicker> flickerEvents)
 {
 	m_hasFlicker = true;
 	m_flickerEvents = flickerEvents;
+}
+
+std::vector<StageLightFlicker> StageLight::getFlickerEvents()
+{
+	return m_flickerEvents;
 }
 
 void StageLight::stopFlicker()
@@ -130,6 +145,7 @@ StageLight::StageLight(Vector3 lightPosition, Vector3 lightRotation, GTAObject l
 		ENTITY::SET_ENTITY_AS_MISSION_ENTITY(newObjectRef, true, true);
 
 		ENTITY::SET_ENTITY_ROTATION(newObjectRef, m_lightRotation.x+180, 0, m_lightRotation.z, 2, true);
+		log_to_file("Init light rotation pitch:" + std::to_string(m_lightRotation.x + 180) + " yaw:" + std::to_string(m_lightRotation.z));
 	}
 }
 
@@ -204,6 +220,48 @@ void StageLight::turnOn()
 	}
 }
 
+bool StageLight::hasRotation()
+{
+	return m_hasRotation;
+}
+
+void StageLight::setHasRotation(std::vector<StageLightRotation> rotationEvents)
+{
+	m_rotationEvents = rotationEvents;
+	m_hasRotation = true;
+}
+
+std::vector<StageLightRotation> StageLight::getRotationEvents()
+{
+	return m_rotationEvents;
+}
+
+void StageLight::stopRotation()
+{
+	m_hasRotation = false;
+}
+
+bool StageLight::hasMovement()
+{
+	return m_hasMovement;
+}
+
+void StageLight::setHasMovement(std::vector<StageLightMovement> movementEvents)
+{
+	m_movementEvents = movementEvents;
+	m_hasMovement = true;
+}
+
+std::vector<StageLightMovement> StageLight::getMovementEvents()
+{
+	return m_movementEvents;
+}
+
+void StageLight::stopMovement()
+{
+	m_hasMovement = false;
+}
+
 void StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
 {
 	if (m_doTrackPed) {
@@ -215,7 +273,7 @@ void StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
 		newLightPosition.z = currentActorPosition.z + m_trackOffset.z;
 
 		if (newLightPosition.x != m_trackActorLastPos.x || newLightPosition.y != m_trackActorLastPos.y || newLightPosition.z != m_trackActorLastPos.z) {
-			moveLight(newLightPosition, m_lightRotation);
+			moveLight(newLightPosition);
 
 			m_trackActorLastPos.x = newLightPosition.x;
 			m_trackActorLastPos.y = newLightPosition.y;
@@ -254,6 +312,71 @@ void StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
 			}
 		}
 	}
+
+	if (m_hasRotation) {
+		if (m_rotationStart == 0) {
+			m_rotationStart = tick;
+			m_rotationIndex = 0;
+		}
+
+		if (m_rotationIndex < m_rotationEvents.size()) {
+			StageLightRotation rotationEvent = m_rotationEvents[m_rotationIndex];
+
+			if (tick - rotationEvent.length > m_rotationStart) {
+				m_rotationIndex++;
+				if (m_rotationIndex >= m_rotationEvents.size()) {
+					m_rotationIndex = 0;
+				}
+				m_rotationStart = tick;
+				rotationEvent = m_rotationEvents[m_rotationIndex];
+				Vector3 rotation;
+				rotation.x = m_lightRotation.x;
+				rotation.z = m_lightRotation.z;
+				if (rotationEvent.hasPitch) {
+					rotation.x += rotationEvent.pitch;
+				}
+				if (rotationEvent.hasYaw) {
+					rotation.z += rotationEvent.yaw;
+				}
+				rotateLight(rotation);
+			}
+			else {
+				log_to_file("Light not changed " + std::to_string(tick) + " vs " + std::to_string(m_rotationStart + rotationEvent.length) + " "  + std::to_string(rotationEvent.length));
+			}
+		}
+	}
+
+	if (m_hasMovement) {
+		if (m_movementStart == 0) {
+			m_movementStart = tick;
+			m_movementIndex = 0;
+		}
+
+		if (m_movementIndex < m_movementEvents.size()) {
+			StageLightMovement movementEvent = m_movementEvents[m_movementIndex];
+
+			if (tick - movementEvent.length > m_movementStart) {
+				m_movementIndex++;
+				if (m_movementIndex >= m_movementEvents.size()) {
+					m_movementIndex = 0;
+				}
+				m_movementStart = tick;
+
+			}
+			//always move light
+			movementEvent = m_movementEvents[m_movementIndex];
+
+			Vector3 newPosition;
+			newPosition.x = m_lightPosition.x + movementEvent.movementDelta.x;
+			newPosition.y = m_lightPosition.y + movementEvent.movementDelta.y;
+			newPosition.z = m_lightPosition.z + movementEvent.movementDelta.z;
+			if (newPosition.x != m_lightPosition.x || newPosition.y != m_lightPosition.y || newPosition.z != m_lightPosition.z) {
+				moveLight(newPosition);
+			}
+		}
+	}
+
+
 }
 
 Vector3 StageLight::getLightPosition()

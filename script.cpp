@@ -196,7 +196,7 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.4 by elsewhat");
+	set_status_text("Scene director 3.4.1 Beta1 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
 	set_status_text("Latest feature: Stage lights");
 	set_status_text("Scene is setup mode");
@@ -3118,6 +3118,104 @@ void action_save_stagelights() {
 				stagelightElement->SetAttribute("isTrackingActor", false);
 			}
 
+			bool includeExamples = true;
+			if (stageLight.hasFlicker() || stageLight.hasMovement() || stageLight.hasRotation()) {
+				includeExamples = false;
+			}
+
+			stagelightElement->SetAttribute("hasFlicker", stageLight.hasFlicker());
+			if (stageLight.hasFlicker()) {
+				std::vector<StageLightFlicker> events = stageLight.getFlickerEvents();
+				for (auto &event : events) {
+					tinyxml2::XMLElement* subElement = doc->NewElement("Flicker");
+					
+					if (event.isOn) {
+						subElement->SetAttribute("on", (int)event.length);
+					}
+					else {
+						subElement->SetAttribute("off", (int)event.length);
+					}
+					stagelightElement->InsertEndChild(subElement);
+				}
+			}
+			else {
+				if (includeExamples) {
+					tinyxml2::XMLElement* example1 = doc->NewElement("Flicker");
+					example1->SetAttribute("on", 400);
+					tinyxml2::XMLElement* example2 = doc->NewElement("Flicker");
+					example2->SetAttribute("off", 300);
+					stagelightElement->InsertEndChild(example1);
+					stagelightElement->InsertEndChild(example2);
+				}
+			}
+
+			stagelightElement->SetAttribute("hasMovement", stageLight.hasMovement());
+			if (stageLight.hasMovement()) {
+				std::vector<StageLightMovement> events = stageLight.getMovementEvents();
+				for (auto &event : events) {
+					tinyxml2::XMLElement* subElement = doc->NewElement("Movement");
+					if (event.movementDelta.x != 0.0) {
+						subElement->SetAttribute("x", event.movementDelta.x);
+					}
+					if (event.movementDelta.y != 0.0) {
+						subElement->SetAttribute("y", event.movementDelta.y);
+					}
+					if (event.movementDelta.z != 0.0) {
+						subElement->SetAttribute("z", event.movementDelta.z);
+					}
+
+					subElement->SetAttribute("length", (int)event.length);
+					stagelightElement->InsertEndChild(subElement);
+				}
+			}
+			else {
+				if (includeExamples) {
+					tinyxml2::XMLElement* example1 = doc->NewElement("Movement");
+					example1->SetAttribute("x", 0.0);
+					example1->SetAttribute("y", 0.0);
+					example1->SetAttribute("z", 0.02);
+					example1->SetAttribute("length", 1000);
+					tinyxml2::XMLElement* example2 = doc->NewElement("Movement");
+					example2->SetAttribute("x", 0.0);
+					example2->SetAttribute("y", 0.0);
+					example2->SetAttribute("z", -0.02);
+					example2->SetAttribute("length", 1000);
+					stagelightElement->InsertEndChild(example1);
+					stagelightElement->InsertEndChild(example2);
+				}
+			}
+			
+			stagelightElement->SetAttribute("hasRotation", stageLight.hasRotation());
+			if (stageLight.hasRotation()) {
+				std::vector<StageLightRotation> events = stageLight.getRotationEvents();
+				for (auto &event : events) {
+					tinyxml2::XMLElement* subElement = doc->NewElement("Rotation");
+
+					if (event.hasPitch) {
+						subElement->SetAttribute("pitch", event.pitch);
+					}
+					if (event.hasYaw) {
+						subElement->SetAttribute("yaw", event.yaw);
+					}
+					subElement->SetAttribute("length", (int)event.length);
+					stagelightElement->InsertEndChild(subElement);
+				}
+			}
+			else {
+				if (includeExamples) {
+					tinyxml2::XMLElement* example1 = doc->NewElement("Rotation");
+					example1->SetAttribute("pitch", 4);
+					example1->SetAttribute("length", 0);
+					tinyxml2::XMLElement* example2 = doc->NewElement("Rotation");
+					example2->SetAttribute("yaw", 2);
+					example2->SetAttribute("length", 0);
+					stagelightElement->InsertEndChild(example1);
+					stagelightElement->InsertEndChild(example2);
+				}
+			}
+
+
+
 			rootElement->InsertEndChild(stagelightElement);
 	}
 
@@ -3213,6 +3311,81 @@ void action_load_stagelights() {
 			if (flickerEvents.size() > 0) {
 				log_to_file("SceneLight has " + std::to_string(flickerEvents.size()) + " flicker events");
 				loadedStageLight.setHasFlicker(flickerEvents);
+			}
+		}
+
+		bool hasRotation = stagelightElement->BoolAttribute("hasRotation");
+		if (hasRotation) {
+			std::vector<StageLightRotation> rotationEvents;
+
+			for (tinyxml2::XMLElement* rotationElement = stagelightElement->FirstChildElement("Rotation");
+			rotationElement;
+				rotationElement = rotationElement->NextSiblingElement("Rotation"))
+			{
+				StageLightRotation rotationEvent;
+				rotationEvent.hasPitch = true;
+				rotationEvent.hasYaw = true;
+
+				float pitch = 0;
+				tinyxml2::XMLError result = rotationElement->QueryFloatAttribute("pitch", &pitch);
+				if (result == tinyxml2::XML_NO_ATTRIBUTE) {
+					rotationEvent.hasPitch = false;
+				}
+				else {
+					rotationEvent.pitch = pitch;
+				}
+
+				float yaw = 0;
+				result = rotationElement->QueryFloatAttribute("yaw", &yaw);
+				if (result == tinyxml2::XML_NO_ATTRIBUTE) {
+					rotationEvent.hasYaw = false;
+				}
+				else {
+					rotationEvent.yaw = yaw;
+				}
+
+				int length = rotationElement->IntAttribute("length");
+				rotationEvent.length = length;
+
+				rotationEvents.push_back(rotationEvent);
+			}
+
+			if (rotationEvents.size() > 0) {
+				log_to_file("SceneLight has " + std::to_string(rotationEvents.size()) + " rotation events");
+				loadedStageLight.setHasRotation(rotationEvents);
+			}
+		}
+
+		bool hasMovement = stagelightElement->BoolAttribute("hasMovement");
+		if (hasMovement) {
+			std::vector<StageLightMovement> movementEvents;
+
+			for (tinyxml2::XMLElement* movementElement = stagelightElement->FirstChildElement("Movement");
+			movementElement;
+				movementElement = movementElement->NextSiblingElement("Movement"))
+			{
+				StageLightMovement movementEvent;
+				Vector3 movementDelta;
+				float x=0.0, y=0.0, z=0.0;
+				movementElement->QueryFloatAttribute("x", &x);
+				movementElement->QueryFloatAttribute("y", &y);
+				movementElement->QueryFloatAttribute("z", &z);
+				movementDelta.x = x;
+				movementDelta.y = y;
+				movementDelta.z = z;
+
+				log_to_file("movementDelta (" + std::to_string(movementDelta.x) + "," + std::to_string(movementDelta.y) + "," + std::to_string(movementDelta.z) + ")");
+
+				int length = movementElement->IntAttribute("length");
+				movementEvent.length = length;
+				movementEvent.movementDelta = movementDelta;
+
+				movementEvents.push_back(movementEvent);
+			}
+
+			if (movementEvents.size() > 0) {
+				log_to_file("SceneLight has " + std::to_string(movementEvents.size()) + " movement events");
+				loadedStageLight.setHasMovement(movementEvents);
 			}
 		}
 

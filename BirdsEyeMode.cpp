@@ -144,7 +144,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			Vector3 cameraDirection = {};
 			cameraDirection = MathUtils::rotationToDirection(cameraRotation);
 
-			currentStageLight->moveLight(cameraPosition, cameraRotation);
+			currentStageLight->moveLight(cameraPosition);
 			lastChangedRecordingLocation = false;
 		}
 	}
