@@ -3164,6 +3164,10 @@ void action_save_stagelights() {
 						subElement->SetAttribute("z", event.movementDelta.z);
 					}
 
+					if (event.hasxyRatio) {
+						subElement->SetAttribute("xyRatio", event.xyRatio);
+					}
+
 					subElement->SetAttribute("length", (int)event.length);
 					stagelightElement->InsertEndChild(subElement);
 				}
@@ -3176,9 +3180,8 @@ void action_save_stagelights() {
 					example1->SetAttribute("z", 0.02);
 					example1->SetAttribute("length", 1000);
 					tinyxml2::XMLElement* example2 = doc->NewElement("Movement");
-					example2->SetAttribute("x", 0.0);
-					example2->SetAttribute("y", 0.0);
-					example2->SetAttribute("z", -0.02);
+					example2->SetAttribute("x", 0.02);
+					example2->SetAttribute("xyRatio", 0.5);
 					example2->SetAttribute("length", 1000);
 					stagelightElement->InsertEndChild(example1);
 					stagelightElement->InsertEndChild(example2);
@@ -3379,6 +3382,16 @@ void action_load_stagelights() {
 				int length = movementElement->IntAttribute("length");
 				movementEvent.length = length;
 				movementEvent.movementDelta = movementDelta;
+
+				float xyRatio = 0.0;
+				tinyxml2::XMLError result = movementElement->QueryFloatAttribute("xyRatio", &xyRatio);
+				if (result == tinyxml2::XML_SUCCESS) {
+					movementEvent.hasxyRatio = true;
+					movementEvent.xyRatio = xyRatio;
+				}
+				else {
+					movementEvent.hasxyRatio = false;
+				}
 
 				movementEvents.push_back(movementEvent);
 			}

@@ -370,6 +370,12 @@ void StageLight::actionOnTick(DWORD tick, std::vector<Actor>& actors)
 			newPosition.x = m_lightPosition.x + movementEvent.movementDelta.x;
 			newPosition.y = m_lightPosition.y + movementEvent.movementDelta.y;
 			newPosition.z = m_lightPosition.z + movementEvent.movementDelta.z;
+
+			//if xyRatio, always use x value as basis
+			if (movementEvent.hasxyRatio) {
+				newPosition.y = m_lightPosition.y + movementEvent.movementDelta.x * movementEvent.xyRatio;
+			}
+
 			if (newPosition.x != m_lightPosition.x || newPosition.y != m_lightPosition.y || newPosition.z != m_lightPosition.z) {
 				moveLight(newPosition);
 			}

@@ -22,6 +22,8 @@ public:
 class StageLightMovement {
 public:
 	Vector3 movementDelta;
+	bool hasxyRatio;
+	float xyRatio;
 	DWORD length;
 };
 
