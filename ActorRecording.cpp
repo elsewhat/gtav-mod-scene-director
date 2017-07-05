@@ -538,25 +538,31 @@ bool ActorVehicleMovementRecordingItem::isRecordingItemCompleted(std::shared_ptr
 
 			float minDistance = getMinDistanceBeforeCompleted();
 
+			std::string nextRecordingTypeName = "Dummy";
+			if (nextRecordingItem != NULL) {
+				nextRecordingTypeName = nextRecordingItem->toUserFriendlyName();
+			}
 
 			//check if next is not a vehicle movement (will often be exit vehicle) Then the threshold should be much less
 			std::shared_ptr<ActorVehicleMovementRecordingItem> nextVehicleMovement = std::dynamic_pointer_cast<ActorVehicleMovementRecordingItem>(nextRecordingItem);
-			log_to_file("nextVehicleMovement: ");
 
 			//&& nextVehicleRocketBoost == NULL
 			if (nextVehicleMovement == NULL) {
-				log_to_file("Next recording is not a vehicle movement, will require a smaller distance to target");
-				if (isPedInHeli && minDistance>45.0) {
-					minDistance = 45.0;
-				}
-				else if (isPedInPlane && minDistance>50.0) {
-					minDistance = 50.0;
-				}
-				else if (isPedInBoat && minDistance>30.0) {
-					minDistance = 30.0;
-				}
-				else if (isInVehicle && minDistance>2.0) {
-					minDistance = 2.0;
+				//Filter out some other types based on names as two dynamic cast causes crash
+				if (nextRecordingTypeName.compare("Speaking") != 0) {
+					log_to_file("Next recording is not a vehicle movement, will require a smaller distance to target");
+					if (isPedInHeli && minDistance > 45.0) {
+						minDistance = 45.0;
+					}
+					else if (isPedInPlane && minDistance > 50.0) {
+						minDistance = 50.0;
+					}
+					else if (isPedInBoat && minDistance > 30.0) {
+						minDistance = 30.0;
+					}
+					else if (isInVehicle && minDistance > 2.0) {
+						minDistance = 2.0;
+					}
 				}
 			}
 			else {
@@ -1137,7 +1143,7 @@ void ActorSpeakRecordingItem::executeNativesForRecording(Actor actor, std::share
 	//Animation flags are type "Facial"
 	AI::TASK_PLAY_ANIM(actor.getActorPed(), "mp_facial", "mic_chatter", 8.0f, -8.0f, -1, ANIMATION_LOOP_FLAG1 | ANIMATION_ALLOW_MOVEMENT_FLAG6, 8.0f, 0, 0, 0);
 
-	if (m_isMovingWhileSpeaking) {
+	if (m_isMovingWhileSpeaking && !PED::IS_PED_IN_ANY_VEHICLE(actor.getActorPed(), 0)) {
 		AI::TASK_GO_STRAIGHT_TO_COORD(actor.getActorPed(), m_location.x, m_location.y, m_location.z, m_walkSpeed, -1, m_heading, 0.5f);
 	}
 }
@@ -1155,6 +1161,7 @@ std::string ActorSpeakRecordingItem::toString() {
 
 void ActorSpeakRecordingItem::executeNativesAfterRecording(Actor actor)
 {
+
 	AI::STOP_ANIM_TASK(actor.getActorPed(), "mp_facial", "mic_chatter", -4.0);
 }
 
