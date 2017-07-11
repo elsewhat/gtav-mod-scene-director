@@ -37,6 +37,11 @@ private:
 	bool currentLightFollowActor = false;
 	int currentLightFollowActorIndex = -1;
 
+	DWORD lastStageLightsTick = 0;
+	StageLightFlickerType currentStageLightFlickerType;
+	StageLightRotationType currentStageLightRotationType;
+	StageLightMovementType currentStageLightMovementType;
+
 	std::shared_ptr<ActorRecordingItem> nearestRecording=nullptr;
 	std::shared_ptr<Actor> nearestActor = nullptr;
 	std::shared_ptr<ActorRecordingItem> highlightedRecording = nullptr;
@@ -83,7 +88,9 @@ private:
 	bool is_key_pressed_for_clear_all_stage_lights();
 	bool is_key_pressed_for_light_change_type();
 	bool is_key_pressed_for_light_follow_actor();
-	
+	bool is_key_pressed_for_light_next_flicker();
+	bool is_key_pressed_for_light_next_rotation();
+	bool is_key_pressed_for_light_next_movement();
 
 public:
 	BirdsEyeMode();

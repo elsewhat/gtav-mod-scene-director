@@ -24,11 +24,36 @@ public:
 	Vector3 movementDelta;
 	bool hasxyRatio;
 	float xyRatio;
+	bool hasyxRatio;
+	float yxRatio;
 	DWORD length;
+};
+
+class StageLightFlickerType {
+public:
+	std::string name;
+	bool isNull;
+	std::vector<StageLightFlicker> flickerEvents;
+};
+
+class StageLightRotationType {
+public:
+	std::string name;
+	bool isNull;
+	std::vector<StageLightRotation> rotationEvents;
+};
+
+class StageLightMovementType {
+public:
+	std::string name;
+	bool isNull;
+	std::vector<StageLightMovement> movementEvents;
 };
 
 class StageLight {
 private:
+	Vector3 m_initialLightPosition;
+	Vector3 m_initialLightRotation;
 	Vector3 m_lightPosition;
 	Vector3 m_lightRotation; 
 	GTAObject m_lightObject;
@@ -61,8 +86,12 @@ public:
 	void turnOff();
 	void turnOn();
 	void moveLight(Vector3 lightPosition);
+	void moveInitialPosOfLight(Vector3 lightPosition);
 	void rotateLight(Vector3 lightRotation);
+	void rotateInitialRotationOfLight(Vector3 lightRotation);
 	void swapLightObject(GTAObject newLightObject);
+
+	void resetToInitial();
 
 	bool hasFlicker();
 	void setHasFlicker(std::vector<StageLightFlicker> flickerEvents);
@@ -88,7 +117,18 @@ public:
 
 
 std::vector<GTAObject> getSceneDirectorLightObject();
-
 GTAObject getDefaultSceneDirectorLightObject();
-
 GTAObject getNextSceneDirectorLightObject(GTAObject lightObject);
+
+std::vector<StageLightRotationType> getStageLightRotationTypes();
+StageLightRotationType getDefaultStageLightRotationType();
+StageLightRotationType getNextStageLightRotationType(StageLightRotationType stageLightEvent);
+
+std::vector<StageLightMovementType> getStageLightMovementTypes();
+StageLightMovementType getDefaultStageLightMovementType();
+StageLightMovementType getNextStageLightMovementType(StageLightMovementType stageLightEvent);
+
+std::vector<StageLightFlickerType> getStageLightFlickerTypes();
+StageLightFlickerType getDefaultStageLightFlickerType();
+StageLightFlickerType getNextStageLightFlickerType(StageLightFlickerType stageLightEvent);
+void initializeStageLights();

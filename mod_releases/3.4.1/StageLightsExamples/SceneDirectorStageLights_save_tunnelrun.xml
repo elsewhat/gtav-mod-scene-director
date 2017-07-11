@@ -1,0 +1,98 @@
+<SceneDirector>
+    <StageLight lightPositionX="-369.16641" lightPositionY="1450.6007" lightPositionZ="292.25363" lightRotationX="-18.790775" lightRotationY="4.509204e-07" lightRotationZ="-74.567383" propName="prop_sd_spot_04" isTrackingActor="0" hasFlicker="0" hasMovement="1" hasRotation="0">
+        <Flicker on="400"/>
+        <Flicker off="300"/>
+        <Movement x="0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="0.64" xyRatio="0.27" z="0." length="3000"/>                                  
+        <Movement x="-0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="-0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="-0.64" xyRatio="0.27" z="0." length="3000"/>   
+
+        <Rotation pitch="4" length="0"/>
+        <Rotation yaw="2" length="0"/>
+    </StageLight>
+    <StageLight lightPositionX="-369.16641" lightPositionY="1450.6007" lightPositionZ="292.25363" lightRotationX="2.9021893" lightRotationY="-9.0829951e-07" lightRotationZ="-75.826485" propName="prop_sd_spot_02" isTrackingActor="0" hasFlicker="0" hasMovement="1" hasRotation="0">
+        <Flicker on="400"/>
+        <Flicker off="300"/>
+        <Movement x="0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="0.64" xyRatio="0.27" z="0." length="3000"/>                                  
+        <Movement x="-0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="-0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="-0.64" xyRatio="0.27" z="0." length="3000"/>          
+        <Rotation pitch="4" length="0"/>
+        <Rotation yaw="2" length="0"/>
+    </StageLight>
+    <StageLight lightPositionX="-369.16641" lightPositionY="1450.6007" lightPositionZ="292.25363" lightRotationX="-4.0269451" lightRotationY="-2.1397163e-07" lightRotationZ="-57.873474" propName="prop_sd_spot_02" isTrackingActor="0" hasFlicker="0" hasMovement="1" hasRotation="0">
+        <Flicker on="400"/>
+        <Flicker off="300"/>
+        <Movement x="0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="0.64" xyRatio="0.27" z="0." length="3000"/>                                  
+        <Movement x="-0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="-0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="-0.64" xyRatio="0.27" z="0." length="3000"/>          
+        <Rotation pitch="4" length="0"/>
+        <Rotation yaw="2" length="0"/>
+    </StageLight>
+    <StageLight lightPositionX="-369.16641" lightPositionY="1450.6007" lightPositionZ="292.25363" lightRotationX="-3.5151346" lightRotationY="-2.2453803e-06" lightRotationZ="-85.43219" propName="prop_sd_spot_02" isTrackingActor="0" hasFlicker="0" hasMovement="1" hasRotation="0">
+        <Flicker on="400"/>
+        <Flicker off="300"/>
+        <Movement x="0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="0.64" xyRatio="0.27" z="0." length="3000"/>                                  
+        <Movement x="-0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="-0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="-0.64" xyRatio="0.27" z="0." length="3000"/>   2
+        <Rotation yaw="2" length="0"/>
+    </StageLight>
+</SceneDirector>

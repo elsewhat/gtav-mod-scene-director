@@ -1,0 +1,190 @@
+<SceneDirector>   
+    <FlickerType name="Blinking">
+        <Flicker on="1000"/>
+        <Flicker off="300"/>
+        <Flicker on="1000"/>
+        <Flicker off="300"/>
+        <Flicker on="500"/>
+        <Flicker off="200"/>
+        <Flicker on="500"/>
+        <Flicker off="200"/>
+    </FlickerType>
+    <FlickerType name="OnOff">
+        <Flicker on="2000"/>
+        <Flicker off="2000"/>
+    </FlickerType> 
+    <FlickerType name="Strobe">
+        <Flicker on="20"/>
+        <Flicker off="20"/>
+    </FlickerType> 
+
+
+    <RotationType name="Clockwise">
+        <Rotation yaw="-4" length="0"/>
+    </RotationType>
+    <RotationType name="Anticlockwise">
+        <Rotation yaw="4" length="0"/>
+    </RotationType>
+    <RotationType name="Upwards">
+        <Rotation pitch="4" length="0"/>
+    </RotationType>
+    <RotationType name="Downwards">
+        <Rotation pitch="-4" length="0"/>
+    </RotationType>    
+    <RotationType name="Up and down">
+        <Rotation pitch="0.1" length="100"/>
+        <Rotation pitch="0.2" length="100"/>
+        <Rotation pitch="0.4" length="2000"/>
+        <Rotation pitch="0.2" length="100"/>
+        <Rotation pitch="0.1" length="100"/>
+        <Rotation pitch="0.0" length="300"/>        
+        <Rotation pitch="-0.1" length="100"/>
+        <Rotation pitch="-0.2" length="100"/>
+        <Rotation pitch="-0.4" length="2000"/>
+        <Rotation pitch="-0.2" length="100"/>
+        <Rotation pitch="-0.1" length="100"/>
+        <Rotation pitch="0.0" length="300"/>         
+    </RotationType> 
+    <RotationType name="Sideways left">
+        <Rotation yaw="0.1" length="100"/>
+        <Rotation yaw="0.5" length="100"/>
+        <Rotation yaw="1" length="2000"/>
+        <Rotation yaw="0.5" length="100"/>
+        <Rotation yaw="0.1" length="100"/>
+        <Rotation yaw="0.0" length="300"/>        
+        <Rotation yaw="-0.1" length="100"/>
+        <Rotation yaw="-0.5" length="100"/>
+        <Rotation yaw="-1" length="2000"/>
+        <Rotation yaw="-0.5" length="100"/>
+        <Rotation yaw="-0.1" length="100"/>
+        <Rotation yaw="0.0" length="300"/>         
+    </RotationType>
+    <RotationType name="Sideways right">
+        <Rotation yaw="-0.1" length="100"/>
+        <Rotation yaw="-0.5" length="100"/>
+        <Rotation yaw="-1" length="2000"/>
+        <Rotation yaw="-0.5" length="100"/>
+        <Rotation yaw="-0.1" length="100"/>
+        <Rotation yaw="-0.0" length="300"/>        
+        <Rotation yaw="0.1" length="100"/>
+        <Rotation yaw="0.5" length="100"/>
+        <Rotation yaw="1" length="2000"/>
+        <Rotation yaw="0.5" length="100"/>
+        <Rotation yaw="0.1" length="100"/>
+        <Rotation yaw="0.0" length="300"/>         
+    </RotationType>                 
+
+    <MovementType name="Up and down">
+        <Movement z="0.01" length="300"/>
+        <Movement z="0.02" length="1000"/>
+        <Movement z="0.01" length="300"/>
+        <Movement length="500"/>
+        <Movement z="-0.01" length="300"/>
+        <Movement z="-0.02" length="1000"/>
+        <Movement z="-0.01" length="300"/>
+        <Movement length="500"/>
+    </MovementType>
+    <MovementType name="Sideways x #1 left">
+        <Movement x="0.05" length="300"/>
+        <Movement x="0.1" length="1000"/>
+        <Movement x="0.05" length="300"/>
+        <Movement length="500"/>
+        <Movement x="-0.05" length="300"/>
+        <Movement x="-0.1" length="1000"/>
+        <Movement x="-0.05" length="300"/>
+        <Movement length="500"/>
+    </MovementType>
+    <MovementType name="Sideways x #1 right">
+        <Movement x="-0.05" length="300"/>
+        <Movement x="-0.1" length="1000"/>
+        <Movement x="-0.05" length="300"/>
+        <Movement length="500"/>
+        <Movement x="0.05" length="300"/>
+        <Movement x="0.1" length="1000"/>
+        <Movement x="0.05" length="300"/>
+        <Movement length="500"/>
+    </MovementType>            
+    <MovementType name="Sideways x #2 left">
+        <Movement x="0.1" length="300"/>
+        <Movement x="0.02" length="1000"/>
+        <Movement x="0.1" length="300"/>
+        <Movement length="500"/>
+        <Movement x="-0.1" length="300"/>
+        <Movement x="-0.02" length="1000"/>
+        <Movement x="-0.1" length="300"/>
+        <Movement length="500"/>
+    </MovementType>
+    <MovementType name="Sideways x #2 right">
+        <Movement x="-0.1" length="300"/>
+        <Movement x="-0.02" length="1000"/>
+        <Movement x="-0.1" length="300"/>
+        <Movement length="500"/>
+        <Movement x="0.1" length="300"/>
+        <Movement x="0.02" length="1000"/>
+        <Movement x="0.1" length="300"/>
+        <Movement length="500"/>
+    </MovementType>
+    <MovementType name="Sideways y #1 left">
+        <Movement y="0.05" length="300"/>
+        <Movement y="0.1" length="1000"/>
+        <Movement y="0.05" length="300"/>
+        <Movement length="500"/>
+        <Movement y="-0.05" length="300"/>
+        <Movement y="-0.1" length="1000"/>
+        <Movement y="-0.05" length="300"/>
+        <Movement length="500"/>
+    </MovementType>
+    <MovementType name="Sideways y #1 right">
+        <Movement y="-0.05" length="300"/>
+        <Movement y="-0.1" length="1000"/>
+        <Movement y="-0.05" length="300"/>
+        <Movement length="500"/>
+        <Movement y="0.05" length="300"/>
+        <Movement y="0.1" length="1000"/>
+        <Movement y="0.05" length="300"/>
+        <Movement length="500"/>
+    </MovementType>            
+    <MovementType name="Sideways y #2 left">
+        <Movement y="0.1" length="300"/>
+        <Movement y="0.02" length="1000"/>
+        <Movement y="0.1" length="300"/>
+        <Movement length="500"/>
+        <Movement y="-0.1" length="300"/>
+        <Movement y="-0.02" length="1000"/>
+        <Movement y="-0.1" length="300"/>
+        <Movement length="500"/>
+    </MovementType>
+    <MovementType name="Sideways y #2 right">
+        <Movement y="-0.1" length="300"/>
+        <Movement y="-0.02" length="1000"/>
+        <Movement y="-0.1" length="300"/>
+        <Movement length="500"/>
+        <Movement y="0.1" length="300"/>
+        <Movement y="0.02" length="1000"/>
+        <Movement y="0.1" length="300"/>
+        <Movement length="500"/>
+    </MovementType>             
+        
+
+    <MovementType name="Fly and return">
+        <Movement x="0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="0.64" xyRatio="0.27" z="0." length="3000"/>                                  
+        <Movement x="-0.001" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.003" xyRatio="0.27" z="0." length="40"/>
+        <Movement x="-0.01" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.02" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.04" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.08" xyRatio="0.27" z="0." length="200"/>
+        <Movement x="-0.16" xyRatio="0.27" z="0." length="400"/>
+        <Movement x="-0.32" xyRatio="0.27" z="0." length="1000"/> 
+        <Movement x="-0.64" xyRatio="0.27" z="0." length="3000"/>   
+    </MovementType>
+
+</SceneDirector>

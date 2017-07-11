@@ -1,0 +1,32 @@
+<SceneDirector>
+    <StageLight lightPositionX="1680.3004" lightPositionY="3277.9675" lightPositionZ="49.052052" lightRotationX="-33.753487" lightRotationY="-3.6967194e-05" lightRotationZ="-50.627434" propName="prop_sd_spot_03" isTrackingActor="0" hasFlicker="1">
+    	<Flicker on="300"/>
+    	<Flicker off="200"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    </StageLight>	
+    <StageLight lightPositionX="1681.7928" lightPositionY="3283.8679" lightPositionZ="40.070786" lightRotationX="12.506433" lightRotationY="-4.3288972e-05" lightRotationZ="-32.75341" propName="prop_sd_spot_14" isTrackingActor="0" hasFlicker="1">
+    	<Flicker on="300"/>
+    	<Flicker off="200"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    </StageLight>	
+    <StageLight lightPositionX="1698.7281" lightPositionY="3293.7634" lightPositionZ="38.426716" lightRotationX="30.301764" lightRotationY="-5.1915868e-05" lightRotationZ="101.65402" propName="prop_sd_spot_05" isTrackingActor="0" hasFlicker="1">
+    	<Flicker on="300"/>
+    	<Flicker off="200"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    	<Flicker on="100"/>
+    	<Flicker off="100"/>
+    </StageLight>
+</SceneDirector>

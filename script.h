@@ -193,3 +193,4 @@ void action_animation_sequence_play(AnimationSequence animSequence);
 
 void action_save_stagelights();
 void action_load_stagelights();
+void action_reset_stagelights();

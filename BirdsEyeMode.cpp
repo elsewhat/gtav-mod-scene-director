@@ -86,6 +86,10 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 
 				sceneStageLights.push_back(StageLight(cameraPosition, cameraRotation, lightObject));
 				log_to_file("Created light with rotation (" + std::to_string(cameraRotation.x) + ", " + std::to_string(cameraRotation.y) + ", " + std::to_string(cameraRotation.z) + ")");
+				
+				action_reset_stagelights();
+				
+				
 				nextWaitTicks = 150;
 			}
 			else if (is_key_pressed_for_clear_all_stage_lights()) {
@@ -144,7 +148,7 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			Vector3 cameraDirection = {};
 			cameraDirection = MathUtils::rotationToDirection(cameraRotation);
 
-			currentStageLight->moveLight(cameraPosition);
+			currentStageLight->moveInitialPosOfLight(cameraPosition);
 			lastChangedRecordingLocation = false;
 		}
 	}
@@ -172,6 +176,21 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 			}
 			else if (is_key_pressed_for_save_light()) {
 				log_to_file("Saving light");
+
+				if (!currentStageLightFlickerType.isNull) {
+					log_to_file("Light has flicker. Adding " + std::to_string(currentStageLightFlickerType.flickerEvents.size())+ " flicker events");
+					currentStageLight->setHasFlicker(currentStageLightFlickerType.flickerEvents);
+				}
+
+				if (!currentStageLightRotationType.isNull) {
+					currentStageLight->setHasRotation(currentStageLightRotationType.rotationEvents);
+				}
+
+				if (!currentStageLightMovementType.isNull) {
+					currentStageLight->setHasMovement(currentStageLightMovementType.movementEvents);
+				}
+				
+
 				sceneStageLights.push_back(*currentStageLight);
 				log_to_file("Have now " + std::to_string(sceneStageLights.size()) + " lights");
 
@@ -184,6 +203,21 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 				currentStageLight->removeLightObject();
 				addLightMode = false;
 				currentStageLight = nullptr;
+				nextWaitTicks = 200;
+			}
+			else if (is_key_pressed_for_light_next_flicker()) {
+				log_to_file("Light next flicker Type");
+				currentStageLightFlickerType = getNextStageLightFlickerType(currentStageLightFlickerType);
+				nextWaitTicks = 200;
+			}
+			else if (is_key_pressed_for_light_next_rotation()) {
+				log_to_file("Light next rotation Type");
+				currentStageLightRotationType = getNextStageLightRotationType(currentStageLightRotationType);
+				nextWaitTicks = 200;
+			}
+			else if (is_key_pressed_for_light_next_movement()) {
+				log_to_file("Light next movement Type");
+				currentStageLightMovementType = getNextStageLightMovementType(currentStageLightMovementType);
 				nextWaitTicks = 200;
 			}
 			else if (is_key_pressed_for_light_follow_actor()) {
@@ -221,6 +255,16 @@ bool BirdsEyeMode::actionOnTick(DWORD tick, std::vector<Actor> & actors, std::ve
 		}
 	}
 
+
+	if (!addLightMode) {
+		//check if any spot lights should be moved or flickered
+		if (GetTickCount() - lastStageLightsTick > 10) {
+			for (auto & stageLight : sceneStageLights) {
+				stageLight.actionOnTick(GetTickCount(), actors);
+			}
+			lastStageLightsTick = GetTickCount();
+		}
+	}
 
 	//actions to be used during active scene
 	draw_spot_lights();
@@ -280,7 +324,7 @@ void BirdsEyeMode::onEnterMode(SCENE_MODE aSceneMode)
 	Vector3 camOffset;
 	camOffset.x = (float)sin((startHeading *PI / 180.0f))*10.0f;
 	camOffset.y = (float)cos((startHeading *PI / 180.0f))*10.0f;
-	camOffset.z = 12.4;
+	camOffset.z = 6.4;
 
 	if (startLocation.x < 0) {
 		camOffset.x = -camOffset.x;
@@ -295,16 +339,14 @@ void BirdsEyeMode::onEnterMode(SCENE_MODE aSceneMode)
 	Vector3 camLocation = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(actorPed, camOffset.x, camOffset.y, camOffset.z);
 	log_to_file("Camera location (" + std::to_string(camLocation.x) + ", " + std::to_string(camLocation.y) + ", " + std::to_string(camLocation.z) + ")");
 	cameraHandle = CAM::CREATE_CAM_WITH_PARAMS("DEFAULT_SCRIPTED_CAMERA", camLocation.x, camLocation.y, camLocation.z, 0.0, 0.0, 0.0, 40.0, 1, 2);
-	//CAM::ATTACH_CAM_TO_ENTITY(cameraHandle, actorPed, camOffset.x, camOffset.y, camOffset.z, true);
+
 	CAM::POINT_CAM_AT_ENTITY(cameraHandle, actorPed, 0.0f, 0.0f, 0.0f, true);
 	WAIT(100);
 	CAM::STOP_CAM_POINTING(cameraHandle);
 
-	//CAM::SET_CAM_ACTIVE_WITH_INTERP(cameraHandle, orgCam, 2500, false, false);
-
 	CAM::RENDER_SCRIPT_CAMS(true, 1, 1800, 1, 0);
 
-	//CAM::DO_SCREEN_FADE_IN(1000);
+	initializeStageLights();
 }
 
 void BirdsEyeMode::onExitMode()
@@ -1181,7 +1223,14 @@ void BirdsEyeMode::actionStartAddLightMode()
 	Vector3 cameraDirection = {};
 	cameraDirection = MathUtils::rotationToDirection(cameraRotation);
 
+	currentStageLightFlickerType = getDefaultStageLightFlickerType();
+	currentStageLightRotationType = getDefaultStageLightRotationType();
+	currentStageLightMovementType = getDefaultStageLightMovementType();
+
+
 	currentStageLight = std::make_shared<StageLight>(cameraPosition, cameraRotation, currentSceneDirectorLightObject);
+
+	action_reset_stagelights();
 }
 
 
@@ -1308,7 +1357,25 @@ void BirdsEyeMode::drawAddLightInstructions() {
 		else {
 			GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING("Follow actor");
 		}
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(4);
+		GRAPHICS::_0xE83A3E3557A56640("t_F");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Flicker: " + currentStageLightFlickerType.name).c_str()));
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(5);
+		GRAPHICS::_0xE83A3E3557A56640("t_R");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Rotation: " + currentStageLightRotationType.name).c_str()));
+		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
+
+
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "SET_DATA_SLOT");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_INT(6);
+		GRAPHICS::_0xE83A3E3557A56640("t_M");
+		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION_PARAMETER_STRING(strdup(("Movement: " + currentStageLightMovementType.name).c_str()));
 		GRAPHICS::_POP_SCALEFORM_MOVIE_FUNCTION_VOID();
 
 		GRAPHICS::_PUSH_SCALEFORM_MOVIE_FUNCTION(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
@@ -1491,12 +1558,19 @@ bool BirdsEyeMode::checkInputMovement()
 
 void BirdsEyeMode::disableControls() {
 	std::vector<int> disabledControls = {
-		0,2,3,4,5,6,16,17,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,44,45,71,72,156,243,257,261,262,263,264,267,268,269,270,271,272,273
+		0,2,3,4,5,6,16,17,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,44,45,71,72,75,140,141,142,143,156,243,257,261,262,263,264,267,268,269,270,271,272,273
 	};
 
 	for (auto & controlCode : disabledControls) {
 		CONTROLS::DISABLE_CONTROL_ACTION(0, controlCode, 1);
 	}
+
+	//INPUT_MELEE_ATTACK_LIGHT = 140
+	//INPUT_MELEE_ATTACK_HEAVY = 141
+	//INPUT_MELEE_ATTACK_ALTERNATE = 142
+	//INPUT_MELEE_BLOCK = 143
+	//INPUT_VEH_EXIT = 75
+
 	//INPUT_NEXT_CAMERA = 0,
 	//INPUT_LOOK_UD = 2,
 	//INPUT_LOOK_UP_ONLY = 3,
@@ -1666,6 +1740,39 @@ bool BirdsEyeMode::is_key_pressed_for_light_follow_actor()
 {
 	//G
 	if (IsKeyDown(0x47)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_light_next_flicker()
+{
+	//F
+	if (IsKeyDown(0x46)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_light_next_rotation()
+{
+	//R
+	if (IsKeyDown(0x52)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool BirdsEyeMode::is_key_pressed_for_light_next_movement()
+{
+	//R
+	if (IsKeyDown(0x4D)) {
 		return true;
 	}
 	else {

@@ -196,7 +196,7 @@ void log_to_file(std::string message, bool bAppend) {
 
 
 void action_show_info_on_start(){
-	set_status_text("Scene director 3.4.1 Beta1 by elsewhat");
+	set_status_text("Scene director 3.4.1 by elsewhat");
 	set_status_text("Duplicate actors in Rockstar editor? Restart GTA after recording");
 	set_status_text("Latest feature: Stage lights");
 	set_status_text("Scene is setup mode");
@@ -3393,6 +3393,16 @@ void action_load_stagelights() {
 					movementEvent.hasxyRatio = false;
 				}
 
+				float yxRatio = 0.0;
+				result = movementElement->QueryFloatAttribute("yxRatio", &xyRatio);
+				if (result == tinyxml2::XML_SUCCESS) {
+					movementEvent.hasyxRatio = true;
+					movementEvent.yxRatio = yxRatio;
+				}
+				else {
+					movementEvent.hasyxRatio = false;
+				}
+
 				movementEvents.push_back(movementEvent);
 			}
 
@@ -3409,6 +3419,13 @@ void action_load_stagelights() {
 
 	set_status_text("Loaded " + std::to_string(lightsLoaded) + " stagelights from " + saveFileNameStageLights);
 
+}
+
+void action_reset_stagelights()
+{
+	for (auto & stageLight : sceneStageLights) {
+		stageLight.resetToInitial();
+	}
 }
 
 
@@ -7372,10 +7389,11 @@ void main()
 			}
 
 			//check if any spot lights should be moved or flickered
-			if (GetTickCount() - lastStageLightsTick > 20) {
+			if (GetTickCount() - lastStageLightsTick > 10) {
 				for (auto & stageLight : sceneStageLights) {
 					stageLight.actionOnTick(GetTickCount(), actors);
 				}
+				lastStageLightsTick = GetTickCount();
 			}
 
 			//Wait for next tick
@@ -7387,11 +7405,8 @@ void main()
 				log_to_file("Exiting birds eye mode");
 				activeMode = MODE_STANDARD;
 				birdsEyeController.onExitMode();
-
-				for (auto & stageLight : sceneStageLights) {
-					log_to_file("Stage light " + std::to_string(stageLight.isTrackingActor()) + " actor"+ std::to_string(stageLight.getTrackedActorIndex())); ;
-				}
-
+				
+				action_reset_stagelights();
 			}
 
 			if (hud_toggle_key_pressed()) {

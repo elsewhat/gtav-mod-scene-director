@@ -1,0 +1,23 @@
+<SceneDirector>
+    <StageLight lightPositionX="1680.3004" lightPositionY="3277.9675" lightPositionZ="44.182011" lightRotationX="-33.753487" lightRotationY="-3.6967194e-05" lightRotationZ="-50.627434" propName="prop_sd_spot_03" isTrackingActor="0" hasFlicker="0" hasMovement="1" hasRotation="0">
+        <Movement z="0.0099999998" length="300"/>
+        <Movement z="0.02" length="1000"/>
+        <Movement z="0.0099999998" length="300"/>
+        <Movement length="500"/>
+        <Movement z="-0.0099999998" length="300"/>
+        <Movement z="-0.02" length="1000"/>
+        <Movement z="-0.0099999998" length="300"/>
+        <Movement length="500"/>
+    </StageLight>
+    <StageLight lightPositionX="1683.5796" lightPositionY="3275.043" lightPositionZ="40.859299" lightRotationX="12.506433" lightRotationY="3277.9675" lightRotationZ="2331.2466" propName="prop_sd_spot_14" isTrackingActor="0" hasFlicker="0" hasMovement="0" hasRotation="1">
+        <Rotation yaw="4" length="0"/>
+    </StageLight>
+    <StageLight lightPositionX="1698.7281" lightPositionY="3293.7634" lightPositionZ="38.426716" lightRotationX="30.301764" lightRotationY="-5.1915868e-05" lightRotationZ="101.65402" propName="prop_sd_spot_05" isTrackingActor="0" hasFlicker="0" hasMovement="0" hasRotation="0">
+        <Flicker on="400"/>
+        <Flicker off="300"/>
+        <Movement x="0" y="0" z="0.02" length="1000"/>
+        <Movement x="0" y="0" z="-0.02" length="1000"/>
+        <Rotation pitch="4" length="0"/>
+        <Rotation yaw="2" length="0"/>
+    </StageLight>
+</SceneDirector>

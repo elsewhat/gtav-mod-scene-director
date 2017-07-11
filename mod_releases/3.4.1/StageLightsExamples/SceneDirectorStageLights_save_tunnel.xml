@@ -1,0 +1,59 @@
+<SceneDirector>
+    <StageLight lightPositionX="-238.84698" lightPositionY="1485.6195" lightPositionZ="289.65323" lightRotationX="-25.997328" lightRotationY="6.1742758e-06" lightRotationZ="104.65958" propName="prop_sd_spot_01" isTrackingActor="0" hasFlicker="0" hasMovement="1" hasRotation="0">
+        <Flicker on="5000"/>
+        <Flicker off="50"/>
+        <Flicker on="300"/>
+        <Flicker off="50"/>
+		<Flicker on="300"/>
+
+		<Movement x="0.001" y="0" z="0." length="100"/>
+		<Movement x="0.003" y="0" z="0." length="100"/>
+		<Movement x="0.005" y="0" z="0." length="100"/>
+		<Movement x="0.007" y="0" z="0." length="100"/>
+        <Movement x="0.01" y="0" z="0." length="2500"/>
+       	<Movement x="0.007" y="0" z="0." length="100"/>
+       	<Movement x="0.005" y="0" z="0." length="100"/>
+		<Movement x="0.003" y="0" z="0." length="100"/>
+		<Movement x="0.0" y="0" z="0." length="400"/>		
+		<Movement x="-0.001" y="0" z="0." length="100"/>	
+		<Movement x="-0.001" y="0" z="0." length="100"/>
+		<Movement x="-0.003" y="0" z="0." length="100"/>
+		<Movement x="-0.005" y="0" z="0." length="100"/>
+		<Movement x="-0.007" y="0" z="0." length="100"/>			       	
+        <Movement x="-0.01" y="0" z="0" length="2500"/>
+       	<Movement x="-0.007" y="0" z="0." length="100"/>
+       	<Movement x="-0.005" y="0" z="0." length="100"/>
+		<Movement x="-0.003" y="0" z="0." length="100"/>  
+		<Movement x="0.0" y="0" z="0." length="400"/>
+        <Rotation pitch="4" length="0"/>
+        <Rotation yaw="2" length="0"/>
+    </StageLight>
+    <StageLight lightPositionX="-238.75598" lightPositionY="1485.2719" lightPositionZ="289.65323" lightRotationX="-25.997328" lightRotationY="6.1742758e-06" lightRotationZ="104.65958" propName="prop_sd_spot_04" isTrackingActor="0" hasFlicker="0" hasMovement="1" hasRotation="0">
+        <Flicker on="400"/>
+        <Flicker off="300"/>
+		<Movement z="0.001" y="0" x="0." length="100"/>
+		<Movement z="0.003" y="0" x="0." length="100"/>
+		<Movement z="0.005" y="0" x="0." length="100"/>
+		<Movement z="0.007" y="0" x="0." length="100"/>
+        <Movement z="0.01" y="0" x="0." length="2500"/>
+       	<Movement z="0.007" y="0" x="0." length="100"/>
+       	<Movement z="0.005" y="0" x="0." length="100"/>
+		<Movement z="0.003" y="0" x="0." length="100"/>
+		<Movement z="0.0" y="0" x="0." length="400"/>		
+		<Movement z="-0.001" y="0" x="0." length="100"/>	
+		<Movement z="-0.001" y="0" x="0." length="100"/>
+		<Movement z="-0.003" y="0" x="0." length="100"/>
+		<Movement z="-0.005" y="0" x="0." length="100"/>
+		<Movement z="-0.007" y="0" x="0." length="100"/>			       	
+        <Movement z="-0.01" y="0" x="0" length="2500"/>
+       	<Movement z="-0.007" y="0" x="0." length="100"/>
+       	<Movement z="-0.005" y="0" x="0." length="100"/>
+		<Movement z="-0.003" y="0" x="0." length="100"/>  
+		<Movement z="0.0" y="0" x="0." length="400"/>
+		<!--        
+        <Movement x="0" y="0" z="0.02" length="1500"/>
+        <Movement x="0" y="0" z="-0.02" length="1500"/>-->
+        <Rotation pitch="4" length="0"/>
+        <Rotation yaw="2" length="0"/>
+    </StageLight>
+</SceneDirector>

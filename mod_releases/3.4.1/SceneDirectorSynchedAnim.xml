@@ -1,0 +1,1932 @@
+<SynchedAnimations>
+<SynchedAnim title="Manly handshake (female - female)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1801"/><ActorAnim animIndex="1803"/>
+</SynchedAnim>
+<SynchedAnim title="Manly handshake (female - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1822"/><ActorAnim animIndex="30710"/>
+</SynchedAnim>
+<SynchedAnim title="Manly handshake (male - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="30719"/><ActorAnim animIndex="30720"/>
+</SynchedAnim>
+<SynchedAnim title="Bro hug (female - female)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="30697"/><ActorAnim animIndex="30698"/>
+</SynchedAnim>
+<SynchedAnim title="Bro hug (female - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1812"/><ActorAnim animIndex="1814"/>
+</SynchedAnim>
+<SynchedAnim title="Bro hug (male - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="30712"/><ActorAnim animIndex="30713"/>
+</SynchedAnim>
+<SynchedAnim title="Cowering (female - female)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1793"/><ActorAnim animIndex="30700"/>
+</SynchedAnim>
+<SynchedAnim title="Cowering (female - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1815"/><ActorAnim animIndex="30705"/>
+</SynchedAnim>
+<SynchedAnim title="Cowering (male - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1833"/><ActorAnim animIndex="30715"/>
+</SynchedAnim>
+<SynchedAnim title="Backslap (female - female)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1790"/><ActorAnim animIndex="30696"/>
+</SynchedAnim>
+<SynchedAnim title="Backslap (female - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1810"/><ActorAnim animIndex="30704"/>
+</SynchedAnim>
+<SynchedAnim title="Backslap (male - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1829"/><ActorAnim animIndex="30711"/>
+</SynchedAnim>
+<SynchedAnim title="Fistbump (female - female)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="30701"/><ActorAnim animIndex="30702"/>
+</SynchedAnim>
+<SynchedAnim title="Fistbump (female - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="30706"/><ActorAnim animIndex="30707"/>
+</SynchedAnim>
+<SynchedAnim title="Fistbump (male - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="30716"/><ActorAnim animIndex="30717"/>
+</SynchedAnim>
+<SynchedAnim title="High five (female - female)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1798"/><ActorAnim animIndex="30703"/>
+</SynchedAnim>
+<SynchedAnim title="High five (female - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="30708"/><ActorAnim animIndex="30709"/>
+</SynchedAnim>
+<SynchedAnim title="High five (male - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1839"/><ActorAnim animIndex="30718"/>
+</SynchedAnim>
+<SynchedAnim title="Sarcastic (female - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1825"/><ActorAnim animIndex="1827"/>
+</SynchedAnim>
+<SynchedAnim title="Sarcastic (female - female)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1805"/><ActorAnim animIndex="1807"/>
+</SynchedAnim>
+<SynchedAnim title="Sarcastic (male - male)" category="Celebration" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1843"/><ActorAnim animIndex="1845"/>
+</SynchedAnim>
+<SynchedAnim title="Cougar takedown back" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="3812"/><ActorAnim animIndex="3820"/>
+</SynchedAnim>
+<SynchedAnim title="Cougar takedown front" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="3814"/><ActorAnim animIndex="3821"/>
+</SynchedAnim>
+<SynchedAnim title="Retriever takedown back" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="43873"/><ActorAnim animIndex="43872"/>
+</SynchedAnim>
+<SynchedAnim title="Retriever takedown front" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="4426"/><ActorAnim animIndex="43875"/>
+</SynchedAnim>
+<SynchedAnim title="Motorcycle knockout passenger (Franklin)" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="5191"/><ActorAnim animIndex="5192"/>
+</SynchedAnim>
+<SynchedAnim title="Vehicle knockout passenger (Franklin)" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5188"/><ActorAnim animIndex="5189"/>
+</SynchedAnim>
+<SynchedAnim title="Hatchet takedown front" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5792"/><ActorAnim animIndex="5795"/>
+</SynchedAnim>
+<SynchedAnim title="Hatchet takedown rear #1" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5793"/><ActorAnim animIndex="5796"/>
+</SynchedAnim>
+<SynchedAnim title="Hatchet takedown rear #2" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5794"/><ActorAnim animIndex="5797"/>
+</SynchedAnim>
+<SynchedAnim title="Knife takedown failed rear" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5823"/><ActorAnim animIndex="5859"/>
+</SynchedAnim>
+<SynchedAnim title="Knife takedown failed front" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5824"/><ActorAnim animIndex="5860"/>
+</SynchedAnim>
+<SynchedAnim title="Knife takedown front" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5825"/><ActorAnim animIndex="5836"/>
+</SynchedAnim>
+<SynchedAnim title="Knife takedown front" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5826"/><ActorAnim animIndex="5837"/>
+</SynchedAnim>
+<SynchedAnim title="Knife stealth takedown" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5827"/><ActorAnim animIndex="5838"/>
+</SynchedAnim>
+<SynchedAnim title="Melee failed takedown front" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6057"/><ActorAnim animIndex="6068"/>
+</SynchedAnim>
+<SynchedAnim title="Melee failed takedown rear" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6058"/><ActorAnim animIndex="6069"/>
+</SynchedAnim>
+<SynchedAnim title="Melee stealth kill unarmed" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6059"/><ActorAnim animIndex="6070"/>
+</SynchedAnim>
+<SynchedAnim title="Melee takedown front elbow" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6060"/><ActorAnim animIndex="6071"/>
+</SynchedAnim>
+<SynchedAnim title="Melee takedown front uppercut" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6061"/><ActorAnim animIndex="6072"/>
+</SynchedAnim>
+<SynchedAnim title="Melee takedown rear lefthook" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6062"/><ActorAnim animIndex="6073"/>
+</SynchedAnim>
+<SynchedAnim title="stealth_kill_unarmed_a" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6116"/><ActorAnim animIndex="6130"/>
+</SynchedAnim>
+<SynchedAnim title="stealth_kill_unarmed_hook_r 2833" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6117"/><ActorAnim animIndex="6131"/>
+</SynchedAnim>
+<SynchedAnim title="stealth_kill_unarmed_non_lethal_a 3466" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6118"/><ActorAnim animIndex="6132"/>
+</SynchedAnim>
+<SynchedAnim title="stealth_kill_unarmed_non_lethal_b 2533" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6170"/><ActorAnim animIndex="6176"/>
+</SynchedAnim>
+<SynchedAnim title="takedown_front_backslap 2333" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6119"/><ActorAnim animIndex="6133"/>
+</SynchedAnim>
+<SynchedAnim title="takedown_front_cross_r 2066" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6120"/><ActorAnim animIndex="6134"/>
+</SynchedAnim>
+<SynchedAnim title="takedown_front_elbow 3233" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6121"/><ActorAnim animIndex="6135"/>
+</SynchedAnim>
+<SynchedAnim title="takedown_front_headbutt 2266" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6122"/><ActorAnim animIndex="6136"/>
+</SynchedAnim>
+<SynchedAnim title="takedown_front_low_punch 3066" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6123"/><ActorAnim animIndex="6137"/>
+</SynchedAnim>
+<SynchedAnim title="takedown_front_slap 2399" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6124"/><ActorAnim animIndex="6138"/>
+</SynchedAnim>
+<SynchedAnim title="takedown_front_uppercut 2533" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6125"/><ActorAnim animIndex="6139"/>
+</SynchedAnim>
+<SynchedAnim title="takedown_rear_lefthook 2266" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6126"/><ActorAnim animIndex="6140"/>
+</SynchedAnim>
+<SynchedAnim title="psycho_front_takedown 4333" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6143"/><ActorAnim animIndex="67770"/>
+</SynchedAnim>
+<SynchedAnim title="psycho_front_takedown_b 4000" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6144"/><ActorAnim animIndex="67771"/>
+</SynchedAnim>
+<SynchedAnim title="psycho_front_takedown_c" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6113"/><ActorAnim animIndex="67772"/>
+</SynchedAnim>
+<SynchedAnim title="psycho_rear_takedown 3366" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6145"/><ActorAnim animIndex="6147"/>
+</SynchedAnim>
+<SynchedAnim title="psycho_rear_takedown_b 3500" category="Melee" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6146"/><ActorAnim animIndex="6148"/>
+</SynchedAnim>
+<SynchedAnim title="Darts intro #1" category="Sports" actorsAligned="true" deltaZ="0.5">
+<ActorAnim animIndex="6306"/><ActorAnim animIndex="6308"/>
+</SynchedAnim>
+<SynchedAnim title="Darts intro #2" category="Sports" actorsAligned="true" deltaZ="0.5">
+<ActorAnim animIndex="6315"/><ActorAnim animIndex="6317"/>
+</SynchedAnim>
+<SynchedAnim title="Darts winner #1" category="Sports" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="6323"/><ActorAnim animIndex="6324"/>
+</SynchedAnim>
+<SynchedAnim title="Darts winner #2" category="Sports" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="6326"/><ActorAnim animIndex="6327"/>
+</SynchedAnim>
+<SynchedAnim title="Darts winner #3" category="Sports" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="6329"/><ActorAnim animIndex="6330"/>
+</SynchedAnim>
+<SynchedAnim title="Drinking with barman #1" category="Drinking/drugs" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6331"/><ActorAnim animIndex="6334"/>
+</SynchedAnim>
+<SynchedAnim title="Drinking with barman #2" category="Drinking/drugs" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6332"/><ActorAnim animIndex="6335"/>
+</SynchedAnim>
+<SynchedAnim title="Drinking with barman #3" category="Drinking/drugs" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6333"/><ActorAnim animIndex="6336"/>
+</SynchedAnim>
+<SynchedAnim title="Sex low vehicle" category="Explicit" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="6767"/><ActorAnim animIndex="6766"/>
+</SynchedAnim>
+<SynchedAnim title="Pimp demands money" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="6864"/><ActorAnim animIndex="6863"/><ObjectAnim animIndex="6862"/><Object propName="prop_cash_pile_02"/>
+</SynchedAnim>
+<SynchedAnim title="Prostitutes argue" category="Aggressive interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6865"/><ActorAnim animIndex="6866"/>
+</SynchedAnim>
+<SynchedAnim title="Drinking at strip club #1" category="Drinking/drugs" actorsAligned="true" deltaZ="1">
+<ActorAnim animIndex="6940"/><ActorAnim animIndex="6937"/>
+</SynchedAnim>
+<SynchedAnim title="Drinking at strip club #2" category="Drinking/drugs" actorsAligned="true" deltaZ="1">
+<ActorAnim animIndex="6955"/><ActorAnim animIndex="6952"/>
+</SynchedAnim>
+<SynchedAnim title="Drinking at strip club #3" category="Drinking/drugs" actorsAligned="true" deltaZ="1">
+<ActorAnim animIndex="6964"/><ActorAnim animIndex="6961"/>
+</SynchedAnim>
+<SynchedAnim title="Drinking at strip club #4" category="Drinking/drugs" actorsAligned="true" deltaZ="1">
+<ActorAnim animIndex="6974"/><ActorAnim animIndex="6971"/>
+</SynchedAnim>
+<SynchedAnim title="Argueing (Jimmy and Simeon) #1" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="7703"/><ActorAnim animIndex="7704"/>
+</SynchedAnim>
+<SynchedAnim title="Argueing (Jimmy and Simeon) #2" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="7705"/><ActorAnim animIndex="7706"/>
+</SynchedAnim>
+<SynchedAnim title="Franklin and Lamar walk to car" category="Vehicle" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="7726"/><ActorAnim animIndex="7727"/><ObjectAnim animIndex="7724"/><ObjectAnim animIndex="7725"/><Object propName="ninef2"/><Object propName="rapidgt2"/>
+</SynchedAnim>
+<SynchedAnim title="Gamer with controller and headset" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="7785"/><ObjectAnim animIndex="7786"/><ObjectAnim animIndex="7787"/><Object propName="prop_controller_01"/><Object propName="prop_headset_01"/>
+</SynchedAnim>
+<SynchedAnim title="Enter door" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="12066"/><ObjectAnim animIndex="12069"/><Object propName="v_ilev_fa_frontdoor"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance exit (exit, touching)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7020"/><ActorAnim animIndex="7018"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance exit (exit, dismiss)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7016"/><ActorAnim animIndex="7015"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance (start dancing)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7001"/><ActorAnim animIndex="6999"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance sit-down (sit down pt1)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7006"/><ActorAnim animIndex="7004"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance sit-down (sit down pt2)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7025"/><ActorAnim animIndex="7023"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance (dance1)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7029"/><ActorAnim animIndex="7027"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance (touch, dance2)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7033"/><ActorAnim animIndex="7031"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance (touch, dance3)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7038"/><ActorAnim animIndex="7036"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance (no touch, dance2)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7034"/><ActorAnim animIndex="7031"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance (no touch, dance3)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7039"/><ActorAnim animIndex="7036"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance (idle)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7042"/><ActorAnim animIndex="7044"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance 2g sit-down (pt1)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7057"/><ActorAnim animIndex="7058"/><ActorAnim animIndex="7060"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance 2g sit-down (pt2)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7084"/><ActorAnim animIndex="7085"/><ActorAnim animIndex="7087"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance 2g (exit, dismiss)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7070"/><ActorAnim animIndex="7071"/><ActorAnim animIndex="7073"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance 2g (touch, dance1)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7091"/><ActorAnim animIndex="7092"/><ActorAnim animIndex="7094"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance 2g (touch, dance2)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7097"/><ActorAnim animIndex="7098"/><ActorAnim animIndex="7100"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance 2g (touch, dance3)" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="7103"/><ActorAnim animIndex="7104"/><ActorAnim animIndex="7106"/>
+</SynchedAnim>
+<SynchedAnim title="Remove parachute #1 (male)" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13664"/><ObjectAnim animIndex="22477"/><Object propName="hei_p_parachute_s_female"/>
+</SynchedAnim>
+<SynchedAnim title="Remove parachute #2 (male)" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="25112"/><ObjectAnim animIndex="1739"/><Object propName="hei_p_parachute_s_female"/>
+</SynchedAnim>
+<SynchedAnim title="Remove parachute #3 (male)" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="25111"/><ObjectAnim animIndex="1740"/><Object propName="hei_p_parachute_s_female"/>
+</SynchedAnim>
+<SynchedAnim title="Remove parachute #4 (female)" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="1731"/><ObjectAnim animIndex="1733"/><Object propName="hei_p_parachute_s_female"/>
+</SynchedAnim>
+<SynchedAnim title="Remove parachute #5 (female)" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22479"/><ObjectAnim animIndex="1734"/><Object propName="hei_p_parachute_s_female"/>
+</SynchedAnim>
+<SynchedAnim title="Remove parachute #6 (female)" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22478"/><ObjectAnim animIndex="1736"/><Object propName="hei_p_parachute_s_female"/>
+</SynchedAnim>
+<SynchedAnim title="Lapdance (Wade)" category="Explicit" actorsAligned="true" deltaZ="0.2">
+<ActorAnim animIndex="7161"/><ActorAnim animIndex="7160"/><ActorAnim animIndex="7159"/>
+</SynchedAnim>
+<SynchedAnim title="Thrown out" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.35">
+<ActorAnim animIndex="7158"/><ActorAnim animIndex="7155"/><ActorAnim animIndex="7156"/>
+</SynchedAnim>
+<SynchedAnim title="Sign in" category="Friendly interaction" actorsAligned="true" deltaZ="-0.58">
+<ActorAnim animIndex="7620"/><ActorAnim animIndex="7621"/><ObjectAnim animIndex="7619"/><Object propName="p_amb_clipboard_01"/>
+</SynchedAnim>
+<SynchedAnim title="Dodge car (crowd 1)" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="7707"/><ActorAnim animIndex="7708"/><ActorAnim animIndex="7709"/><ActorAnim animIndex="7710"/>
+</SynchedAnim>
+<SynchedAnim title="Dodge car (crowd 2)" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="7711"/><ActorAnim animIndex="7712"/><ActorAnim animIndex="7713"/><ActorAnim animIndex="7714"/>
+</SynchedAnim>
+<SynchedAnim title="Dodge car (crowd 3)" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="7715"/><ActorAnim animIndex="7716"/><ActorAnim animIndex="7717"/><ActorAnim animIndex="7718"/>
+</SynchedAnim>
+<SynchedAnim title="Dodge car (push)" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="7719"/><ActorAnim animIndex="7720"/>
+</SynchedAnim>
+<SynchedAnim title="Gun to driver head (intro)" category="Vehicle" actorsAligned="false" deltaZ="-1">
+<ActorAnim animIndex="7794"/><ActorAnim animIndex="7795"/>
+</SynchedAnim>
+<SynchedAnim title="Gun to driver head (loop)" category="Vehicle" actorsAligned="false" deltaZ="-1">
+<ActorAnim animIndex="7801"/><ActorAnim animIndex="7802"/>
+</SynchedAnim>
+<SynchedAnim title="Tennis coach (practice swing)" category="Sports" actorsAligned="true" deltaZ="0.2">
+<ActorAnim animIndex="7806"/><ActorAnim animIndex="7810"/><ObjectAnim animIndex="7807"/><ObjectAnim animIndex="7808"/><ObjectAnim animIndex="7809"/><Object propName="prop_tennis_rack_01"/><Object propName="prop_tennis_rack_01b"/><Object propName="p_tennis_bag_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Close vault door" category="Individual w/props" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="7930"/><ObjectAnim animIndex="7931"/><Object propName="p_fin_vaultdoor_s"/>
+</SynchedAnim>
+<SynchedAnim title="Take crate from van" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="7937"/><ObjectAnim animIndex="7939"/><Object propName="prop_ld_gold_chest"/>
+</SynchedAnim>
+<SynchedAnim title="Exit car with rifles" category="Vehicle" actorsAligned="true" deltaZ="-1.1">
+<ActorAnim animIndex="7995"/><ActorAnim animIndex="7996"/><ObjectAnim animIndex="7994"/><Object propName="dubsta"/>
+</SynchedAnim>
+<SynchedAnim title="Gathered around laptop" category="Friendly interaction" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="8013"/><ActorAnim animIndex="8014"/><ActorAnim animIndex="8017"/><ObjectAnim animIndex="8015"/><ObjectAnim animIndex="8016"/><Object propName="p_laptop_02_s"/><Object propName="p_laptop_02_s"/>
+</SynchedAnim>
+<SynchedAnim title="Get in passenger seat" category="Vehicle" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="8040"/><ActorAnim animIndex="8043"/><ObjectAnim animIndex="8042"/><Object propName="asea"/>
+</SynchedAnim>
+<SynchedAnim title="Pull lever" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8068"/><ObjectAnim animIndex="8069"/><Object propName="p_rail_controller_s"/>
+</SynchedAnim>
+<SynchedAnim title="Chad Hug #1" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8105"/><ActorAnim animIndex="8106"/>
+</SynchedAnim>
+<SynchedAnim title="Chad Hug #2" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8101"/><ActorAnim animIndex="8102"/>
+</SynchedAnim>
+<SynchedAnim title="Chad Hug #3" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8103"/><ActorAnim animIndex="8104"/>
+</SynchedAnim>
+<SynchedAnim title="Hang and throw over ledge" category="Aggressive interaction" actorsAligned="true" deltaZ="-8.3">
+<ActorAnim animIndex="8127"/><ActorAnim animIndex="8128"/>
+</SynchedAnim>
+<SynchedAnim title="Blowjob, kneeling" category="Explicit" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="8132"/><ActorAnim animIndex="8130"/>
+</SynchedAnim>
+<SynchedAnim title="Sex, standing" category="Explicit" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8134"/><ActorAnim animIndex="8133"/>
+</SynchedAnim>
+<SynchedAnim title="Throw grenade launcher" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8238"/><ActorAnim animIndex="8237"/>
+</SynchedAnim>
+<SynchedAnim title="Drunken fist fight" category="Advanced Melee" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8253"/><ActorAnim animIndex="8258"/>
+</SynchedAnim>
+<SynchedAnim title="Car flips" category="Vehicle" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8424"/><ActorAnim animIndex="8427"/><ObjectAnim animIndex="8426"/><Object propName="dubsta"/>
+</SynchedAnim>
+<SynchedAnim title="Hold dog by collar" category="Other" actorsAligned="true" deltaZ="-1.1">
+<ActorAnim animIndex="8434"/><ActorAnim animIndex="8435"/>
+</SynchedAnim>
+<SynchedAnim title="Let go of dog collar" category="Other" actorsAligned="true" deltaZ="-1.1">
+<ActorAnim animIndex="8433"/><ActorAnim animIndex="8432"/>
+</SynchedAnim>
+<SynchedAnim title="Yacht fight 1 (1/3)" category="Advanced Melee" actorsAligned="true" deltaZ="-3">
+<ActorAnim animIndex="8533"/><ActorAnim animIndex="8534"/>
+</SynchedAnim>
+<SynchedAnim title="Yacht fight 1 (2/3)" category="Advanced Melee" actorsAligned="true" deltaZ="-3">
+<ActorAnim animIndex="8535"/><ActorAnim animIndex="8536"/>
+</SynchedAnim>
+<SynchedAnim title="Yacht fight 1 (3/3)" category="Advanced Melee" actorsAligned="true" deltaZ="-3">
+<ActorAnim animIndex="8537"/><ActorAnim animIndex="8538"/>
+</SynchedAnim>
+<SynchedAnim title="Yacht fight 2 (1/3)" category="Advanced Melee" actorsAligned="true" deltaZ="-2.5">
+<ActorAnim animIndex="8541"/><ActorAnim animIndex="8542"/>
+</SynchedAnim>
+<SynchedAnim title="Yacht fight 2 (2/3)" category="Advanced Melee" actorsAligned="true" deltaZ="-2.5">
+<ActorAnim animIndex="8544"/><ActorAnim animIndex="8545"/>
+</SynchedAnim>
+<SynchedAnim title="Yacht fight 2 (3/3 failure)" category="Advanced Melee" actorsAligned="true" deltaZ="-2.5">
+<ActorAnim animIndex="8539"/><ActorAnim animIndex="8540"/>
+</SynchedAnim>
+<SynchedAnim title="Yacht fight 2 (3/3 success)" category="Advanced Melee" actorsAligned="true" deltaZ="-2.5">
+<ActorAnim animIndex="8547"/><ActorAnim animIndex="8548"/>
+</SynchedAnim>
+<SynchedAnim title="Pull over ledge" category="Advanced Melee" actorsAligned="true" deltaZ="-2.6">
+<ActorAnim animIndex="8572"/><ActorAnim animIndex="8573"/>
+</SynchedAnim>
+<SynchedAnim title="Seated, touching hands" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8609"/><ActorAnim animIndex="8611"/>
+</SynchedAnim>
+<SynchedAnim title="Open door #3 (double doors)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8618"/><ObjectAnim animIndex="8617"/><ObjectAnim animIndex="8616"/><Object propName="v_ilev_mm_doorm_r"/><Object propName="v_ilev_mm_doorm_l"/>
+</SynchedAnim>
+<SynchedAnim title="Jimmy drugs michael #1" category="Vehicle" actorsAligned="true" deltaZ="-0.3">
+<ActorAnim animIndex="8653"/><ActorAnim animIndex="8651"/>
+</SynchedAnim>
+<SynchedAnim title="Jimmy drugs michael #2" category="Vehicle" actorsAligned="true" deltaZ="-0.3">
+<ActorAnim animIndex="8735"/><ActorAnim animIndex="8734"/><ObjectAnim animIndex="8733"/><Object propName="tailgater"/>
+</SynchedAnim>
+<SynchedAnim title="Ear piercing base" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8748"/><ActorAnim animIndex="8746"/>
+</SynchedAnim>
+<SynchedAnim title="Ear piercing #1" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8741"/><ActorAnim animIndex="8740"/>
+</SynchedAnim>
+<SynchedAnim title="Ear piercing #2" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8744"/><ActorAnim animIndex="8743"/>
+</SynchedAnim>
+<SynchedAnim title="Ear piercing #3" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="8751"/><ActorAnim animIndex="8750"/>
+</SynchedAnim>
+<SynchedAnim title="Enter car panicked" category="Vehicle" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="8817"/><ObjectAnim animIndex="8816"/><Object propName="asea"/>
+</SynchedAnim>
+<SynchedAnim title="Interrogate" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="8921"/><ActorAnim animIndex="8923"/><ObjectAnim animIndex="8920"/><Object propName="v_corp_offchair"/>
+</SynchedAnim>
+<SynchedAnim title="Group talking" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9086"/><ActorAnim animIndex="9087"/><ActorAnim animIndex="9088"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, stab in chest" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9174"/><ActorAnim animIndex="9177"/><ObjectAnim animIndex="9171"/><Object propName="prop_torture_ch_01"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, tooth pull (intro)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9198"/><ActorAnim animIndex="9201"/><ObjectAnim animIndex="9200"/><Object propName="prop_pliers_01"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, tooth pull (idle)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9190"/><ActorAnim animIndex="9193"/><ObjectAnim animIndex="9192"/><Object propName="prop_pliers_01"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, tooth pull (loop)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9206"/><ActorAnim animIndex="9209"/><ObjectAnim animIndex="9208"/><Object propName="prop_pliers_01"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, tooth pull (exit)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9226"/><ActorAnim animIndex="9229"/><ObjectAnim animIndex="9228"/><Object propName="prop_pliers_01"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, waterboard (intro)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9269"/><ActorAnim animIndex="9272"/><ObjectAnim animIndex="9265"/><ObjectAnim animIndex="9268"/><ObjectAnim animIndex="9271"/><Object propName="prop_torture_ch_01"/><Object propName="w_am_jerrycan"/><Object propName="p_loose_rag_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, waterboard (kick)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9279"/><ActorAnim animIndex="9283"/><ObjectAnim animIndex="9275"/><ObjectAnim animIndex="9278"/><ObjectAnim animIndex="9282"/><Object propName="prop_torture_ch_01"/><Object propName="w_am_jerrycan"/><Object propName="p_loose_rag_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, waterboard (loop)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9298"/><ActorAnim animIndex="9301"/><ObjectAnim animIndex="9294"/><ObjectAnim animIndex="9297"/><ObjectAnim animIndex="9300"/><Object propName="prop_torture_ch_01"/><Object propName="w_am_jerrycan"/><Object propName="prop_face_rag_01"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, waterboard (outro)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="9313"/><ActorAnim animIndex="9317"/><ObjectAnim animIndex="9306"/><ObjectAnim animIndex="9312"/><ObjectAnim animIndex="9315"/><Object propName="prop_torture_ch_01"/><Object propName="w_am_jerrycan"/><Object propName="prop_face_rag_01"/>
+</SynchedAnim>
+<SynchedAnim title="Rollercoaster enter" category="Sports" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="2415"/><ActorAnim animIndex="2416"/><ObjectAnim animIndex="2417"/><Object propName="prop_roller_car_01"/>
+</SynchedAnim>
+<SynchedAnim title="Rollercoaster exit" category="Sports" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="2418"/><ActorAnim animIndex="2419"/>
+</SynchedAnim>
+<SynchedAnim title="Rollercoaster hands-up start" category="Sports" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="2420"/><ActorAnim animIndex="2421"/><ObjectAnim animIndex="2422"/><Object propName="prop_roller_car_01"/>
+</SynchedAnim>
+<SynchedAnim title="Rollercoaster hands-up idle" category="Sports" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="2426"/><ActorAnim animIndex="30746"/><ObjectAnim animIndex="2427"/><Object propName="prop_roller_car_01"/>
+</SynchedAnim>
+<SynchedAnim title="Rollercoaster hands-up end" category="Sports" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="2423"/><ActorAnim animIndex="2424"/><ObjectAnim animIndex="2425"/><Object propName="prop_roller_car_01"/>
+</SynchedAnim>
+<SynchedAnim title="Drink beer at safehouse #1" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2446"/><ObjectAnim animIndex="2447"/><ObjectAnim animIndex="2448"/><Object propName="prop_sh_beer_pissh_01"/><Object propName="prop_beer_box_01"/>
+</SynchedAnim>
+<SynchedAnim title="Drink beer at safehouse #2" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2449"/><ObjectAnim animIndex="2450"/><ObjectAnim animIndex="2451"/><Object propName="prop_sh_beer_pissh_01"/><Object propName="prop_beer_box_01"/>
+</SynchedAnim>
+<SynchedAnim title="Drink beer at safehouse #3" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="22905"/><ObjectAnim animIndex="2454"/><ObjectAnim animIndex="2453"/><Object propName="prop_sh_beer_pissh_01"/><Object propName="prop_beer_box_01"/>
+</SynchedAnim>
+<SynchedAnim title="Drink beer at safehouse #4" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2454"/><ObjectAnim animIndex="2455"/><ObjectAnim animIndex="2456"/><Object propName="prop_sh_beer_pissh_01"/><Object propName="prop_beer_box_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke bong at safehouse #1" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2457"/><ObjectAnim animIndex="22904"/><ObjectAnim animIndex="2458"/><Object propName="prop_sh_bong_01"/><Object propName="p_cs_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke bong beer at safehouse #2" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2459"/><ObjectAnim animIndex="22903"/><ObjectAnim animIndex="22902"/><Object propName="prop_sh_bong_01"/><Object propName="v_res_tt_lighter"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke bong beer at safehouse #3" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2460"/><ObjectAnim animIndex="22898"/><ObjectAnim animIndex="22900"/><Object propName="prop_sh_bong_01"/><Object propName="ex_prop_exec_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke bong beer at safehouse #4" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2461"/><ObjectAnim animIndex="22899"/><ObjectAnim animIndex="22901"/><Object propName="prop_sh_bong_01"/><Object propName="lux_prop_lighter_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey at safehouse #1" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="22896"/><ObjectAnim animIndex="2465"/><ObjectAnim animIndex="2464"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey at safehouse #2" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2467"/><ObjectAnim animIndex="2468"/><ObjectAnim animIndex="2469"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey at safehouse #3" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2470"/><ObjectAnim animIndex="2471"/><ObjectAnim animIndex="2472"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey at safehouse #4" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2473"/><ObjectAnim animIndex="22895"/><ObjectAnim animIndex="2474"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drink wine at safehouse #1" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2477"/><ObjectAnim animIndex="2478"/><ObjectAnim animIndex="2480"/><ObjectAnim animIndex="2479"/><Object propName="prop_wine_bot_01"/><Object propName="p_wine_glass_s"/><Object propName="prop_sh_wine_glass"/>
+</SynchedAnim>
+<SynchedAnim title="Drink wine at safehouse #2" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2481"/><ObjectAnim animIndex="22893"/><ObjectAnim animIndex="22894"/><ObjectAnim animIndex="2482"/><Object propName="prop_wine_bot_01"/><Object propName="p_wine_glass_s"/><Object propName="prop_sh_wine_glass"/>
+</SynchedAnim>
+<SynchedAnim title="Drink wine at safehouse #3" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2483"/><ObjectAnim animIndex="2484"/><ObjectAnim animIndex="2486"/><ObjectAnim animIndex="2485"/><Object propName="prop_wine_bot_02"/><Object propName="p_wine_glass_s"/><Object propName="prop_sh_wine_glass"/>
+</SynchedAnim>
+<SynchedAnim title="Drink wine at safehouse #4" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="2487"/><ObjectAnim animIndex="2488"/><ObjectAnim animIndex="2490"/><ObjectAnim animIndex="2489"/><Object propName="prop_wine_bot_02"/><Object propName="p_wine_glass_s"/><Object propName="prop_sh_wine_glass"/>
+</SynchedAnim>
+<SynchedAnim title="Drink wheatgrass at safehouse" category="Drinking/drugs" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="22897"/><ObjectAnim animIndex="2462"/><Object propName="p_w_grass_gls_s"/>
+</SynchedAnim>
+<SynchedAnim title="Car knockout" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="5188"/><ActorAnim animIndex="5189"/>
+</SynchedAnim>
+<SynchedAnim title="Motorcycle knockout" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="5191"/><ActorAnim animIndex="5192"/>
+</SynchedAnim>
+<SynchedAnim title="Arm wrestling winner #1" category="Sports" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6206"/><ActorAnim animIndex="6208"/>
+</SynchedAnim>
+<SynchedAnim title="Arm wrestling winner #2" category="Sports" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="6210"/><ActorAnim animIndex="6212"/>
+</SynchedAnim>
+<SynchedAnim title="CPR" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10902"/><ActorAnim animIndex="10903"/>
+</SynchedAnim>
+<SynchedAnim title="CPR Cower" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10904"/><ActorAnim animIndex="10905"/>
+</SynchedAnim>
+<SynchedAnim title="Miss switch in car" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="12031"/><ActorAnim animIndex="12032"/><ActorAnim animIndex="12030"/>
+</SynchedAnim>
+<SynchedAnim title="mid_mission_inside_helicopter_lester " category="Vehicle" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12036"/><ActorAnim animIndex="12037"/>
+</SynchedAnim>
+<SynchedAnim title="shop_ig_4_customer" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12042"/><ActorAnim animIndex="12045"/><ObjectAnim animIndex="12043"/><ObjectAnim animIndex="12044"/><Object propName="v_ilev_ta_door"/><Object propName="v_ilev_ta_tatgun"/>
+</SynchedAnim>
+<SynchedAnim title="artist_finishes_up_his_tattoo_artist" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12055"/><ActorAnim animIndex="1253"/><ObjectAnim animIndex="12054"/><Object propName="v_ilev_ta_door"/>
+</SynchedAnim>
+<SynchedAnim title="Enter shop" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12058"/><ActorAnim animIndex="12059"/><ObjectAnim animIndex="12060"/><ObjectAnim animIndex="12057"/><Object propName="v_ilev_ta_door"/><Object propName="v_ilev_ta_door"/>
+</SynchedAnim>
+<SynchedAnim title="Tattoo #2" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14856"/><ActorAnim animIndex="14857"/>
+</SynchedAnim>
+<SynchedAnim title="Enter home #1" category="Individual w/props" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="12062"/><ObjectAnim animIndex="12064"/><Object propName="v_ilev_fh_door02"/>
+</SynchedAnim>
+<SynchedAnim title="Enter home #2" category="Individual w/props" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="12066"/><ObjectAnim animIndex="12069"/><Object propName="v_ilev_fh_door02"/>
+</SynchedAnim>
+<SynchedAnim title="threaten_ortega_trev" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12107"/><ActorAnim animIndex="12106"/><ActorAnim animIndex="12105"/>
+</SynchedAnim>
+<SynchedAnim title="dialogue_b_ron" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="12157"/><ActorAnim animIndex="12156"/>
+</SynchedAnim>
+<SynchedAnim title="jump_out_of_van_ds" category="Vehicle" actorsAligned="true" deltaZ="-0.1">
+<ActorAnim animIndex="12169"/><ActorAnim animIndex="12170"/>
+</SynchedAnim>
+<SynchedAnim title="bikers_from_van_ped_a" category="Vehicle" actorsAligned="true" deltaZ="-0.1">
+<ActorAnim animIndex="12171"/><ActorAnim animIndex="12172"/>
+</SynchedAnim>
+<SynchedAnim title="bikers_from_van_peda" category="Vehicle" actorsAligned="true" deltaZ="-0.1">
+<ActorAnim animIndex="12173"/><ActorAnim animIndex="12174"/>
+</SynchedAnim>
+<SynchedAnim title="call_biker_biker" category="Friendly interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="12197"/><ActorAnim animIndex="12198"/>
+</SynchedAnim>
+<SynchedAnim title="misstrevor3 bike_chat_a_1 intro" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12236"/><ActorAnim animIndex="12237"/><ObjectAnim animIndex="12238"/><ObjectAnim animIndex="12239"/><Object propName="daemon"/><Object propName="daemon"/>
+</SynchedAnim>
+<SynchedAnim title="misstrevor3 bike_chat_b_loop_1 loop" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12240"/><ActorAnim animIndex="12241"/><ObjectAnim animIndex="12242"/><ObjectAnim animIndex="12243"/><Object propName="daemon"/><Object propName="daemon"/>
+</SynchedAnim>
+<SynchedAnim title="misstrevor3 bike_chat_b_outro_1 outro" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12245"/><ActorAnim animIndex="12246"/><ObjectAnim animIndex="12247"/><ObjectAnim animIndex="12248"/><Object propName="daemon"/><Object propName="daemon"/>
+</SynchedAnim>
+<SynchedAnim title="Beatup dockworker intro" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12267"/><ActorAnim animIndex="12268"/><ActorAnim animIndex="12269"/>
+</SynchedAnim>
+<SynchedAnim title="Beatup dockworker main" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12264"/><ActorAnim animIndex="12265"/><ActorAnim animIndex="12266"/>
+</SynchedAnim>
+<SynchedAnim title="Beatup dockworker exit" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12258"/><ActorAnim animIndex="12259"/><ActorAnim animIndex="12260"/>
+</SynchedAnim>
+<SynchedAnim title="Beatup dockworker idle" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12261"/><ActorAnim animIndex="12262"/><ActorAnim animIndex="12263"/>
+</SynchedAnim>
+<SynchedAnim title="Shove" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="12270"/><ActorAnim animIndex="12271"/>
+</SynchedAnim>
+<SynchedAnim title="Dive clear" category="Other" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="12281"/><ActorAnim animIndex="12282"/>
+</SynchedAnim>
+<SynchedAnim title="Jump out of van" category="Vehicle" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="12289"/><ActorAnim animIndex="12290"/>
+</SynchedAnim>
+<SynchedAnim title="Store hold up cash" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13107"/><ObjectAnim animIndex="13108"/><ObjectAnim animIndex="13109"/><Object propName="p_poly_bag_01_s"/><Object propName="p_till_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Purchase beer" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13111"/><ObjectAnim animIndex="13110"/><Object propName="prop_beer_pissh"/>
+</SynchedAnim>
+<SynchedAnim title="Purchase beerbox" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13113"/><ObjectAnim animIndex="13112"/><Object propName="v_ret_ml_beerjak2"/>
+</SynchedAnim>
+<SynchedAnim title="Purchase chocbar" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13115"/><ObjectAnim animIndex="13114"/><Object propName="prop_choc_ego"/>
+</SynchedAnim>
+<SynchedAnim title="Purchase cigarette" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13117"/><ObjectAnim animIndex="13116"/><Object propName="prop_fag_packet_01"/>
+</SynchedAnim>
+<SynchedAnim title="Lap dance" category="Explicit" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="13124"/><ActorAnim animIndex="13123"/>
+</SynchedAnim>
+<SynchedAnim title="Arrest back-left" category="Aggressive interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="13158"/><ActorAnim animIndex="13172"/>
+</SynchedAnim>
+<SynchedAnim title="Arrest back-right" category="Aggressive interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="13159"/><ActorAnim animIndex="13173"/>
+</SynchedAnim>
+<SynchedAnim title="Arrest forward-left" category="Aggressive interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="13161"/><ActorAnim animIndex="13174"/>
+</SynchedAnim>
+<SynchedAnim title="Arrest forward-right" category="Aggressive interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="13162"/><ActorAnim animIndex="13175"/>
+</SynchedAnim>
+<SynchedAnim title="Arrest on floor back-left" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13180"/><ActorAnim animIndex="13181"/>
+</SynchedAnim>
+<SynchedAnim title="Arrest on floor back-right" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13184"/><ActorAnim animIndex="13185"/>
+</SynchedAnim>
+<SynchedAnim title="Arrest on floor front-left" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13188"/><ActorAnim animIndex="13189"/>
+</SynchedAnim>
+<SynchedAnim title="Arrest on floor front-right" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13192"/><ActorAnim animIndex="13193"/>
+</SynchedAnim>
+<SynchedAnim title="Buzz in friend" category="Friendly interaction" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="13392"/><ActorAnim animIndex="13393"/><ObjectAnim animIndex="13391"/><Object propName="v_ilev_fh_door02"/>
+</SynchedAnim>
+<SynchedAnim title="Enter door left #1" category="Individual w/props" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="13411"/><ObjectAnim animIndex="13410"/><Object propName="v_ilev_fh_door02"/>
+</SynchedAnim>
+<SynchedAnim title="Enter door left #2" category="Individual w/props" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="13414"/><ObjectAnim animIndex="13413"/><Object propName="v_ilev_fh_door02"/>
+</SynchedAnim>
+<SynchedAnim title="Enter door right" category="Individual w/props" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="13418"/><ObjectAnim animIndex="13417"/><Object propName="v_ilev_fh_door02"/>
+</SynchedAnim>
+<SynchedAnim title="Exit door left" category="Individual w/props" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="13422"/><ObjectAnim animIndex="13421"/><Object propName="v_ilev_fh_door02"/>
+</SynchedAnim>
+<SynchedAnim title="Exit door right" category="Individual w/props" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="13426"/><ObjectAnim animIndex="13425"/><Object propName="v_ilev_fh_door02"/>
+</SynchedAnim>
+<SynchedAnim title="Lamar's introduction to multiplayer female" category="Friendly interaction" actorsAligned="false" deltaZ="-0.5">
+<ActorAnim animIndex="13528"/><ActorAnim animIndex="13529"/>
+</SynchedAnim>
+<SynchedAnim title="Lamar's introduction to multiplayer male" category="Friendly interaction" actorsAligned="false" deltaZ="-0.5">
+<ActorAnim animIndex="13530"/><ActorAnim animIndex="13531"/>
+</SynchedAnim>
+<SynchedAnim title="Shoot out" category="Aggressive interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="13633"/><ActorAnim animIndex="13634"/>
+</SynchedAnim>
+<SynchedAnim title="Handshake" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13669"/><ActorAnim animIndex="13670"/>
+</SynchedAnim>
+<SynchedAnim title="High five" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13672"/><ActorAnim animIndex="13673"/>
+</SynchedAnim>
+<SynchedAnim title="Hugs" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13675"/><ActorAnim animIndex="13676"/>
+</SynchedAnim>
+<SynchedAnim title="Kisses" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13678"/><ActorAnim animIndex="13679"/>
+</SynchedAnim>
+<SynchedAnim title="Lap dance safehouse" category="Explicit" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="13764"/><ActorAnim animIndex="13765"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey #1 shot" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13952"/><ObjectAnim animIndex="13957"/><ObjectAnim animIndex="13959"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey #2 shot" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13968"/><ObjectAnim animIndex="13973"/><ObjectAnim animIndex="13975"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey #3 shot" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13980"/><ObjectAnim animIndex="13985"/><ObjectAnim animIndex="13987"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey #4 shot" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13960"/><ObjectAnim animIndex="13965"/><ObjectAnim animIndex="13967"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drink whiskey #5 shot" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13944"/><ObjectAnim animIndex="13949"/><ObjectAnim animIndex="13951"/><Object propName="prop_cs_whiskey_bottle"/><Object propName="ex_p_ex_tumbler_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, wrench intro" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9485"/><ActorAnim animIndex="9487"/><ObjectAnim animIndex="9482"/><ObjectAnim animIndex="9488"/><Object propName="prop_torture_ch_01"/><Object propName="prop_cs_wrench"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, wrench #1" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.65">
+<ActorAnim animIndex="9458"/><ActorAnim animIndex="9460"/><ObjectAnim animIndex="9455"/><ObjectAnim animIndex="9462"/><Object propName="prop_torture_ch_01"/><Object propName="prop_cs_wrench"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, wrench #2" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.65">
+<ActorAnim animIndex="9467"/><ActorAnim animIndex="9469"/><ObjectAnim animIndex="9464"/><ObjectAnim animIndex="9471"/><Object propName="prop_torture_ch_01"/><Object propName="prop_cs_wrench"/>
+</SynchedAnim>
+<SynchedAnim title="Torture, wrench #3" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.65">
+<ActorAnim animIndex="9476"/><ActorAnim animIndex="9478"/><ObjectAnim animIndex="9473"/><ObjectAnim animIndex="9480"/><Object propName="prop_torture_ch_01"/><Object propName="prop_cs_wrench"/>
+</SynchedAnim>
+<SynchedAnim title="Take off mask" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9508"/><ObjectAnim animIndex="9509"/><Object propName="prop_mask_ballistic"/>
+</SynchedAnim>
+<SynchedAnim title="Driver crying #1" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9562"/><ActorAnim animIndex="9560"/><ObjectAnim animIndex="9558"/><Object propName="bodhi"/>
+</SynchedAnim>
+<SynchedAnim title="Driver crying #2" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9563"/><ActorAnim animIndex="9561"/><ObjectAnim animIndex="9559"/>
+</SynchedAnim>
+<SynchedAnim title="Holdup (humane elevator #1)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9564"/><ActorAnim animIndex="9569"/><ActorAnim animIndex="9565"/>
+</SynchedAnim>
+<SynchedAnim title="Holdup (humane elevator #2)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9570"/><ActorAnim animIndex="9567"/><ActorAnim animIndex="9571"/>
+</SynchedAnim>
+<SynchedAnim title="Move through labs #1" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9575"/><ActorAnim animIndex="9576"/>
+</SynchedAnim>
+<SynchedAnim title="Scientists working base" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9583"/><ActorAnim animIndex="9584"/>
+</SynchedAnim>
+<SynchedAnim title="Scientists working #1" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9579"/><ActorAnim animIndex="9580"/>
+</SynchedAnim>
+<SynchedAnim title="Scientists working #2" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9581"/><ActorAnim animIndex="9582"/>
+</SynchedAnim>
+<SynchedAnim title="Scientists working #3" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9585"/><ActorAnim animIndex="9586"/>
+</SynchedAnim>
+<SynchedAnim title="Holdup (scientists working #1)" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9587"/><ActorAnim animIndex="9590"/><ActorAnim animIndex="9591"/>
+</SynchedAnim>
+<SynchedAnim title="Driver sad, push passenger away" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="9603"/><ActorAnim animIndex="9602"/>
+</SynchedAnim>
+<SynchedAnim title="Driver tells passenger to stop" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="9605"/><ActorAnim animIndex="9604"/>
+</SynchedAnim>
+<SynchedAnim title="Move through labs #2" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9606"/><ActorAnim animIndex="9607"/>
+</SynchedAnim>
+<SynchedAnim title="Holdup (use keycard)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9608"/><ActorAnim animIndex="9610"/><ActorAnim animIndex="9609"/>
+</SynchedAnim>
+<SynchedAnim title="Holdup (scientist walking)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9622"/><ActorAnim animIndex="9621"/>
+</SynchedAnim>
+<SynchedAnim title="Holdup (press button)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9625"/><ActorAnim animIndex="9627"/><ActorAnim animIndex="9626"/>
+</SynchedAnim>
+<SynchedAnim title="Take chemical" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="9632"/><ObjectAnim animIndex="9634"/><ObjectAnim animIndex="9635"/><Object propName="prop_cs_vial_01"/><Object propName="p_chem_vial_02b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Insert chemical" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="9667"/><ObjectAnim animIndex="9668"/><ObjectAnim animIndex="9669"/><Object propName="prop_cs_vial_01"/><Object propName="p_chem_vial_02b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Double doors (two actors)" category="Other" actorsAligned="true" deltaZ="1.3">
+<ActorAnim animIndex="9683"/><ActorAnim animIndex="9684"/><ObjectAnim animIndex="9685"/><ObjectAnim animIndex="9686"/><Object propName="v_ilev_bl_door_l"/><Object propName="v_ilev_bl_door_r"/>
+</SynchedAnim>
+<SynchedAnim title="Door kick #1" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11026"/><ObjectAnim animIndex="11029"/><Object propName="v_ilev_fa_frontdoor"/>
+</SynchedAnim>
+<SynchedAnim title="Mopping (wash mop)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9716"/><ObjectAnim animIndex="9715"/><Object propName="prop_cs_mop_s"/><Object propName="prop_cs_mopbucket_01"/>
+</SynchedAnim>
+<SynchedAnim title="Mopping (scrub)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9731"/><ObjectAnim animIndex="9732"/><Object propName="prop_cs_mop_s"/><Object propName="prop_cs_mopbucket_01"/>
+</SynchedAnim>
+<SynchedAnim title="Mopping (scrub small)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="9735"/><ObjectAnim animIndex="9734"/><Object propName="prop_cs_mop_s"/><Object propName="prop_cs_mopbucket_01"/>
+</SynchedAnim>
+<SynchedAnim title="Show ID" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9740"/><ActorAnim animIndex="9739"/>
+</SynchedAnim>
+<SynchedAnim title="Michael's death (hanging)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1.2">
+<ActorAnim animIndex="9824"/><ActorAnim animIndex="9826"/>
+</SynchedAnim>
+<SynchedAnim title="Michael's death (dropped)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1.2">
+<ActorAnim animIndex="9820"/><ActorAnim animIndex="9821"/>
+</SynchedAnim>
+<SynchedAnim title="Michael's death (headbutt)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1.2">
+<ActorAnim animIndex="9822"/><ActorAnim animIndex="9823"/>
+</SynchedAnim>
+<SynchedAnim title="Devin hide in box #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9837"/><ObjectAnim animIndex="9836"/><ObjectAnim animIndex="9838"/><Object propName="p_devin_box_01_s"/><Object propName="prop_cs_tablet"/>
+</SynchedAnim>
+<SynchedAnim title="Devin hide in box #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="9840"/><ObjectAnim animIndex="9839"/><ObjectAnim animIndex="9841"/><Object propName="p_devin_box_01_s"/><Object propName="prop_cs_tablet"/>
+</SynchedAnim>
+<SynchedAnim title="Push car" category="Vehicle" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="9846"/><ActorAnim animIndex="9847"/><ActorAnim animIndex="9848"/>
+</SynchedAnim>
+<SynchedAnim title="Dogs humping enter" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="9961"/><ActorAnim animIndex="9962"/>
+</SynchedAnim>
+<SynchedAnim title="Dogs humping loop" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="9969"/><ActorAnim animIndex="9970"/>
+</SynchedAnim>
+<SynchedAnim title="Dogs humping exit #1" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="9963"/><ActorAnim animIndex="9964"/>
+</SynchedAnim>
+<SynchedAnim title="Dogs humping exit #2" category="Explicit" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="9966"/><ActorAnim animIndex="9968"/><ActorAnim animIndex="9967"/>
+</SynchedAnim>
+<SynchedAnim title="Get in back of van with dog" category="Vehicle" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="9988"/><ActorAnim animIndex="9987"/><ObjectAnim animIndex="9989"/><Object propName="speedo"/>
+</SynchedAnim>
+<SynchedAnim title="Wheelchair - turn right" category="Individual w/props" actorsAligned="true" deltaZ="-0.35">
+<ActorAnim animIndex="9889"/><ObjectAnim animIndex="9890"/><Object propName="prop_wheelchair_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Wheelchair - stationary" category="Individual w/props" actorsAligned="true" deltaZ="-0.35">
+<ActorAnim animIndex="9893"/><ObjectAnim animIndex="9894"/><Object propName="prop_wheelchair_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Wheelchair - turn left" category="Individual w/props" actorsAligned="true" deltaZ="-0.35">
+<ActorAnim animIndex="9895"/><ObjectAnim animIndex="9896"/><Object propName="prop_wheelchair_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Wheelchair - use computer" category="Individual w/props" actorsAligned="true" deltaZ="-0.35">
+<ActorAnim animIndex="9897"/><ObjectAnim animIndex="9898"/><Object propName="prop_wheelchair_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Throw passengers phone" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="9915"/><ActorAnim animIndex="9916"/>
+</SynchedAnim>
+<SynchedAnim title="Get out of van (injured)" category="Vehicle" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="9910"/><ObjectAnim animIndex="9912"/><Object propName="speedo"/>
+</SynchedAnim>
+<SynchedAnim title="Get out of van with dog" category="Vehicle" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="9924"/><ActorAnim animIndex="9923"/><ActorAnim animIndex="9925"/><ObjectAnim animIndex="9926"/><Object propName="speedo"/>
+</SynchedAnim>
+<SynchedAnim title="Open door (strip club)" category="Individual w/props" actorsAligned="true" deltaZ="0.2">
+<ActorAnim animIndex="9997"/><ObjectAnim animIndex="9999"/><Object propName="prop_strip_door_01"/>
+</SynchedAnim>
+<SynchedAnim title="Hairdressers leave" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10028"/><ActorAnim animIndex="10041"/><ObjectAnim animIndex="10031"/><ObjectAnim animIndex="10056"/><Object propName="v_ilev_bs_door"/><Object propName="v_serv_bs_scissors"/>
+</SynchedAnim>
+<SynchedAnim title="Hairdressers sitdown" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10044"/><ActorAnim animIndex="10037"/><ObjectAnim animIndex="10052"/><Object propName="v_serv_bs_scissors"/>
+</SynchedAnim>
+<SynchedAnim title="Hairdressers haircut" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10086"/><ActorAnim animIndex="10075"/><ObjectAnim animIndex="10096"/><Object propName="v_serv_bs_scissors"/>
+</SynchedAnim>
+<SynchedAnim title="Throw helmet" category="Friendly interaction" actorsAligned="true" deltaZ="-0.7">
+<ActorAnim animIndex="10160"/><ActorAnim animIndex="10159"/>
+</SynchedAnim>
+<SynchedAnim title="Break door axe #1" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10190"/><ActorAnim animIndex="10188"/><ActorAnim animIndex="10189"/><ObjectAnim animIndex="10187"/><Object propName="prop_ld_fireaxe"/>
+</SynchedAnim>
+<SynchedAnim title="Break door axe #2" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10199"/><ActorAnim animIndex="10198"/><ActorAnim animIndex="10197"/><ObjectAnim animIndex="10196"/><Object propName="prop_ld_fireaxe"/>
+</SynchedAnim>
+<SynchedAnim title="Idle at computer #1" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10249"/><ObjectAnim animIndex="10244"/><ObjectAnim animIndex="10245"/><ObjectAnim animIndex="10248"/><Object propName="p_clb_officechair_s"/><Object propName="prop_cs_keyboard_01"/><Object propName="prop_cs_mouse_01"/>
+</SynchedAnim>
+<SynchedAnim title="Idle at computer #2" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10261"/><ObjectAnim animIndex="10256"/><ObjectAnim animIndex="10257"/><ObjectAnim animIndex="10260"/><Object propName="p_clb_officechair_s"/><Object propName="prop_cs_keyboard_01"/><Object propName="prop_cs_mouse_01"/>
+</SynchedAnim>
+<SynchedAnim title="Idle at computer #3" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10267"/><ObjectAnim animIndex="10262"/><ObjectAnim animIndex="10263"/><ObjectAnim animIndex="10266"/><Object propName="p_clb_officechair_s"/><Object propName="prop_cs_keyboard_01"/><Object propName="prop_cs_mouse_01"/>
+</SynchedAnim>
+<SynchedAnim title="Pull to feet (alive)" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10363"/><ActorAnim animIndex="10361"/>
+</SynchedAnim>
+<SynchedAnim title="Pull to feet (dead)" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10372"/><ActorAnim animIndex="10370"/>
+</SynchedAnim>
+<SynchedAnim title="Stab guard" category="Advanced Melee" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="10563"/><ActorAnim animIndex="10562"/>
+</SynchedAnim>
+<SynchedAnim title="Enterboat action" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="10573"/><ObjectAnim animIndex="10575"/><Object propName="p_po1_01_doorm_s"/>
+</SynchedAnim>
+<SynchedAnim title="Enterboat stealth" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="10576"/><ObjectAnim animIndex="10578"/><Object propName="p_po1_01_doorm_s"/>
+</SynchedAnim>
+<SynchedAnim title="Back massage" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10583"/><ActorAnim animIndex="10582"/>
+</SynchedAnim>
+<SynchedAnim title="Leg massage" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10609"/><ActorAnim animIndex="10608"/>
+</SynchedAnim>
+<SynchedAnim title="Dock beatup #1" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10665"/><ActorAnim animIndex="10666"/><ActorAnim animIndex="10667"/>
+</SynchedAnim>
+<SynchedAnim title="Dock beatup #2" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10672"/><ActorAnim animIndex="10673"/><ActorAnim animIndex="10674"/>
+</SynchedAnim>
+<SynchedAnim title="Grab money, duffel (enter)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1461"/><ObjectAnim animIndex="25701"/><ObjectAnim animIndex="25700"/><Object propName="p_ld_heist_bag_s_1"/><Object propName="p_csh_strap_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Grab money, duffel (loop)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="1463"/><ObjectAnim animIndex="1464"/><ObjectAnim animIndex="1467"/><Object propName="p_ld_heist_bag_s_1"/><Object propName="p_csh_strap_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Grab money, duffel (exit)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="25702"/><ObjectAnim animIndex="25699"/><ObjectAnim animIndex="1462"/><Object propName="p_ld_heist_bag_s_1"/><Object propName="p_csh_strap_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Wheelchair idle" category="Individual w/props" actorsAligned="true" deltaZ="-0.35">
+<ActorAnim animIndex="11397"/><ObjectAnim animIndex="11398"/><Object propName="prop_wheelchair_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Push up stairs" category="Aggressive interaction" actorsAligned="true" deltaZ="-1.2">
+<ActorAnim animIndex="10699"/><ActorAnim animIndex="10700"/><ActorAnim animIndex="10698"/>
+</SynchedAnim>
+<SynchedAnim title="Box falls" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10734"/><ActorAnim animIndex="10733"/><ActorAnim animIndex="10732"/><ActorAnim animIndex="10731"/><ObjectAnim animIndex="10730"/><Object propName="prop_cs_package_01"/>
+</SynchedAnim>
+<SynchedAnim title="Chatting leaning on wall (enter)" category="Friendly interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="10741"/><ActorAnim animIndex="10742"/>
+</SynchedAnim>
+<SynchedAnim title="Chatting leaning on wall (base)" category="Friendly interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="10739"/><ActorAnim animIndex="10740"/>
+</SynchedAnim>
+<SynchedAnim title="Chatting leaning on wall (exit)" category="Friendly interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="10743"/><ActorAnim animIndex="10744"/>
+</SynchedAnim>
+<SynchedAnim title="Exit car with stick and argue #1" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.35">
+<ActorAnim animIndex="10805"/><ActorAnim animIndex="10806"/><ObjectAnim animIndex="10804"/><Object propName="asea"/>
+</SynchedAnim>
+<SynchedAnim title="Exit car with stick and argue #2" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.35">
+<ActorAnim animIndex="10802"/><ActorAnim animIndex="10803"/>
+</SynchedAnim>
+<SynchedAnim title="Catch bag" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10923"/><ActorAnim animIndex="10926"/><ObjectAnim animIndex="10922"/><Object propName="p_ld_heist_bag_s"/>
+</SynchedAnim>
+<SynchedAnim title="Unlock door #1" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10941"/><ObjectAnim animIndex="10940"/><Object propName="v_ilev_janitor_frontdoor"/>
+</SynchedAnim>
+<SynchedAnim title="Unlock door #2" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="10939"/><ObjectAnim animIndex="10938"/><Object propName="v_ilev_janitor_frontdoor"/>
+</SynchedAnim>
+<SynchedAnim title="Exit tank" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="10956"/><ActorAnim animIndex="10957"/><ActorAnim animIndex="10958"/>
+</SynchedAnim>
+<SynchedAnim title="Heli crash" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ObjectAnim animIndex="10991"/><Object propName="maverick"/>
+</SynchedAnim>
+<SynchedAnim title="Exit van (bank heist)" category="Vehicle" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="10996"/><ActorAnim animIndex="10993"/><ObjectAnim animIndex="10999"/><Object propName="burrito"/>
+</SynchedAnim>
+<SynchedAnim title="Ready to enter (bank heist)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="11003"/><ActorAnim animIndex="11000"/>
+</SynchedAnim>
+<SynchedAnim title="Blowtorch door intro (bank heist)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11016"/><ObjectAnim animIndex="11018"/><ObjectAnim animIndex="11015"/><ObjectAnim animIndex="11019"/><Object propName="prop_welding_mask_01_s"/><Object propName="prop_tool_blowtorch"/><Object propName="v_ilev_cbankvaulgate01"/>
+</SynchedAnim>
+<SynchedAnim title="Blowtorch door loop (bank heist)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11021"/><ObjectAnim animIndex="11023"/><ObjectAnim animIndex="11020"/><ObjectAnim animIndex="11024"/><Object propName="prop_welding_mask_01_s"/><Object propName="prop_tool_blowtorch"/><Object propName="v_ilev_cbankvaulgate01"/>
+</SynchedAnim>
+<SynchedAnim title="Blowtorch door exit (bank heist)" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11013"/><ActorAnim animIndex="11026"/><ObjectAnim animIndex="11012"/><ObjectAnim animIndex="11025"/><ObjectAnim animIndex="11029"/><Object propName="prop_tool_blowtorch"/><Object propName="prop_welding_mask_01_s"/><Object propName="v_ilev_cbankvaulgate01"/>
+</SynchedAnim>
+<SynchedAnim title="Empty safe exit (bank heist)" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11041"/><ActorAnim animIndex="11044"/><ObjectAnim animIndex="11042"/><ObjectAnim animIndex="11045"/><Object propName="p_ld_heist_bag_s_1"/><Object propName="p_ld_heist_bag_s_1"/>
+</SynchedAnim>
+<SynchedAnim title="Walk in bank, gunmen (bank heist)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="11112"/><ActorAnim animIndex="11097"/><ObjectAnim animIndex="11113"/><ObjectAnim animIndex="11114"/><ObjectAnim animIndex="11094"/><ObjectAnim animIndex="11095"/><Object propName="p_ld_heist_bag_s_1"/><Object propName="p_csh_strap_01_s"/><Object propName="v_ilev_bank4door02"/><Object propName="v_ilev_bank4door01"/>
+</SynchedAnim>
+<SynchedAnim title="Walk in bank, hostages (bank heist)" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="11096"/><ActorAnim animIndex="11108"/><ActorAnim animIndex="11109"/><ActorAnim animIndex="11110"/><ActorAnim animIndex="11111"/><ObjectAnim animIndex="11093"/><Object propName="v_ilev_cbankcountdoor01"/>
+</SynchedAnim>
+<SynchedAnim title="Hide behind door (bank heist)" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="11116"/><ObjectAnim animIndex="11117"/><Object propName="v_ilev_cf_officedoor"/>
+</SynchedAnim>
+<SynchedAnim title="Cops investigate bank #1" category="Friendly interaction" actorsAligned="true" deltaZ="2.6">
+<ActorAnim animIndex="11132"/><ActorAnim animIndex="11129"/><ActorAnim animIndex="11130"/><ActorAnim animIndex="11131"/>
+</SynchedAnim>
+<SynchedAnim title="Cops investigate bank #2" category="Friendly interaction" actorsAligned="true" deltaZ="2.6">
+<ActorAnim animIndex="11140"/><ActorAnim animIndex="11142"/><ActorAnim animIndex="11143"/><ActorAnim animIndex="11137"/><ActorAnim animIndex="11138"/><ActorAnim animIndex="11139"/><ObjectAnim animIndex="11141"/><Object propName="police"/>
+</SynchedAnim>
+<SynchedAnim title="Shoot target on floor" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11175"/><ActorAnim animIndex="11174"/><ActorAnim animIndex="11176"/>
+</SynchedAnim>
+<SynchedAnim title="Throw paperball" category="Individual w/props" actorsAligned="true" deltaZ="-0.8">
+<ActorAnim animIndex="11360"/><ObjectAnim animIndex="11361"/><ObjectAnim animIndex="11362"/><Object propName="prop_off_chair_01"/><Object propName="prop_paper_ball"/>
+</SynchedAnim>
+<SynchedAnim title="Climb from plane wreckage" category="Vehicle" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="11521"/><ActorAnim animIndex="11522"/>
+</SynchedAnim>
+<SynchedAnim title="Knife struggle (top wins)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11609"/><ActorAnim animIndex="11610"/>
+</SynchedAnim>
+<SynchedAnim title="Knife struggle (tackle)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11614"/><ActorAnim animIndex="11616"/>
+</SynchedAnim>
+<SynchedAnim title="Knife struggle (loop)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11617"/><ActorAnim animIndex="11618"/>
+</SynchedAnim>
+<SynchedAnim title="Run from heli crash" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="11649"/><ActorAnim animIndex="11650"/><ActorAnim animIndex="11648"/><ObjectAnim animIndex="11646"/><Object propName="buzzard"/>
+</SynchedAnim>
+<SynchedAnim title="Throw passport from car" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="11749"/><ActorAnim animIndex="11750"/><ObjectAnim animIndex="11751"/><Object propName="prop_passport_01"/>
+</SynchedAnim>
+<SynchedAnim title="Yankton hostages loop (prologue)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11756"/><ActorAnim animIndex="11761"/><ActorAnim animIndex="11758"/><ActorAnim animIndex="11759"/><ActorAnim animIndex="11760"/><ActorAnim animIndex="11757"/>
+</SynchedAnim>
+<SynchedAnim title="Yankton hostages enter (prologue)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11762"/><ActorAnim animIndex="11772"/><ActorAnim animIndex="11768"/><ActorAnim animIndex="11770"/><ActorAnim animIndex="11771"/><ActorAnim animIndex="11766"/>
+</SynchedAnim>
+<SynchedAnim title="Push hostage (prologue)" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11796"/><ActorAnim animIndex="11797"/>
+</SynchedAnim>
+<SynchedAnim title="Shut door with rifle" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11800"/><ObjectAnim animIndex="11801"/><Object propName="v_ilev_cd_door2"/>
+</SynchedAnim>
+<SynchedAnim title="Human shield loop" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11811"/><ActorAnim animIndex="11813"/>
+</SynchedAnim>
+<SynchedAnim title="Human shield exit" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11817"/><ActorAnim animIndex="11818"/>
+</SynchedAnim>
+<SynchedAnim title="Pick up bag with rifle" category="Broken/WIP" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11816"/><ObjectAnim animIndex="11815"/><ObjectAnim animIndex="11819"/><Object propName="p_ld_heist_bag_s_1"/><Object propName="p_csh_strap_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Kick down hostage" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11850"/><ActorAnim animIndex="11849"/>
+</SynchedAnim>
+<SynchedAnim title="IAA human shield intro" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11942"/><ActorAnim animIndex="11943"/>
+</SynchedAnim>
+<SynchedAnim title="IAA human shield crouched loop" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11939"/><ActorAnim animIndex="11940"/>
+</SynchedAnim>
+<SynchedAnim title="IAA human shield standing loop" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11938"/><ActorAnim animIndex="11941"/>
+</SynchedAnim>
+<SynchedAnim title="Roughen up, grab shirt intro" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.7">
+<ActorAnim animIndex="11955"/><ActorAnim animIndex="11957"/>
+</SynchedAnim>
+<SynchedAnim title="Roughen up, grab shirt shake" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.7">
+<ActorAnim animIndex="11958"/><ActorAnim animIndex="11960"/>
+</SynchedAnim>
+<SynchedAnim title="Run out of car with film" category="Vehicle" actorsAligned="true" deltaZ="0.25">
+<ActorAnim animIndex="11970"/><ObjectAnim animIndex="11969"/><Object propName="asea"/>
+</SynchedAnim>
+<SynchedAnim title="Tracey human shield intro" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11974"/><ActorAnim animIndex="11975"/>
+</SynchedAnim>
+<SynchedAnim title="Tracey human shield idle 1" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11983"/><ActorAnim animIndex="11984"/>
+</SynchedAnim>
+<SynchedAnim title="Tracey human shield idle 2" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11986"/><ActorAnim animIndex="11987"/>
+</SynchedAnim>
+<SynchedAnim title="Tracey human shield idle 3" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11989"/><ActorAnim animIndex="11990"/>
+</SynchedAnim>
+<SynchedAnim title="Tracey human shield killed" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11980"/><ActorAnim animIndex="11981"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda human shield idle 1" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="12007"/><ActorAnim animIndex="12006"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda human shield idle 2" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="12009"/><ActorAnim animIndex="12008"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda human shield idle 3" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="12011"/><ActorAnim animIndex="12010"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda human shield idle 3" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="12013"/><ActorAnim animIndex="12012"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda human shield killed" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="12003"/><ActorAnim animIndex="12002"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda human shield freed" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="12005"/><ActorAnim animIndex="12004"/>
+</SynchedAnim>
+<SynchedAnim title="Crying over dead body" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="12089"/><ActorAnim animIndex="12090"/>
+</SynchedAnim>
+<SynchedAnim title="Neck snap" category="Aggressive interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="13275"/><ActorAnim animIndex="13276"/>
+</SynchedAnim>
+<SynchedAnim title="Pass package across counter" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13294"/><ActorAnim animIndex="13295"/>
+</SynchedAnim>
+<SynchedAnim title="Pass pistol across counter" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13296"/><ActorAnim animIndex="13297"/>
+</SynchedAnim>
+<SynchedAnim title="Pass rifle across counter" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13298"/><ActorAnim animIndex="13299"/>
+</SynchedAnim>
+<SynchedAnim title="MP intro plane flying" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ObjectAnim animIndex="13514"/><Object propName="p_cs_mp_jet_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="MP intro plane landing" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ObjectAnim animIndex="13516"/><Object propName="p_cs_mp_jet_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Mp intro plane look out window" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13519"/><ObjectAnim animIndex="13518"/><Object propName="p_cs_mp_jet_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Pin photo to wall" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="13821"/><ObjectAnim animIndex="13822"/><Object propName="prop_cs_planning_photo"/>
+</SynchedAnim>
+<SynchedAnim title="Payphone conversation #1" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14122"/><ObjectAnim animIndex="14123"/><Object propName="p_phonebox_01b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Payphone conversation #2" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14130"/><ObjectAnim animIndex="14131"/><Object propName="p_phonebox_01b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Payphone conversation #3" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14153"/><ObjectAnim animIndex="14154"/><Object propName="p_phonebox_01b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Payphone conversation #4" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14169"/><ObjectAnim animIndex="14170"/><Object propName="p_phonebox_01b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Punch passenger out of car" category="Vehicle" actorsAligned="false" deltaZ="-0.7">
+<ActorAnim animIndex="14182"/><ActorAnim animIndex="14181"/>
+</SynchedAnim>
+<SynchedAnim title="Put on parachute (male)" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14231"/><ObjectAnim animIndex="14232"/><Object propName="hei_p_parachute_s_female"/>
+</SynchedAnim>
+<SynchedAnim title="Enter back of campervan" category="Vehicle" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="14248"/><ObjectAnim animIndex="14250"/><Object propName="journey"/>
+</SynchedAnim>
+<SynchedAnim title="Exit back of campervan" category="Vehicle" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="14251"/><ObjectAnim animIndex="14253"/><Object propName="journey"/>
+</SynchedAnim>
+<SynchedAnim title="Stand off bikers" category="Aggressive interaction" actorsAligned="true" deltaZ="-1.1">
+<ActorAnim animIndex="14280"/><ActorAnim animIndex="14281"/><ActorAnim animIndex="14282"/>
+</SynchedAnim>
+<SynchedAnim title="Give money to driver (front)" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="14286"/><ActorAnim animIndex="14288"/><ObjectAnim animIndex="14287"/><Object propName="hei_prop_heist_cash_pile"/>
+</SynchedAnim>
+<SynchedAnim title="Give money to driver (rear left)" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="14289"/><ActorAnim animIndex="14291"/><ObjectAnim animIndex="14290"/><Object propName="hei_prop_heist_cash_pile"/>
+</SynchedAnim>
+<SynchedAnim title="Give money to driver (rear right)" category="Vehicle" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="14292"/><ActorAnim animIndex="14294"/><ObjectAnim animIndex="14293"/><Object propName="hei_prop_heist_cash_pile"/>
+</SynchedAnim>
+<SynchedAnim title="Return wallet (female) #1" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14382"/><ActorAnim animIndex="14381"/>
+</SynchedAnim>
+<SynchedAnim title="Return wallet (female) #2" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14393"/><ActorAnim animIndex="14392"/>
+</SynchedAnim>
+<SynchedAnim title="Return wallet (female) #3" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14389"/><ActorAnim animIndex="14388"/>
+</SynchedAnim>
+<SynchedAnim title="Return wallet (male) #1" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14398"/><ActorAnim animIndex="14397"/>
+</SynchedAnim>
+<SynchedAnim title="Return wallet (male) #2" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14402"/><ActorAnim animIndex="14401"/>
+</SynchedAnim>
+<SynchedAnim title="Return wallet (male) #3" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14406"/><ActorAnim animIndex="14405"/>
+</SynchedAnim>
+<SynchedAnim title="Untie person on floor" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14459"/><ActorAnim animIndex="14458"/><ObjectAnim animIndex="14457"/><ObjectAnim animIndex="14460"/><Object propName="p_ld_cable_tie_01_s"/><Object propName="p_ld_cable_tie_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Untie person standing" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14907"/><ActorAnim animIndex="14906"/>
+</SynchedAnim>
+<SynchedAnim title="Return stolen peyote #1" category="Friendly interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="14468"/><ActorAnim animIndex="14467"/><ObjectAnim animIndex="14466"/><Object propName="peyote"/>
+</SynchedAnim>
+<SynchedAnim title="Return stolen peyote #2" category="Friendly interaction" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="14472"/><ActorAnim animIndex="14471"/><ObjectAnim animIndex="14470"/><Object propName="peyote"/>
+</SynchedAnim>
+<SynchedAnim title="Bag struggle loop #1" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14500"/><ActorAnim animIndex="14499"/>
+</SynchedAnim>
+<SynchedAnim title="Bag struggle loop #2" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14504"/><ActorAnim animIndex="14505"/>
+</SynchedAnim>
+<SynchedAnim title="Bag struggle, thief takes bag" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14511"/><ActorAnim animIndex="14512"/>
+</SynchedAnim>
+<SynchedAnim title="Open door, hide intro" category="Vehicle" actorsAligned="true" deltaZ="-0.3">
+<ActorAnim animIndex="14517"/><ObjectAnim animIndex="14516"/><Object propName="picador"/>
+</SynchedAnim>
+<SynchedAnim title="Open door, hide loop" category="Vehicle" actorsAligned="true" deltaZ="-0.3">
+<ActorAnim animIndex="14519"/><ObjectAnim animIndex="14518"/><Object propName="picador"/>
+</SynchedAnim>
+<SynchedAnim title="Open door, hide outro" category="Vehicle" actorsAligned="true" deltaZ="-0.3">
+<ActorAnim animIndex="14521"/><ObjectAnim animIndex="14520"/><Object propName="picador"/>
+</SynchedAnim>
+<SynchedAnim title="Help injured to feet" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14535"/><ActorAnim animIndex="14536"/>
+</SynchedAnim>
+<SynchedAnim title="Car sex, lying down intro" category="Explicit" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="14574"/><ActorAnim animIndex="14573"/>
+</SynchedAnim>
+<SynchedAnim title="Car sex, lying down loop" category="Explicit" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="14576"/><ActorAnim animIndex="14575"/>
+</SynchedAnim>
+<SynchedAnim title="Car sex, lying down exit" category="Explicit" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="14578"/><ActorAnim animIndex="14577"/>
+</SynchedAnim>
+<SynchedAnim title="Gang intimidation" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="14609"/><ActorAnim animIndex="14610"/><ActorAnim animIndex="14611"/><Object propName="fbi2"/>
+</SynchedAnim>
+<SynchedAnim title="Put prisoner in police car, loop" category="Vehicle" actorsAligned="true" deltaZ="-0.3">
+<ActorAnim animIndex="14633"/><ActorAnim animIndex="14635"/><ActorAnim animIndex="14634"/><Object propName="fbi2"/>
+</SynchedAnim>
+<SynchedAnim title="Put prisoner in police car, exit" category="Vehicle" actorsAligned="true" deltaZ="-0.3">
+<ActorAnim animIndex="14630"/><ActorAnim animIndex="14632"/><ActorAnim animIndex="14631"/><ObjectAnim animIndex="14629"/><Object propName="fbi2"/>
+</SynchedAnim>
+<SynchedAnim title="Kidnap, drag to van" category="Aggressive interaction" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="14650"/><ActorAnim animIndex="14646"/><ActorAnim animIndex="14648"/><ObjectAnim animIndex="14640"/><Object propName="burrito"/>
+</SynchedAnim>
+<SynchedAnim title="Take dog collar" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="14707"/><ActorAnim animIndex="14705"/>
+</SynchedAnim>
+<SynchedAnim title="Get in stockade" category="Vehicle" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="14783"/><ObjectAnim animIndex="14784"/><Object propName="stockade"/>
+</SynchedAnim>
+<SynchedAnim title="Put case in stockade (calm)" category="Vehicle" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="14777"/><ObjectAnim animIndex="14787"/><Object propName="stockade"/>
+</SynchedAnim>
+<SynchedAnim title="Put case in stockade (panic)" category="Vehicle" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="14778"/><ObjectAnim animIndex="14788"/><Object propName="stockade"/>
+</SynchedAnim>
+<SynchedAnim title="Shop robbery, customer through door" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="14826"/><ActorAnim animIndex="14831"/><ActorAnim animIndex="14827"/><ActorAnim animIndex="14830"/><ObjectAnim animIndex="14828"/><Object propName="p_poly_bag_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Examine car together" category="Friendly interaction" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="14859"/><ActorAnim animIndex="14860"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke blunt, light" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.7">
+<ActorAnim animIndex="15082"/><ObjectAnim animIndex="15083"/><ObjectAnim animIndex="15087"/><ObjectAnim animIndex="15088"/><Object propName="v_ret_fh_ashtray"/><Object propName="prop_sh_joint_01"/><Object propName="p_cs_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke blunt, loop" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.7">
+<ActorAnim animIndex="15098"/><ObjectAnim animIndex="15099"/><ObjectAnim animIndex="15103"/><ObjectAnim animIndex="15104"/><Object propName="v_ret_fh_ashtray"/><Object propName="prop_sh_joint_01"/><Object propName="p_cs_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke blunt, exit" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.7">
+<ActorAnim animIndex="15090"/><ObjectAnim animIndex="15091"/><ObjectAnim animIndex="15095"/><ObjectAnim animIndex="15096"/><Object propName="v_ret_fh_ashtray"/><Object propName="prop_sh_joint_01"/><Object propName="p_cs_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke cigar, enter" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.1">
+<ActorAnim animIndex="15326"/><ObjectAnim animIndex="15324"/><ObjectAnim animIndex="15325"/><Object propName="prop_sh_cigar_01"/><Object propName="p_cs_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke cigar, exit" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.1">
+<ActorAnim animIndex="15333"/><ObjectAnim animIndex="15331"/><ObjectAnim animIndex="15332"/><Object propName="prop_sh_cigar_01"/><Object propName="p_cs_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke cigar, loop #1" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.1">
+<ActorAnim animIndex="15339"/><ObjectAnim animIndex="15337"/><ObjectAnim animIndex="15338"/><Object propName="prop_sh_cigar_01"/><Object propName="p_cs_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Smoke cigar, loop #2" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.1">
+<ActorAnim animIndex="15346"/><ObjectAnim animIndex="15344"/><ObjectAnim animIndex="15345"/><Object propName="prop_sh_cigar_01"/><Object propName="p_cs_lighter_01"/>
+</SynchedAnim>
+<SynchedAnim title="Sit on table, drink beer intro" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="15481"/><ObjectAnim animIndex="15482"/><ObjectAnim animIndex="15484"/><Object propName="prop_cs_beer_bot_02"/><Object propName="prop_bottle_cap_01"/>
+</SynchedAnim>
+<SynchedAnim title="Sit on table, drink beer #1" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="15456"/><ObjectAnim animIndex="15457"/><ObjectAnim animIndex="15459"/><Object propName="prop_cs_beer_bot_02"/><Object propName="prop_bottle_cap_01"/>
+</SynchedAnim>
+<SynchedAnim title="Sit on table, drink beer #2" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="15461"/><ObjectAnim animIndex="15462"/><ObjectAnim animIndex="15464"/><Object propName="prop_cs_beer_bot_02"/><Object propName="prop_bottle_cap_01"/>
+</SynchedAnim>
+<SynchedAnim title="Sit on table, drink beer #3" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="15466"/><ObjectAnim animIndex="15467"/><ObjectAnim animIndex="15468"/><Object propName="prop_cs_beer_bot_02"/><Object propName="prop_bottle_cap_01"/>
+</SynchedAnim>
+<SynchedAnim title="Sit on table, drink beer #4" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="15471"/><ObjectAnim animIndex="15472"/><ObjectAnim animIndex="15474"/><Object propName="prop_cs_beer_bot_02"/><Object propName="prop_bottle_cap_01"/>
+</SynchedAnim>
+<SynchedAnim title="Sit on table, drink beer #5" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="15476"/><ObjectAnim animIndex="15477"/><ObjectAnim animIndex="15479"/><Object propName="prop_cs_beer_bot_02"/><Object propName="prop_bottle_cap_01"/>
+</SynchedAnim>
+<SynchedAnim title="Raspberryjam #1" category="Individual w/props" actorsAligned="true" deltaZ="0.2">
+<ActorAnim animIndex="15590"/><ObjectAnim animIndex="15592"/><Object propName="p_mr_raspberry_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Raspberryjam #2" category="Individual w/props" actorsAligned="true" deltaZ="0.2">
+<ActorAnim animIndex="15593"/><ObjectAnim animIndex="15595"/><Object propName="p_mr_raspberry_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Raspberryjam #3" category="Individual w/props" actorsAligned="true" deltaZ="0.2">
+<ActorAnim animIndex="15596"/><ObjectAnim animIndex="15598"/><Object propName="p_mr_raspberry_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Raspberryjam #4" category="Individual w/props" actorsAligned="true" deltaZ="0.2">
+<ActorAnim animIndex="15599"/><ObjectAnim animIndex="15601"/><Object propName="p_mr_raspberry_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Huff gas and pass out" category="Drinking/drugs" actorsAligned="true" deltaZ="-0.1">
+<ActorAnim animIndex="15603"/><ObjectAnim animIndex="15605"/><Object propName="prop_rolled_sock_02"/>
+</SynchedAnim>
+<SynchedAnim title="Weed depository" category="Other" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="17089"/><ActorAnim animIndex="17091"/><ObjectAnim animIndex="17092"/><Object propName="p_weed_bottle_s"/>
+</SynchedAnim>
+<SynchedAnim title="Talking to taxi passenger" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17109"/><ActorAnim animIndex="17110"/><ObjectAnim animIndex="17111"/><Object propName="taxi"/>
+</SynchedAnim>
+<SynchedAnim title="Gang taunt loop" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17154"/><ActorAnim animIndex="17155"/><ActorAnim animIndex="17156"/><ActorAnim animIndex="17157"/>
+</SynchedAnim>
+<SynchedAnim title="Gang taunt exit" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17149"/><ActorAnim animIndex="17150"/><ActorAnim animIndex="17151"/><ActorAnim animIndex="17152"/>
+</SynchedAnim>
+<SynchedAnim title="Stop gang fight loop" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17165"/><ActorAnim animIndex="17168"/><ActorAnim animIndex="17166"/><ActorAnim animIndex="17167"/>
+</SynchedAnim>
+<SynchedAnim title="Stop gang fight exit" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17160"/><ActorAnim animIndex="17163"/><ActorAnim animIndex="17161"/><ActorAnim animIndex="16162"/>
+</SynchedAnim>
+<SynchedAnim title="Shoved by gangster" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17198"/><ActorAnim animIndex="17199"/>
+</SynchedAnim>
+<SynchedAnim title="Toss garbage bag" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17211"/><ObjectAnim animIndex="17209"/><Object propName="prop_cs_rub_binbag_01"/>
+</SynchedAnim>
+<SynchedAnim title="Toss cup" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17225"/><ObjectAnim animIndex="17227"/><Object propName="p_ing_coffeecup_01"/>
+</SynchedAnim>
+<SynchedAnim title="Ironing clothes loop" category="Individual w/props" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="17231"/><ObjectAnim animIndex="17233"/><Object propName="prop_cs_ironing_board"/>
+</SynchedAnim>
+<SynchedAnim title="Ironing clothes exit" category="Individual w/props" actorsAligned="true" deltaZ="-0.55">
+<ActorAnim animIndex="17234"/><ObjectAnim animIndex="17237"/><Object propName="prop_cs_ironing_board"/>
+</SynchedAnim>
+<SynchedAnim title="Shut laptop, loop" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17259"/><ObjectAnim animIndex="17261"/><Object propName="p_laptop_02_s"/>
+</SynchedAnim>
+<SynchedAnim title="Shut laptop, exit" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17254"/><ObjectAnim animIndex="17258"/><Object propName="p_laptop_02_s"/>
+</SynchedAnim>
+<SynchedAnim title="Tanisha argument" category="Aggressive interaction" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="17304"/><ActorAnim animIndex="17305"/><ObjectAnim animIndex="17307"/><Object propName="v_ilev_fa_frontdoor"/>
+</SynchedAnim>
+<SynchedAnim title="Throw cup" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17312"/><ObjectAnim animIndex="17314"/><Object propName="p_ing_coffeecup_01"/>
+</SynchedAnim>
+<SynchedAnim title="Upset talking in bed, exit 1" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17370"/><ActorAnim animIndex="17376"/>
+</SynchedAnim>
+<SynchedAnim title="Upset talking in bed, exit 2" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17384"/><ActorAnim animIndex="17379"/>
+</SynchedAnim>
+<SynchedAnim title="Upset talking in bed, loop 1" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17375"/><ActorAnim animIndex="17373"/>
+</SynchedAnim>
+<SynchedAnim title="Upset talking in bed, loop 2" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17387"/><ActorAnim animIndex="17385"/>
+</SynchedAnim>
+<SynchedAnim title="Gaming together" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17478"/><ActorAnim animIndex="17477"/>
+</SynchedAnim>
+<SynchedAnim title="Gaming ragequit" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17475"/><ActorAnim animIndex="17474"/>
+</SynchedAnim>
+<SynchedAnim title="Get out of bed, playful" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17482"/><ActorAnim animIndex="17479"/>
+</SynchedAnim>
+<SynchedAnim title="Wave goodbye" category="Friendly interaction" actorsAligned="false" deltaZ="0">
+<ActorAnim animIndex="17491"/><ActorAnim animIndex="17487"/>
+</SynchedAnim>
+<SynchedAnim title="Couple on loungechairs, loop" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17502"/><ActorAnim animIndex="17499"/><ObjectAnim animIndex="17500"/><ObjectAnim animIndex="17501"/><Object propName="lounchchaira"/><Object propName="lounchchairb"/>
+</SynchedAnim>
+<SynchedAnim title="Couple on loungechairs, exit" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17498"/><ActorAnim animIndex="17494"/><ObjectAnim animIndex="17496"/><ObjectAnim animIndex="17497"/><Object propName="lounchchaira"/><Object propName="lounchchairb"/>
+</SynchedAnim>
+<SynchedAnim title="Pat on back" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17516"/><ActorAnim animIndex="17515"/>
+</SynchedAnim>
+<SynchedAnim title="Open door for passenger" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17527"/><ActorAnim animIndex="17524"/><ObjectAnim animIndex="17526"/><Object propName="tailgater"/>
+</SynchedAnim>
+<SynchedAnim title="No smoking allowed" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17531"/><ActorAnim animIndex="17533"/>
+</SynchedAnim>
+<SynchedAnim title="Throw cigarette over railing" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17546"/><ObjectAnim animIndex="17548"/><Object propName="bg_proc_cigarette01a"/>
+</SynchedAnim>
+<SynchedAnim title="Show wedding ring to hooker" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17555"/><ActorAnim animIndex="17554"/>
+</SynchedAnim>
+<SynchedAnim title="Read script on bed, loop" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17560"/><ObjectAnim animIndex="17562"/><Object propName="p_cs_script_s"/>
+</SynchedAnim>
+<SynchedAnim title="Read script on bed, exit" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17556"/><ObjectAnim animIndex="17559"/><Object propName="p_cs_script_s"/>
+</SynchedAnim>
+<SynchedAnim title="Rejected entry" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17566"/><ActorAnim animIndex="17563"/>
+</SynchedAnim>
+<SynchedAnim title="Leave table and kiss" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17579"/><ActorAnim animIndex="17574"/><ObjectAnim animIndex="17577"/><ObjectAnim animIndex="17578"/><Object propName="prop_chateau_chair_01"/><Object propName="prop_chateau_chair_01"/>
+</SynchedAnim>
+<SynchedAnim title="Comfort while kneeling, loop" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="14746"/><ActorAnim animIndex="14752"/>
+</SynchedAnim>
+<SynchedAnim title="Comfort while kneeling, exit" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="14745"/><ActorAnim animIndex="14750"/>
+</SynchedAnim>
+<SynchedAnim title="Hold hostage, loop" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="14756"/><ActorAnim animIndex="14753"/>
+</SynchedAnim>
+<SynchedAnim title="Hold hostage, victim killed" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="14755"/><ActorAnim animIndex="14751"/>
+</SynchedAnim>
+<SynchedAnim title="Give cash to passenger" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17652"/><ActorAnim animIndex="17653"/><ObjectAnim animIndex="17647"/><ObjectAnim animIndex="17648"/><Object propName="tailgater"/><Object propName="prop_cash_pile_02"/>
+</SynchedAnim>
+<SynchedAnim title="Annoy sunbathers" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17687"/><ActorAnim animIndex="17686"/><ActorAnim animIndex="17685"/>
+</SynchedAnim>
+<SynchedAnim title="Leave bar" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17705"/><ActorAnim animIndex="17697"/><ObjectAnim animIndex="17698"/><Object propName="prop_cs_beer_bot_02"/>
+</SynchedAnim>
+<SynchedAnim title="Rub teddy in face" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17718"/><ActorAnim animIndex="17713"/><ObjectAnim animIndex="17717"/><Object propName="p_mr_raspberry_01_s"/>
+</SynchedAnim>
+<SynchedAnim title="Spooning with floyd, exit 1" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17732"/><ActorAnim animIndex="17731"/>
+</SynchedAnim>
+<SynchedAnim title="Spooning with floyd, exit 2" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17735"/><ActorAnim animIndex="17734"/>
+</SynchedAnim>
+<SynchedAnim title="Spooning with floyd, loop" category="Friendly interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17738"/><ActorAnim animIndex="17737"/>
+</SynchedAnim>
+<SynchedAnim title="Block photograph" category="Other" actorsAligned="true" deltaZ="-0.9">
+<ActorAnim animIndex="17749"/><ActorAnim animIndex="17747"/>
+</SynchedAnim>
+<SynchedAnim title="Throw over bridge, loop" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17754"/><ActorAnim animIndex="17755"/>
+</SynchedAnim>
+<SynchedAnim title="Throw over bridge, exit" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17757"/><ActorAnim animIndex="17758"/>
+</SynchedAnim>
+<SynchedAnim title="Chase strippers out of club" category="Aggressive interaction" actorsAligned="true" deltaZ="0.2">
+<ActorAnim animIndex="17765"/><ActorAnim animIndex="17763"/><ActorAnim animIndex="17764"/><ActorAnim animIndex="17760"/><ObjectAnim animIndex="17762"/><Object propName="prop_strip_door_01"/>
+</SynchedAnim>
+<SynchedAnim title="Escorted out" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17792"/><ActorAnim animIndex="17788"/><ActorAnim animIndex="17790"/>
+</SynchedAnim>
+<SynchedAnim title="Console floyd #1" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17807"/><ActorAnim animIndex="17805"/>
+</SynchedAnim>
+<SynchedAnim title="Console floyd #2" category="Other" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17817"/><ActorAnim animIndex="17815"/>
+</SynchedAnim>
+<SynchedAnim title="Eat from trash" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17832"/><ObjectAnim animIndex="17831"/><Object propName="prop_taco_02"/>
+</SynchedAnim>
+<SynchedAnim title="Guitar beatdown" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17838"/><ActorAnim animIndex="17835"/><ObjectAnim animIndex="17837"/><Object propName="prop_acc_guitar_01_d1"/>
+</SynchedAnim>
+<SynchedAnim title="Strumming guitar" category="Individual w/props" actorsAligned="true" deltaZ="0.05">
+<ActorAnim animIndex="17839"/><ObjectAnim animIndex="17841"/><Object propName="prop_acc_guitar_01_d1"/>
+</SynchedAnim>
+<SynchedAnim title="Knockout against wall" category="Advanced Melee" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17855"/><ActorAnim animIndex="17853"/>
+</SynchedAnim>
+<SynchedAnim title="Throw pineapple" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17890"/><ActorAnim animIndex="17886"/><ObjectAnim animIndex="17889"/><Object propName="prop_pineapple"/>
+</SynchedAnim>
+<SynchedAnim title="Scare tramp" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17918"/><ActorAnim animIndex="17917"/>
+</SynchedAnim>
+<SynchedAnim title="Steal and throw food" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="17938"/><ActorAnim animIndex="17935"/><ObjectAnim animIndex="17937"/><Object propName="prop_taco_01"/>
+</SynchedAnim>
+<SynchedAnim title="Grab by throat, throw over railing" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17974"/><ActorAnim animIndex="17972"/>
+</SynchedAnim>
+<SynchedAnim title="Drunk amanda #1" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17986"/><ObjectAnim animIndex="17987"/><ObjectAnim animIndex="17988"/><Object propName="prop_wine_bot_01"/><Object propName="p_wine_glass_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drunk amanda #2" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17989"/><ObjectAnim animIndex="17990"/><ObjectAnim animIndex="17991"/><Object propName="prop_wine_bot_01"/><Object propName="p_wine_glass_s"/>
+</SynchedAnim>
+<SynchedAnim title="Drunk amanda #3" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="17992"/><ObjectAnim animIndex="17993"/><ObjectAnim animIndex="17994"/><Object propName="prop_wine_bot_01"/><Object propName="p_wine_glass_s"/>
+</SynchedAnim>
+<SynchedAnim title="KO Train Driver TEST" category="Setpiece" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="8469"/><ActorAnim animIndex="8471"/><ObjectAnim animIndex="8473"/><Object propName="freight"/>
+</SynchedAnim>
+<SynchedAnim title="Train Crash TEST" category="Setpiece" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="8475"/><ObjectAnim animIndex="44004"/><ObjectAnim animIndex="44002"/><ObjectAnim animIndex="43998"/><ObjectAnim animIndex="43999"/><ObjectAnim animIndex="44000"/><Object propName="des_traincrash_root1"/><Object propName="des_traincrash_root2"/><Object propName="des_traincrash_root3"/><Object propName="des_traincrash_root4"/><Object propName="des_traincrash_root5"/>
+</SynchedAnim>
+<SynchedAnim title="Crash Into Cargoplane TEST" category="Setpiece" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="49540"/><ObjectAnim animIndex="49541"/><ObjectAnim animIndex="49542"/><ObjectAnim animIndex="49544"/><ObjectAnim animIndex="49546"/><ObjectAnim animIndex="49548"/><Object propName="cargoplane"/><Object propName="cropduster1_skin"/><Object propName="cropduster2_skin"/><Object propName="cropduster3_skin"/><Object propName="cropduster4_skin"/>
+</SynchedAnim>
+<SynchedAnim title="Gas Station Explosion TEST" category="Setpiece" actorsAligned="true" deltaZ="0">
+<ObjectAnim animIndex="43936"/><ObjectAnim animIndex="43935"/><ObjectAnim animIndex="43937"/><Object propName="des_gasstation_skin01"/><Object propName="des_gasstation_skin02"/><Object propName="des_gasstation_tiles_root"/>
+</SynchedAnim>
+<SynchedAnim title="Destroy Wall TEST" category="Setpiece" actorsAligned="true" deltaZ="0">
+<ObjectAnim animIndex="43961"/><ObjectAnim animIndex="43962"/><ObjectAnim animIndex="43963"/><ObjectAnim animIndex="43965"/><ObjectAnim animIndex="43964"/><Object propName="des_smash2_root"/><Object propName="des_smash2_root2"/><Object propName="des_smash2_root3"/><Object propName="des_smash2_root4"/><Object propName="des_smash2_root005"/>
+</SynchedAnim>
+<SynchedAnim title="Tanker Crash TEST" category="Setpiece" actorsAligned="true" deltaZ="0">
+<ObjectAnim animIndex="43986"/><Object propName="des_tankercrash_01"/>
+</SynchedAnim>
+<SynchedAnim title="Tanker Explosion TEST" category="Setpiece" actorsAligned="true" deltaZ="0">
+<ObjectAnim animIndex="43987"/><ObjectAnim animIndex="43988"/><Object propName="des_tankerexplosion_01"/><Object propName="des_tankerexplosion_02"/>
+</SynchedAnim>
+<SynchedAnim title="Cargo Ship Sinks TEST" category="Setpiece" actorsAligned="true" deltaZ="0">
+<ObjectAnim animIndex="43966"/><ObjectAnim animIndex="43969"/><ObjectAnim animIndex="43970"/><ObjectAnim animIndex="43967"/><ObjectAnim animIndex="43968"/><Object propName="root_scroll_anim_skel"/><Object propName="des_shipsink_01"/><Object propName="des_shipsink_02"/><Object propName="des_shipsink_03"/><Object propName="des_shipsink_04"/>
+</SynchedAnim>
+<SynchedAnim title="Argue &amp; Exit Door #1" category="Individual w/props" actorsAligned="true" deltaZ="-1.8">
+<ActorAnim animIndex="18036"/><ObjectAnim animIndex="18035"/><Object propName="v_ilev_mm_doorw"/>
+</SynchedAnim>
+<SynchedAnim title="Argue &amp; Exit Door #2" category="Individual w/props" actorsAligned="true" deltaZ="-1.8">
+<ActorAnim animIndex="18042"/><ObjectAnim animIndex="18041"/><Object propName="v_ilev_mm_doorw"/>
+</SynchedAnim>
+<SynchedAnim title="Argue &amp; Slam Door" category="Individual w/props" actorsAligned="true" deltaZ="-1.8">
+<ActorAnim animIndex="18048"/><ObjectAnim animIndex="18047"/><Object propName="v_ilev_mm_doorw"/>
+</SynchedAnim>
+<SynchedAnim title="Using Vibrator" category="Explicit" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18057"/><ObjectAnim animIndex="18058"/><Object propName="prop_cs_dildo_01"/>
+</SynchedAnim>
+<SynchedAnim title="Throw Vibrator" category="Explicit" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18061"/><ObjectAnim animIndex="18062"/><Object propName="prop_cs_dildo_01"/>
+</SynchedAnim>
+<SynchedAnim title="Enter Home with Bags" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18069"/><ObjectAnim animIndex="18070"/><ObjectAnim animIndex="18071"/><ObjectAnim animIndex="18072"/><ObjectAnim animIndex="18073"/><Object propName="prop_shopping_bags01"/><Object propName="prop_shopping_bags02"/><Object propName="v_ilev_mm_doorm_l"/><Object propName="v_ilev_mm_doorm_r"/>
+</SynchedAnim>
+<SynchedAnim title="Maid Caught Slacking Off" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18079"/><ActorAnim animIndex="18078"/><ObjectAnim animIndex="18080"/><Object propName="prop_scourer_01"/>
+</SynchedAnim>
+<SynchedAnim title="Clean Pool Base" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18136"/><ObjectAnim animIndex="18137"/><Object propName="prop_poolskimmer"/>
+</SynchedAnim>
+<SynchedAnim title="Clean Pool #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18138"/><ObjectAnim animIndex="18139"/><Object propName="prop_poolskimmer"/>
+</SynchedAnim>
+<SynchedAnim title="Clean Pool #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18140"/><ObjectAnim animIndex="18141"/><Object propName="prop_poolskimmer"/>
+</SynchedAnim>
+<SynchedAnim title="Clean Pool #3" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18142"/><ObjectAnim animIndex="18143"/><Object propName="prop_poolskimmer"/>
+</SynchedAnim>
+<SynchedAnim title="Start Lawnmower Base" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18145"/><ObjectAnim animIndex="18146"/>
+</SynchedAnim>
+<SynchedAnim title="Start Lawnmower #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18147"/><ObjectAnim animIndex="18148"/>
+</SynchedAnim>
+<SynchedAnim title="Start Lawnmower #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18149"/><ObjectAnim animIndex="18150"/>
+</SynchedAnim>
+<SynchedAnim title="Start Lawnmower #3" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18151"/><ObjectAnim animIndex="18152"/>
+</SynchedAnim>
+<SynchedAnim title="Gaming Base" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18167"/><ObjectAnim animIndex="18168"/><ObjectAnim animIndex="18169"/><Object propName="p_controller_01_s"/><Object propName="prop_headset_01"/>
+</SynchedAnim>
+<SynchedAnim title="Gaming Exit #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18170"/><ObjectAnim animIndex="18171"/><ObjectAnim animIndex="18172"/><Object propName="p_controller_01_s"/><Object propName="prop_headset_01"/>
+</SynchedAnim>
+<SynchedAnim title="Gaming Exit #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18173"/><ObjectAnim animIndex="18174"/><ObjectAnim animIndex="18175"/><Object propName="p_controller_01_s"/><Object propName="prop_headset_01"/>
+</SynchedAnim>
+<SynchedAnim title="Search Fridge Base" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18184"/><ObjectAnim animIndex="18185"/><ObjectAnim animIndex="18186"/><Object propName="v_ilev_mm_fridge_l"/><Object propName="v_ilev_mm_fridge_r"/>
+</SynchedAnim>
+<SynchedAnim title="Search Fridge #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18187"/><ObjectAnim animIndex="18188"/><ObjectAnim animIndex="18189"/><Object propName="v_ilev_mm_fridge_l"/><Object propName="v_ilev_mm_fridge_r"/>
+</SynchedAnim>
+<SynchedAnim title="Search Fridge #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18190"/><ObjectAnim animIndex="18191"/><ObjectAnim animIndex="18192"/><Object propName="v_ilev_mm_fridge_l"/><Object propName="v_ilev_mm_fridge_r"/>
+</SynchedAnim>
+<SynchedAnim title="Search Fridge #3" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18193"/><ObjectAnim animIndex="18194"/><ObjectAnim animIndex="18195"/><Object propName="v_ilev_mm_fridge_l"/><Object propName="v_ilev_mm_fridge_r"/>
+</SynchedAnim>
+<SynchedAnim title="Sit on Chairs and Chat" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18207"/><ActorAnim animIndex="18206"/><ObjectAnim animIndex="18204"/><ObjectAnim animIndex="18205"/><Object propName="prop_table_03_chr"/><Object propName="prop_table_03_chr"/>
+</SynchedAnim>
+<SynchedAnim title="Lamar and Stretch Chat #1" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18209"/><ActorAnim animIndex="18210"/>
+</SynchedAnim>
+<SynchedAnim title="Lamar and Stretch Chat #2" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18215"/><ActorAnim animIndex="18216"/>
+</SynchedAnim>
+<SynchedAnim title="Lamar and Stretch Chat #3" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18217"/><ActorAnim animIndex="18218"/>
+</SynchedAnim>
+<SynchedAnim title="Lamar and Stretch Chat #4" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18219"/><ActorAnim animIndex="18220"/>
+</SynchedAnim>
+<SynchedAnim title="Lamar and Stretch Chat #5" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18221"/><ActorAnim animIndex="18222"/>
+</SynchedAnim>
+<SynchedAnim title="Talk on Couch #1" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18340"/><ActorAnim animIndex="18341"/>
+</SynchedAnim>
+<SynchedAnim title="Talk on Couch #2" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18342"/><ActorAnim animIndex="18343"/>
+</SynchedAnim>
+<SynchedAnim title="Talk on Couch #3" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18344"/><ActorAnim animIndex="18345"/>
+</SynchedAnim>
+<SynchedAnim title="Green Juice Tastes Nasty" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18372"/><ObjectAnim animIndex="18373"/><Object propName="p_w_grass_gls_s"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda and Tracey Shopping" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18375"/><ActorAnim animIndex="18382"/><ObjectAnim animIndex="18376"/><ObjectAnim animIndex="18377"/><ObjectAnim animIndex="18378"/><ObjectAnim animIndex="18379"/><ObjectAnim animIndex="18380"/><Object propName="prop_shopping_bags01"/><Object propName="prop_shopping_bags02"/><Object propName="prop_shopping_bags01"/><Object propName="prop_shopping_bags02"/><Object propName="v_ilev_mm_doorm_l"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda and Jimmy Shopping" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18383"/><ActorAnim animIndex="18390"/><ObjectAnim animIndex="18384"/><ObjectAnim animIndex="18385"/><ObjectAnim animIndex="18386"/><ObjectAnim animIndex="18387"/><ObjectAnim animIndex="18388"/><Object propName="prop_shopping_bags01"/><Object propName="prop_shopping_bags02"/><Object propName="prop_shopping_bags01"/><Object propName="prop_shopping_bags02"/><Object propName="v_ilev_mm_doorm_l"/>
+</SynchedAnim>
+<SynchedAnim title="Give Drunk Girl Money #1" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18475"/><ActorAnim animIndex="18476"/><ObjectAnim animIndex="18474"/><Object propName="prop_cash_note_01"/>
+</SynchedAnim>
+<SynchedAnim title="Give Drunk Girl Money #2" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18479"/><ActorAnim animIndex="184780"/><ObjectAnim animIndex="18478"/><Object propName="prop_cash_note_01"/>
+</SynchedAnim>
+<SynchedAnim title="Give Drunk Girl Money #3" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18483"/><ActorAnim animIndex="18484"/><ObjectAnim animIndex="18482"/><Object propName="prop_cash_note_01"/>
+</SynchedAnim>
+<SynchedAnim title="Tracey and Boy in Room" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18514"/><ActorAnim animIndex="18512"/><ObjectAnim animIndex="18513"/><Object propName="v_ilev_mm_doorw"/>
+</SynchedAnim>
+<SynchedAnim title="Jimmy and Tracy Argue #1" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18556"/><ActorAnim animIndex="18557"/><ObjectAnim animIndex="18554"/><ObjectAnim animIndex="18555"/><Object propName="v_ilev_mm_doorw"/><Object propName="v_ilev_mm_doorw"/>
+</SynchedAnim>
+<SynchedAnim title="Jimmy and Tracy Argue #2" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18564"/><ActorAnim animIndex="18565"/><ObjectAnim animIndex="18562"/><ObjectAnim animIndex="18563"/><Object propName="v_ilev_mm_doorw"/><Object propName="v_ilev_mm_doorw"/>
+</SynchedAnim>
+<SynchedAnim title="Jimmy and Tracy Argue #3" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18572"/><ActorAnim animIndex="18573"/><ObjectAnim animIndex="18570"/><ObjectAnim animIndex="18771"/><Object propName="v_ilev_mm_doorw"/><Object propName="v_ilev_mm_doorw"/>
+</SynchedAnim>
+<SynchedAnim title="Jimmy and Tracy Argue #4" category="Aggressive interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18588"/><ActorAnim animIndex="18589"/><ObjectAnim animIndex="18586"/><ObjectAnim animIndex="18587"/><Object propName="v_ilev_mm_doorw"/><Object propName="v_ilev_mm_doorw"/>
+</SynchedAnim>
+<SynchedAnim title="Pull Grenade Pin with Teeth" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18606"/><ObjectAnim animIndex="18605"/><Object propName="w_ex_grenadefrag"/>
+</SynchedAnim>
+<SynchedAnim title="Lovers Embrace #1" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18610"/><ActorAnim animIndex="18609"/>
+</SynchedAnim>
+<SynchedAnim title="Lovers Embrace #2" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18612"/><ActorAnim animIndex="18611"/>
+</SynchedAnim>
+<SynchedAnim title="Lovers Embrace #3" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18614"/><ActorAnim animIndex="18613"/>
+</SynchedAnim>
+<SynchedAnim title="Trevor and Patricia Chat #1" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18628"/><ActorAnim animIndex="18627"/>
+</SynchedAnim>
+<SynchedAnim title="Trevor and Patricia Chat #2" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18630"/><ActorAnim animIndex="18629"/>
+</SynchedAnim>
+<SynchedAnim title="Trevor and Patricia Chat #3" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="18632"/><ActorAnim animIndex="18631"/>
+</SynchedAnim>
+<SynchedAnim title="Use Meat as Cover" category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11594"/><ObjectAnim animIndex="11593"/><Object propName="v_ind_coo_half"/>
+</SynchedAnim>
+<SynchedAnim title="Let into Apartment #1" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22068"/><ActorAnim animIndex="22069"/><ObjectAnim animIndex="22072"/><Object propName="hei_heist_apart2_door"/>
+</SynchedAnim>
+<SynchedAnim title="Let into Apartment #2" category="Other" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22071"/><ActorAnim animIndex="22073"/><ObjectAnim animIndex="22070"/><Object propName="hei_heist_apart2_door"/>
+</SynchedAnim>
+<SynchedAnim title="Jacuzzi Smoking #1" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22134"/><ObjectAnim animIndex="22139"/><Object propName="lux_prop_cigar_01_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Jacuzzi Drinking #1" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22140"/><ObjectAnim animIndex="22143"/><Object propName="apa_prop_cs_plastic_cup_01"/>
+</SynchedAnim>
+<SynchedAnim title="Jacuzzi Smoking #2" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22147"/><ObjectAnim animIndex="22151"/><Object propName="lux_prop_cigar_01_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Jacuzzi Drinking #2" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22153"/><ObjectAnim animIndex="22156"/><Object propName="apa_prop_cs_plastic_cup_01"/>
+</SynchedAnim>
+<SynchedAnim title="Jacuzzi Smoking #3" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22164"/><ObjectAnim animIndex="22162"/><Object propName="lux_prop_cigar_01_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Jacuzzi Drinking #3" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="22165"/><ObjectAnim animIndex="22170"/><Object propName="apa_prop_cs_plastic_cup_01"/>
+</SynchedAnim>
+<SynchedAnim title="Luxor Cigar #1" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="23925"/><ObjectAnim animIndex="23919"/><ObjectAnim animIndex="23921"/><Object propName="lux_prop_cigar_01_luxe"/><Object propName="lux_prop_lighter_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Luxor Cigar #2" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="23924"/><ObjectAnim animIndex="23916"/><ObjectAnim animIndex="23915"/><Object propName="lux_prop_cigar_01_luxe"/><Object propName="lux_prop_lighter_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Luxor Cigar #3" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="23918"/><ObjectAnim animIndex="23923"/><ObjectAnim animIndex="23926"/><Object propName="lux_prop_cigar_01_luxe"/><Object propName="lux_prop_lighter_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Luxor Champagne #1" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="23928"/><ObjectAnim animIndex="23930"/><ObjectAnim animIndex="23935"/><ObjectAnim animIndex="23927"/><Object propName="lux_p_pour_champagne_luxe"/><Object propName="lux_prop_champ_01_luxe"/><Object propName="lux_prop_champ_flute_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Luxor Champagne #2" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="23929"/><ObjectAnim animIndex="23931"/><ObjectAnim animIndex="23934"/><ObjectAnim animIndex="23933"/><Object propName="lux_p_pour_champagne_luxe"/><Object propName="lux_prop_champ_01_luxe"/><Object propName="lux_prop_champ_flute_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Luxor Champagne #3" category="Drinking/drugs" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="23932"/><ObjectAnim animIndex="23938"/><ObjectAnim animIndex="23936"/><Object propName="lux_p_pour_champagne_luxe"/><Object propName="lux_prop_champ_01_luxe"/>
+</SynchedAnim>
+<SynchedAnim title="Chair Fall" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="25396"/><ObjectAnim animIndex="25397"/><Object propName="hei_prop_hei_skid_chair"/>
+</SynchedAnim>
+<SynchedAnim title="Plant Thermal Charge" category="Individual w/props" actorsAligned="true" deltaZ="0.1">
+<ActorAnim animIndex="25401"/><ObjectAnim animIndex="25402"/><Object propName="hei_p_m_bag_var22_arm_s"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) Hack Vault Laptop Enter" category="Individual w/props" actorsAligned="true" deltaZ="0.4">
+<ActorAnim animIndex="25568"/><ObjectAnim animIndex="25566"/><ObjectAnim animIndex="25560"/><ObjectAnim animIndex="25562"/><Object propName="hei_p_m_bag_var22_arm_s"/><Object propName="hei_prop_heist_card_hack_02"/><Object propName="hei_prop_hst_laptop"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) Hack Vault Laptop Loop" category="Individual w/props" actorsAligned="true" deltaZ="0.4">
+<ActorAnim animIndex="25558"/><ObjectAnim animIndex="25570"/><ObjectAnim animIndex="25563"/><ObjectAnim animIndex="25565"/><Object propName="hei_p_m_bag_var22_arm_s"/><Object propName="hei_prop_heist_card_hack_02"/><Object propName="hei_prop_hst_laptop"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) Hack Vault Laptop Exit" category="Individual w/props" actorsAligned="true" deltaZ="0.4">
+<ActorAnim animIndex="25567"/><ObjectAnim animIndex="25557"/><ObjectAnim animIndex="25571"/><ObjectAnim animIndex="25564"/><Object propName="hei_p_m_bag_var22_arm_s"/><Object propName="hei_prop_heist_card_hack_02"/><Object propName="hei_prop_hst_laptop"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) Grab Cash Intro" category="Individual w/props" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="25605"/><ObjectAnim animIndex="25600"/><Object propName="hei_p_m_bag_var22_arm_s"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) Grab Cash Base" category="Individual w/props" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="25606"/><ObjectAnim animIndex="25591"/><ObjectAnim animIndex="25604"/><ObjectAnim animIndex="1493"/><Object propName="hei_p_m_bag_var22_arm_s"/><Object propName="hei_prop_hei_cash_trolly_01"/><Object propName="hei_prop_heist_cash_pile"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) Grab Cash Exit" category="Individual w/props" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="25622"/><ObjectAnim animIndex="25588"/><Object propName="hei_p_m_bag_var22_arm_s"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) CEO Chair Enter" category="Individual w/props" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="26659"/><ObjectAnim animIndex="26656"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) CEO Chair #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26658"/><ObjectAnim animIndex="26651"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) CEO Chair #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26654"/><ObjectAnim animIndex="26662"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) CEO Chair #3" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26645"/><ObjectAnim animIndex="26653"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) CEO Chair #4" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26655"/><ObjectAnim animIndex="26661"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) CEO Chair #5" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26663"/><ObjectAnim animIndex="26649"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Male) CEO Chair Exit" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26666"/><ObjectAnim animIndex="26650"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) CEO Chair Enter" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26677"/><ObjectAnim animIndex="26678"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) CEO Chair #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26668"/><ObjectAnim animIndex="26682"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) CEO Chair #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26685"/><ObjectAnim animIndex="26671"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) CEO Chair #3" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26676"/><ObjectAnim animIndex="26672"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) CEO Chair #4" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26675"/><ObjectAnim animIndex="26679"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) CEO Chair #5" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26681"/><ObjectAnim animIndex="26686"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) CEO Chair Exit" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26687"/><ObjectAnim animIndex="26673"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="Open CEO Safe" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26632"/><ObjectAnim animIndex="26631"/><Object propName="ex_prop_safedoor_office2a_r"/>
+</SynchedAnim>
+<SynchedAnim title="Close CEO Safe" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="26629"/><ObjectAnim animIndex="26630"/><Object propName="ex_prop_safedoor_office2a_r"/>
+</SynchedAnim>
+<SynchedAnim title="Boardroom Boss Enter" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="27332"/><ObjectAnim animIndex="27335"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="Boardroom Boss #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="27338"/><ObjectAnim animIndex="27339"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="Boardroom Boss #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="27341"/><ObjectAnim animIndex="27342"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="Boardroom Boss #3" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="27345"/><ObjectAnim animIndex="27347"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="Boardroom Boss #4" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="27352"/><ObjectAnim animIndex="27349"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="Boardroom Boss #5" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="27353"/><ObjectAnim animIndex="27354"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="Boardroom Boss Exit" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="27359"/><ObjectAnim animIndex="27344"/><Object propName="ex_prop_offchair_exec_03"/>
+</SynchedAnim>
+<SynchedAnim title="Franklin and Dom Banter" category="Friendly interaction" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="83371"/><ActorAnim animIndex="83370"/>
+</SynchedAnim>
+<SynchedAnim title="Josh Gate #1" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="83429"/><ObjectAnim animIndex="83432"/><Object propName="prop_lrggate_01c_l"/>
+</SynchedAnim>
+<SynchedAnim title="Josh Gate #2" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="83434"/><ObjectAnim animIndex="83430"/><Object propName="prop_lrggate_01c_l"/>
+</SynchedAnim>
+<SynchedAnim title="Knock on Motel Door" category="Individual w/props" actorsAligned="true" deltaZ="-5.1">
+<ActorAnim animIndex="83473"/><ObjectAnim animIndex="83472"/><Object propName="prop_motel_door_09"/>
+</SynchedAnim>
+<SynchedAnim title="Amanda Arrested" category="Vehicle" actorsAligned="true" deltaZ="-3.2">
+<ActorAnim animIndex="83486"/><ActorAnim animIndex="83488"/><ActorAnim animIndex="83497"/><ObjectAnim animIndex="83493"/><Object propName="police3"/>
+</SynchedAnim>
+<SynchedAnim title="Rescue Amanda" category="Broken/WIP" actorsAligned="true" deltaZ="-3.2">
+<ActorAnim animIndex="83490"/><ActorAnim animIndex="83492"/><ObjectAnim animIndex="83487"/><ObjectAnim animIndex="83495"/><ObjectAnim animIndex="83496"/><Object propName="police3"/><Object propName="prop_cs_cuffs_01"/><Object propName="      prop_cuff_keys_01"/>
+</SynchedAnim>
+<SynchedAnim title="Rockstar with Groupie #1" category="Friendly interaction" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="83539"/><ActorAnim animIndex="83541"/>
+</SynchedAnim>
+<SynchedAnim title="Rockstar with Groupie #2" category="Friendly interaction" actorsAligned="true" deltaZ="-0.2">
+<ActorAnim animIndex="83548"/><ActorAnim animIndex="83547"/>
+</SynchedAnim>
+<SynchedAnim title="Dogging" category="Explicit" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="83720"/><ActorAnim animIndex="83718"/>
+</SynchedAnim>
+<SynchedAnim title="Drug Deal" category="Other" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="83729"/><ActorAnim animIndex="83727"/><ActorAnim animIndex="83728"/><ActorAnim animIndex="83732"/>
+</SynchedAnim>
+<SynchedAnim title="Hiding in Dumpster Enter" category="Individual w/props" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="83750"/><ObjectAnim animIndex="83751"/><ObjectAnim animIndex="83752"/><ObjectAnim animIndex="83737"/><Object propName="prop_cs_dumpster_01a"/><Object propName="prop_cs_dumpster_lidl"/><Object propName="prop_cs_dumpster_lidr"/>
+</SynchedAnim>
+<SynchedAnim title="Hiding in Dumpster #1" category="Individual w/props" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="83739"/><ObjectAnim animIndex="83741"/><ObjectAnim animIndex="83744"/><ObjectAnim animIndex="83745"/><Object propName="prop_cs_dumpster_01a"/><Object propName="prop_cs_dumpster_lidl"/><Object propName="prop_cs_dumpster_lidr"/>
+</SynchedAnim>
+<SynchedAnim title="Hiding in Dumpster #2" category="Individual w/props" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="83746"/><ObjectAnim animIndex="83749"/><ObjectAnim animIndex="83747"/><ObjectAnim animIndex="83748"/><Object propName="prop_cs_dumpster_01a"/><Object propName="prop_cs_dumpster_lidl"/><Object propName="prop_cs_dumpster_lidr"/>
+</SynchedAnim>
+<SynchedAnim title="Hiding in Dumpster Exit" category="Individual w/props" actorsAligned="true" deltaZ="-0.5">
+<ActorAnim animIndex="83738"/><ObjectAnim animIndex="83740"/><ObjectAnim animIndex="83742"/><ObjectAnim animIndex="83743"/><Object propName="prop_cs_dumpster_01a"/><Object propName="prop_cs_dumpster_lidl"/><Object propName="prop_cs_dumpster_lidr"/>
+</SynchedAnim>
+<SynchedAnim title="Poppy Arrested" category="Vehicle" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="83755"/><ActorAnim animIndex="83757"/><ObjectAnim animIndex="83754"/><ObjectAnim animIndex="83756"/><Object propName="police3"/><Object propName="rapidgt2"/>
+</SynchedAnim>
+<SynchedAnim title="Clubhouse Boss Sit Down" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="97871"/><ObjectAnim animIndex="97867"/><Object propName="ex_prop_offchair_exec_01"/>
+</SynchedAnim>
+<SynchedAnim title="Clubhouse Boss Get Up" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="97875"/><ObjectAnim animIndex="97863"/><Object propName="ex_prop_offchair_exec_01"/>
+</SynchedAnim>
+<SynchedAnim title="Clubhouse Backwards Chair Enter" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="97926"/><ObjectAnim animIndex="97927"/><Object propName="bkr_prop_clubhouse_chair_01"/>
+</SynchedAnim>
+<SynchedAnim title="Clubhouse Backwards Chair #1" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="97929"/><ObjectAnim animIndex="97930"/><Object propName="bkr_prop_clubhouse_chair_01"/>
+</SynchedAnim>
+<SynchedAnim title="Clubhouse Backwards Chair #2" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="97932"/><ObjectAnim animIndex="97923"/><Object propName="bkr_prop_clubhouse_chair_01"/>
+</SynchedAnim>
+<SynchedAnim title="Clubhouse Backwards Chair #3" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="97924"/><ObjectAnim animIndex="97931"/><Object propName="bkr_prop_clubhouse_chair_01"/>
+</SynchedAnim>
+<SynchedAnim title="Clubhouse Backwards Chair Exit" category="Individual w/props" actorsAligned="true" deltaZ="-0.4">
+<ActorAnim animIndex="97922"/><ObjectAnim animIndex="97928"/><Object propName="bkr_prop_clubhouse_chair_01"/>
+</SynchedAnim>
+<SynchedAnim title="Fleeca Bank Drill Enter" category="Individual w/props" actorsAligned="true" deltaZ="0.23">
+<ActorAnim animIndex="25913"/><ObjectAnim animIndex="25929"/><Object propName="hei_p_m_bag_var22_arm_s"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) Grab Cash Intro" category="Individual w/props" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="25605"/><ObjectAnim animIndex="25601"/><Object propName="hei_p_m_bag_var22_arm_s"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) Grab Cash Base" category="Individual w/props" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="25606"/><ObjectAnim animIndex="25598"/><ObjectAnim animIndex="25604"/><ObjectAnim animIndex="1493"/><Object propName="hei_p_m_bag_var22_arm_s"/><Object propName="hei_prop_hei_cash_trolly_01"/><Object propName="hei_prop_heist_cash_pile"/>
+</SynchedAnim>
+<SynchedAnim title="(Female) Grab Cash Exit" category="Individual w/props" actorsAligned="true" deltaZ="-0.6">
+<ActorAnim animIndex="25622"/><ObjectAnim animIndex="25587"/><Object propName="hei_p_m_bag_var22_arm_s"/>
+</SynchedAnim>
+<SynchedAnim title="Prologue Set C4 Mainaction " category="Aggressive interaction" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11828"/><ActorAnim animIndex="11829"/><ActorAnim animIndex="11830"/>
+</SynchedAnim>
+<SynchedAnim title="Narcotics Trevor Phone #1" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="25090"/><ObjectAnim animIndex="25094"/><Object propName="prop_npc_phone"/>
+</SynchedAnim>
+<SynchedAnim title="Narcotics Trevor Phone #2" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="25089"/><ObjectAnim animIndex="25095"/><Object propName="prop_npc_phone"/>
+</SynchedAnim>
+<SynchedAnim title="Narcotics Trevor Phone #3" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="25696"/><ObjectAnim animIndex="25695"/><Object propName="prop_npc_phone"/>
+</SynchedAnim>
+<SynchedAnim title="Narcotics Trevor Phone #4" category="Individual w/props" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="25697"/><ObjectAnim animIndex="25694"/><Object propName="prop_npc_phone"/>
+</SynchedAnim>
+<SynchedAnim title="Briefcase #1 Enter" category="Individual w/props" actorsAligned="true" deltaZ="-0.95">
+<ActorAnim animIndex="25703"/><ObjectAnim animIndex="25704"/><Object propName="hei_p_attache_case_01b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Briefcase #2 Loop" category="Individual w/props" actorsAligned="true" deltaZ="-0.95">
+<ActorAnim animIndex="25706"/><ObjectAnim animIndex="1456"/><Object propName="hei_p_attache_case_01b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Briefcase #3 Exit" category="Individual w/props" actorsAligned="true" deltaZ="-0.95">
+<ActorAnim animIndex="1453"/><ObjectAnim animIndex="1454"/><Object propName="hei_p_attache_case_01b_s"/>
+</SynchedAnim>
+<SynchedAnim title="Newspaper Loop" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11633"/><ObjectAnim animIndex="11634"/><Object propName="p_cs_newspaper_s"/>
+</SynchedAnim>
+<SynchedAnim title="Newspaper Idle" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11631"/><ObjectAnim animIndex="11632"/><Object propName="p_cs_newspaper_s"/>
+</SynchedAnim>
+<SynchedAnim title="Newspaper Exit" category="Individual w/props" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="11635"/><ObjectAnim animIndex="11636"/><Object propName="p_cs_newspaper_s"/>
+</SynchedAnim>
+<SynchedAnim title="Coke: Doll Base #1" category="Broken/WIP" actorsAligned="true" deltaZ="-1">
+<ActorAnim animIndex="98722"/><ObjectAnim animIndex="98717"/><ObjectAnim animIndex="98724"/><ObjectAnim animIndex="98723"/><ObjectAnim animIndex="98720"/><ObjectAnim animIndex="98716"/><Object propName="bkr_prop_coke_dollcast"/><Object propName="bkr_prop_coke_dollmould"/><Object propName="bkr_prop_coke_dollboxfolded"/><Object propName="bkr_prop_coke_fullscoop_01a"/><Object propName="bkr_prop_coke_press_01aa"/>
+</SynchedAnim>
+<SynchedAnim title="Fake Money: Test #1" category="Broken/WIP" actorsAligned="true" deltaZ="0.5">
+<ActorAnim animIndex="98856"/><ObjectAnim animIndex="98858"/><ObjectAnim animIndex="98857"/><ObjectAnim animIndex="98859"/><ObjectAnim animIndex="98861"/><ObjectAnim animIndex="98862"/><Object propName="bkr_prop_fakeid_papercutter"/><Object propName="bkr_prop_cutter_moneystack_01a"/><Object propName="bkr_prop_cutter_moneypage"/><Object propName="bkr_prop_cutter_moneystrip"/><Object propName="bkr_prop_cutter_singlestack_01a"/>
+</SynchedAnim>
+<SynchedAnim title="Fake Money: Test #2" category="Broken/WIP" actorsAligned="true" deltaZ="0.5">
+<ActorAnim animIndex="98863"/><ObjectAnim animIndex="98865"/><ObjectAnim animIndex="98864"/><ObjectAnim animIndex="98866"/><ObjectAnim animIndex="98867"/><ObjectAnim animIndex="98868"/><Object propName="bkr_prop_fakeid_papercutter"/><Object propName="bkr_prop_cutter_moneystack_01a"/><Object propName="bkr_prop_cutter_moneypage"/><Object propName="bkr_prop_cutter_moneystrip"/><Object propName="bkr_prop_cutter_singlestack_01a"/>
+</SynchedAnim>
+<SynchedAnim title="Eating Stew" category="Broken/WIP" actorsAligned="true" deltaZ="0">
+<ActorAnim animIndex="82595"/><ObjectAnim animIndex="82596"/><ObjectAnim animIndex="82594"/><Object propName="p_cs_bowl_01b_s"/><Object propName="prop_cs_fork"/>
+</SynchedAnim>
+
+</SynchedAnimations>
