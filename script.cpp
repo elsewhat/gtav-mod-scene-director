@@ -5677,6 +5677,13 @@ void init_read_keys_from_ini() {
 
 	log_to_file("Converted keys to dword key_possess " + std::to_string(key_hud));
 
+	
+	int outdated_gtav_version = GetPrivateProfileInt("gtaversion", "outdated_gtav_version ", 0, config_path);
+	if (outdated_gtav_version == 1) {
+		hasOutdatedGTA = true;
+		set_status_text("You have an outdated unsupported GTA V version. Please update!");
+	}
+
 
 	char key_menu_down_str[256], key_menu_up_str[256], key_menu_select_str[256], key_menu_left_str[256], key_menu_right_str[256], key_menu_delete_str[256];
 	GetPrivateProfileString("keys", "key_menu_down", "NUM2", key_menu_down_str, sizeof(key_menu_down_str), config_path);
@@ -5892,12 +5899,14 @@ void action_copy_recording_to_other_actors(Actor actorCopyFrom) {
 void action_record_scene_for_actor(bool replayOtherActors) {
 
 	Actor & actor = get_actor_from_ped(PLAYER::PLAYER_PED_ID());
+
 	if (actor.isNullActor()) {
 		set_status_text("Actor must be assigned slot 1-9 before recording actions");
 	}
 	else {
 		set_status_text("Recording actions for current actions. Press ALT+R to stop recording");
 		Ped actorPed = actor.getActorPed();
+		int actorIndex = get_actor_index_from_ped(PLAYER::PLAYER_PED_ID());
 
 		//the actual recording
 		std::vector<std::shared_ptr<ActorRecordingItem>> actorRecording;
@@ -6017,7 +6026,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					
 					actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
 					float heading = ENTITY::GET_ENTITY_HEADING(actorPed);
-					ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, heading,  animationSeqRecorded, animationFlag);
+					ActorAnimationSequenceRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, heading,  animationSeqRecorded, animationFlag);
 					log_to_file(recordingItem.toString());
 
 					DELTA_TICKS = 500;
@@ -6059,7 +6068,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					float actorRotation = ENTITY::GET_ENTITY_ROTATION(actorPed, 2).z;
 					actorLocation = ENTITY::GET_ENTITY_COORDS(actorPed, true);
 
-					ActorSyncedAnimationRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, getActorPointers(), actorLocation, actorRotation, syncedAnimCopy);
+					ActorSyncedAnimationRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, getActorPointers(), actorLocation, actorRotation, syncedAnimCopy);
 					
 					//make sure we walk closer to where animation was recorded
 					if (!PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
@@ -6068,7 +6077,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						if (AI::IS_PED_RUNNING(actorPed) || AI::IS_PED_SPRINTING(actorPed)) {
 							walkSpeed = 2.0;
 						}
-						ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
+						ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, walkSpeed, actorHeading);
 						recordingItem.setMinDistanceBeforeCompleted(1.8);
 						recordingItem.setTicksDeltaCheckCompletion(50);
 						recordingItem.setNrAttemptsBeforeSkipping(50);
@@ -6144,7 +6153,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						}
 						
 
-						ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, actorVehHeading, seat, enterSpeed);
+						ActorVehicleEnterRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, actorVeh, actorVehHeading, seat, enterSpeed);
 						actorRecording.push_back(std::make_shared<ActorVehicleEnterRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 						previousVehicle = actorVeh;
@@ -6163,7 +6172,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 						Vector3 location = ENTITY::GET_ENTITY_COORDS(actorVeh, true);
 
 
-						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, location, actorVeh,actorVehHeading, recordedSpeed);
+						ActorVehicleMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, location, actorVeh,actorVehHeading, recordedSpeed);
 						actorRecording.push_back(std::make_shared<ActorVehicleMovementRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 
@@ -6179,7 +6188,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					//ActorVehicleExitRecordingItem
 					//If actor was previously in a vehicle, the have exited. Record this
 					if (previousVehicle != 0) {
-						ActorVehicleExitRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, previousVehicle, previousVehicleHeading);
+						ActorVehicleExitRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, previousVehicle, previousVehicleHeading);
 						actorRecording.push_back(std::make_shared<ActorVehicleExitRecordingItem>(recordingItem));
 						log_to_file(recordingItem.toString());
 						previousVehicle = 0;
@@ -6199,7 +6208,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 							}
 							log_to_file("action_record_scene_for_actor: Will add scenario");
 							ticksCurrentScenarioStart = ticksNow;
-							ActorScenarioRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, currentScenario);
+							ActorScenarioRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, currentScenario);
 							recordingItem.setTicksLength((DWORD)1000);
 							ongoingActorScenarioRecordingItem = std::make_shared<ActorScenarioRecordingItem>(recordingItem);
 							actorRecording.push_back(ongoingActorScenarioRecordingItem);
@@ -6217,7 +6226,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 								ticksCurrentCoverStart = ticksNow;
 								log_to_file("IS_PED_GOING_INTO_COVER");
 
-								ActorCoverAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorLocation, actorLocation);
+								ActorCoverAtRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, actorLocation, actorLocation);
 								recordingItem.setTicksLength((DWORD)1000);
 								ongoingActorCoverAtRecordingItem = std::make_shared<ActorCoverAtRecordingItem>(recordingItem);
 								actorRecording.push_back(ongoingActorCoverAtRecordingItem);
@@ -6235,7 +6244,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 							bool isClimbing = PED::IS_PED_CLIMBING(actorPed);
 							if (isClimbing) {
 								//walk over to where the jumping happened
-								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
+								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, walkSpeed, actorHeading);
 								recordingItem.setMinDistanceBeforeCompleted(1.8);
 								recordingItem.setTicksDeltaCheckCompletion(50);
 								recordingItem.setNrAttemptsBeforeSkipping(50);
@@ -6244,7 +6253,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 							}
 
 
-							ActorJumpingRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading, isClimbing);
+							ActorJumpingRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, walkSpeed, actorHeading, isClimbing);
 							if (isClimbing) {
 								recordingItem.setTicksDeltaCheckCompletion(50);
 							}
@@ -6280,7 +6289,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 										doAim = true;
 									}
 
-									ActorReloadRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, weaponHash, doAim, weaponImpactLocation);
+									ActorReloadRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, weaponHash, doAim, weaponImpactLocation);
 									actorRecording.push_back(std::make_shared<ActorReloadRecordingItem>(recordingItem));
 									log_to_file(recordingItem.toString());
 								}
@@ -6320,7 +6329,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 									float actorHeading = ENTITY::GET_ENTITY_HEADING(actorPed);
 
 									//"FIRING_PATTERN_FULL_AUTO" FIRING_PATTERN_BURST_FIRE
-									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, deltaCheckRecordingTicks, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_FULL_AUTO"), walkSpeed, actorHeading);
+									ActorShootAtByImpactRecordingItem recordingItem(ticksSinceStart, deltaCheckRecordingTicks, actorIndex, actorPed, actorLocation, weaponHash, weaponImpactLocation, GAMEPLAY::GET_HASH_KEY("FIRING_PATTERN_FULL_AUTO"), walkSpeed, actorHeading);
 									actorRecording.push_back(std::make_shared<ActorShootAtByImpactRecordingItem>(recordingItem));
 									log_to_file(recordingItem.toString());
 									hasRecordingWithGunFire = true;
@@ -6343,7 +6352,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 									walkSpeed = 2.0;
 								}
 
-								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading);
+								ActorOnFootMovementRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, walkSpeed, actorHeading);
 								actorRecording.push_back(std::make_shared<ActorOnFootMovementRecordingItem>(recordingItem));
 
 								log_to_file(recordingItem.toString());
@@ -6388,7 +6397,7 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 					isWalkingWhileSpeaking = true;
 				}
 
-				ActorSpeakRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, walkSpeed, actorHeading, isWalkingWhileSpeaking);
+				ActorSpeakRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, walkSpeed, actorHeading, isWalkingWhileSpeaking);
 				recordingItem.setTicksLength(ticksStoppedSpeaking - ticksStartedSpeaking);
 				actorRecording.push_back(std::make_shared<ActorSpeakRecordingItem>(recordingItem));
 				log_to_file(recordingItem.toString());
@@ -6398,34 +6407,27 @@ void action_record_scene_for_actor(bool replayOtherActors) {
 			if (!hasOutdatedGTA && PED::IS_PED_IN_ANY_VEHICLE(actorPed, 0)) {
 				Vehicle actorVeh = PED::GET_VEHICLE_PED_IS_USING(actorPed);
 				
-				try {
-					if (VEHICLE::_HAS_VEHICLE_ROCKET_BOOST(actorVeh) && VEHICLE::_IS_VEHICLE_ROCKET_BOOST_ACTIVE(actorVeh)) {
-						Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
-						if (pedDriver == actorPed && (hasRecordedRocketBoost == false || ticksSinceStart > lastRocketBoost + 5500)) {
-							ActorVehicleRocketBoostRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
-							actorRecording.push_back(std::make_shared<ActorVehicleRocketBoostRecordingItem>(recordingItem));
-							log_to_file(recordingItem.toString());
-							lastRocketBoost = ticksSinceStart;
-							hasRecordedRocketBoost = true;
-						}
-					}
-
-					if (VEHICLE::_HAS_VEHICLE_PARACHUTE(actorVeh) && VEHICLE::_CAN_VEHICLE_PARACHUTE_BE_ACTIVATED(actorVeh)) {
-						Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
-						if (pedDriver == actorPed && hasRecordedVehParachute == false) {
-							ActorVehicleParachuteRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorPed, actorLocation, actorVeh, 0.0f);
-							actorRecording.push_back(std::make_shared<ActorVehicleParachuteRecordingItem>(recordingItem));
-							log_to_file(recordingItem.toString());
-							hasRecordedVehParachute = true;
-							vehicleParachute = actorVeh;
-						}
+				if (VEHICLE::_HAS_VEHICLE_ROCKET_BOOST(actorVeh) && VEHICLE::_IS_VEHICLE_ROCKET_BOOST_ACTIVE(actorVeh)) {
+					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
+					if (pedDriver == actorPed && (hasRecordedRocketBoost == false || ticksSinceStart > lastRocketBoost + 5500)) {
+						ActorVehicleRocketBoostRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, actorVeh, 0.0f);
+						actorRecording.push_back(std::make_shared<ActorVehicleRocketBoostRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+						lastRocketBoost = ticksSinceStart;
+						hasRecordedRocketBoost = true;
 					}
 				}
-				catch (...) {
-					set_status_text("Upgrade GTA V to rocket boost recording");
-					hasOutdatedGTA = true;
-				}
 
+				if (VEHICLE::_HAS_VEHICLE_PARACHUTE(actorVeh) && VEHICLE::_CAN_VEHICLE_PARACHUTE_BE_ACTIVATED(actorVeh)) {
+					Ped pedDriver = VEHICLE::GET_PED_IN_VEHICLE_SEAT(actorVeh, -1);
+					if (pedDriver == actorPed && hasRecordedVehParachute == false) {
+						ActorVehicleParachuteRecordingItem recordingItem(ticksSinceStart, DELTA_TICKS, actorIndex, actorPed, actorLocation, actorVeh, 0.0f);
+						actorRecording.push_back(std::make_shared<ActorVehicleParachuteRecordingItem>(recordingItem));
+						log_to_file(recordingItem.toString());
+						hasRecordedVehParachute = true;
+						vehicleParachute = actorVeh;
+					}
+				}
 			}
 
 			

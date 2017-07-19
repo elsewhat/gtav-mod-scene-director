@@ -5,9 +5,10 @@
 #include "Actor.h"
 #include "scenario.h"
 
-ActorRecordingItem::ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location)
+ActorRecordingItem::ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location)
 {
 	m_ticksAfterRecordStart = ticksStart;
+	m_actorIndex = actorIndex;
 	m_actorPed = actor;
 	m_location = location;
 	m_ticksDeltaCheckCompletion = 300;
@@ -54,6 +55,22 @@ void ActorRecordingItem::updatePreviewLocation(Actor* actor,Vector3 location)
 {
 	//do nothing
 }
+
+tinyxml2::XMLElement * ActorRecordingItem::toXML(tinyxml2::XMLDocument* doc)
+{
+	tinyxml2::XMLElement* element = doc->NewElement("ActorRecordingItem");
+
+	element->SetAttribute("TicksAfterRecordStart", (int) m_ticksAfterRecordStart);
+	element->SetAttribute("TicksDeltaWhenRecorded", (int)m_ticksDeltaWhenRecorded);
+	element->SetAttribute("ActorPed", m_actorPed);
+	element->SetAttribute("ActorPed", m_actorIndex);
+	element->SetAttribute("LocationX", m_location.x);
+	element->SetAttribute("LocationY", m_location.y);
+	element->SetAttribute("LocationZ", m_location.z);
+
+	return element;
+}
+
 
 
 
@@ -168,7 +185,7 @@ float ActorRecordingItem::getMinDistanceBeforeCompleted()
 }
 
 
-ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorOnFootMovementRecordingItem::ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex,Ped actor, Vector3 location, float walkSpeed, float headingAtEnd):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex,actor, location)
 {
 	m_walkSpeed = walkSpeed;
 	m_heading = headingAtEnd;
@@ -260,7 +277,7 @@ std::string ActorOnFootMovementRecordingItem::toUserFriendlyName()
 }
 
 
-ActorVehicleRecordingItem::ActorVehicleRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh,float vehHeading) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorVehicleRecordingItem::ActorVehicleRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh,float vehHeading) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location)
 {
 	m_vehicle = veh;
 	m_vehicleType = _getVehicleTypeFromNatives();
@@ -318,7 +335,7 @@ VEHICLE_TYPE ActorVehicleRecordingItem::_getVehicleTypeFromNatives()
 
 
 
-ActorVehicleEnterRecordingItem::ActorVehicleEnterRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, int vehicleSeat, float enterVehicleSpeed) : ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading)
+ActorVehicleEnterRecordingItem::ActorVehicleEnterRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading, int vehicleSeat, float enterVehicleSpeed) : ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location, veh, vehHeading)
 {
 	m_vehicleSeat = vehicleSeat;
 	m_enterVehicleSpeed = enterVehicleSpeed;
@@ -351,7 +368,7 @@ std::string ActorVehicleEnterRecordingItem::toUserFriendlyName()
 	return "Enter";
 }
 
-ActorVehicleExitRecordingItem::ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading): ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading)
+ActorVehicleExitRecordingItem::ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading): ActorVehicleRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location, veh, vehHeading)
 {
 	//check for completion every 200 ticks (default 1000)
 	m_ticksDeltaCheckCompletion = 100;
@@ -387,7 +404,7 @@ std::string ActorVehicleExitRecordingItem::toUserFriendlyName()
 	return "Exit";
 }
 
-ActorStandingStillRecordingItem::ActorStandingStillRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float heading) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorStandingStillRecordingItem::ActorStandingStillRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float heading) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location)
 {
 	m_heading = heading;
 	m_ticksDeltaCheckCompletion = 200;
@@ -419,7 +436,7 @@ std::string ActorStandingStillRecordingItem::toUserFriendlyName()
 	return "Waiting";
 }
 
-ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, float speedInVehicle) : ActorVehicleRecordingItem(ticksStart,  ticksDeltaWhenRecorded, actor, location, veh, vehHeading)
+ActorVehicleMovementRecordingItem::ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading, float speedInVehicle) : ActorVehicleRecordingItem(ticksStart,  ticksDeltaWhenRecorded, actorIndex, actor, location, veh, vehHeading)
 {
 	m_speedInVehicle = speedInVehicle;
 
@@ -610,7 +627,7 @@ std::string ActorVehicleMovementRecordingItem::toUserFriendlyName()
 	return "Vehicle";
 }
 
-ActorScenarioRecordingItem::ActorScenarioRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Scenario scenario): ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorScenarioRecordingItem::ActorScenarioRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Scenario scenario): ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location)
 {
 	m_scenario = scenario;
 	//check for completion every 200 ticks (default 1000)
@@ -660,7 +677,7 @@ std::string ActorScenarioRecordingItem::toUserFriendlyName()
 	return "Scenario";
 }
 
-ActorAimAtRecordingItem::ActorAimAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity aimedAtEntity): ActorRecordingItem( ticksStart, ticksDeltaWhenRecorded, actor,  location)
+ActorAimAtRecordingItem::ActorAimAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Entity aimedAtEntity): ActorRecordingItem( ticksStart, ticksDeltaWhenRecorded, actorIndex, actor,  location)
 {
 	m_aimedAtEntity = aimedAtEntity;
 	//check for completion every 200 ticks (default 1000)
@@ -702,7 +719,7 @@ std::string ActorAimAtRecordingItem::toUserFriendlyName()
 	return "Aim";
 }
 
-ActorShootAtEntityRecordingItem::ActorShootAtEntityRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity shotAtEntity) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor,location)
+ActorShootAtEntityRecordingItem::ActorShootAtEntityRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Entity shotAtEntity) :ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor,location)
 {
 	m_shotAtEntity = shotAtEntity;
 	//check for completion every 200 ticks (default 1000)
@@ -739,7 +756,7 @@ std::string ActorShootAtEntityRecordingItem::toUserFriendlyName()
 	return "Shoot";
 }
 
-ActorAnimationSequenceRecordingItem::ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float heading, AnimationSequence animationSequence, AnimationFlag animationFlag):ActorRecordingItem(ticksStart,ticksDeltaWhenRecorded,actor,location)
+ActorAnimationSequenceRecordingItem::ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float heading, AnimationSequence animationSequence, AnimationFlag animationFlag):ActorRecordingItem(ticksStart,ticksDeltaWhenRecorded, actorIndex, actor,location)
 {
 	m_animationSequence = animationSequence;
 	m_animationFlag = animationFlag;
@@ -876,7 +893,7 @@ void ActorAnimationSequenceRecordingItem::setHeading(float heading)
 }
 
 
-ActorCoverAtRecordingItem::ActorCoverAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vector3 enterCoverPosition, Vector3 coverPosition) : ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorCoverAtRecordingItem::ActorCoverAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vector3 enterCoverPosition, Vector3 coverPosition) : ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location)
 {
 	m_coverPosition = coverPosition;
 	m_enterCoverPosition = enterCoverPosition;
@@ -920,7 +937,7 @@ std::string ActorCoverAtRecordingItem::toUserFriendlyName()
 	return "Cover";
 }
 
-ActorShootAtByImpactRecordingItem::ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern, float walkSpeed, float heading):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorShootAtByImpactRecordingItem::ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern, float walkSpeed, float heading):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location)
 {
 	m_weapon = weapon;
 	m_weaponImpact = weaponImpact;
@@ -1041,7 +1058,7 @@ std::string ActorShootAtByImpactRecordingItem::toUserFriendlyName()
 	return "Shoot";
 }
 
-ActorJumpingRecordingItem::ActorJumpingRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isClimbing):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, walkSpeed, headingAtEnd)
+ActorJumpingRecordingItem::ActorJumpingRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isClimbing):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location, walkSpeed, headingAtEnd)
 {
 	//TODO
 	m_isClimbing = isClimbing;
@@ -1087,7 +1104,7 @@ void ActorJumpingRecordingItem::setIsClimbing(bool isClimbing)
 	m_isClimbing = isClimbing;
 }
 
-ActorReloadRecordingItem::ActorReloadRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, bool doAim, Vector3 weaponImpact):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location)
+ActorReloadRecordingItem::ActorReloadRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Hash weapon, bool doAim, Vector3 weaponImpact):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location)
 {
 	m_weapon = weapon;
 	m_doAim = doAim;
@@ -1128,7 +1145,7 @@ std::string ActorReloadRecordingItem::toString()
 	return ActorRecordingItem::toString() + " ActorReloadRecordingItem ";
 }
 
-ActorSpeakRecordingItem::ActorSpeakRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isMovingWhileSpeaking):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, walkSpeed, headingAtEnd)
+ActorSpeakRecordingItem::ActorSpeakRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isMovingWhileSpeaking):ActorOnFootMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location, walkSpeed, headingAtEnd)
 {
 	m_isMovingWhileSpeaking = isMovingWhileSpeaking;
 	setTicksDeltaCheckCompletion(50);
@@ -1170,7 +1187,7 @@ std::string ActorSpeakRecordingItem::toUserFriendlyName()
 	return "Speaking";
 }
 
-ActorSyncedAnimationRecordingItem::ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded,Ped pedActor, std::vector<Actor*> actors, Vector3 location, float actorRotation, SyncedAnimation *syncedAnimation):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, pedActor, location)
+ActorSyncedAnimationRecordingItem::ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped pedActor, std::vector<Actor*> actors, Vector3 location, float actorRotation, SyncedAnimation *syncedAnimation):ActorRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, pedActor, location)
 {
 	m_syncedAnimation = syncedAnimation;
 	m_actors = actors;
@@ -1313,7 +1330,7 @@ void ActorSyncedAnimationRecordingItem::updatePreviewLocation(Actor* actor,Vecto
 	}
 }
 
-ActorVehicleRocketBoostRecordingItem::ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading):ActorVehicleMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading, 30.0f)
+ActorVehicleRocketBoostRecordingItem::ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading):ActorVehicleMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location, veh, vehHeading, 30.0f)
 {
 	m_ticksDeltaCheckCompletion = 10;
 }
@@ -1344,7 +1361,7 @@ std::string ActorVehicleRocketBoostRecordingItem::toUserFriendlyName()
 }
 
 
-ActorVehicleParachuteRecordingItem::ActorVehicleParachuteRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading) :ActorVehicleMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actor, location, veh, vehHeading, 30.0f)
+ActorVehicleParachuteRecordingItem::ActorVehicleParachuteRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading) :ActorVehicleMovementRecordingItem(ticksStart, ticksDeltaWhenRecorded, actorIndex, actor, location, veh, vehHeading, 30.0f)
 {
 	m_ticksDeltaCheckCompletion = 10;
 }

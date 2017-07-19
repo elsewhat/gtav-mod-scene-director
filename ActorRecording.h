@@ -5,6 +5,7 @@
 #include "scenario.h"
 #include "Animation.h"
 #include "SyncedAnimation.h"
+#include "tinyxml2.h"
 #include <string>
 #include <memory>
 
@@ -17,6 +18,7 @@ class ActorRecordingItem {
 protected:
 	bool m_isDisabled = false;
 	DWORD m_ticksAfterRecordStart;
+	int m_actorIndex;
 	Ped m_actorPed;
 	Vector3 m_location;
 	DWORD m_ticksDeltaCheckCompletion;
@@ -27,7 +29,7 @@ protected:
 	int m_index;
 	int m_nrAttemptsBeforeSkipping;
 public:
-	ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actorPed, Vector3 location);
+	ActorRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actorPed, Vector3 location);
 
 	DWORD getTicksAfterRecordStart();
 	Vector3 getLocation();
@@ -61,6 +63,7 @@ public:
 	virtual void previewRecording(Actor* actor);
 	virtual void stopPreviewRecording(Actor* actor);
 	virtual void updatePreviewLocation(Actor* actor, Vector3 location);
+	virtual tinyxml2::XMLElement* toXML(tinyxml2::XMLDocument* doc);
 };
 
 class ActorOnFootMovementRecordingItem : public ActorRecordingItem {
@@ -68,7 +71,7 @@ protected:
 	float m_walkSpeed;
 	float m_heading;
 public:
-	ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd);
+	ActorOnFootMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd);
 	float getWalkSpeed();
 	void setWalkSpeed(float walkSpeed);
 	float getHeading();
@@ -83,7 +86,7 @@ class ActorSpeakRecordingItem : public ActorOnFootMovementRecordingItem {
 protected:
 	bool m_isMovingWhileSpeaking;
 public:
-	ActorSpeakRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isMovingWhileSpeaking);
+	ActorSpeakRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isMovingWhileSpeaking);
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location);
 	std::string toString() override;
@@ -95,7 +98,7 @@ class ActorJumpingRecordingItem : public ActorOnFootMovementRecordingItem {
 protected:
 	bool m_isClimbing;
 public:
-	ActorJumpingRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isClimbing);
+	ActorJumpingRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float walkSpeed, float headingAtEnd, bool isClimbing);
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	virtual bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location);
 	std::string toString() override;
@@ -110,7 +113,7 @@ class ActorStandingStillRecordingItem : public ActorRecordingItem {
 protected:
 	float m_heading;
 public:
-	ActorStandingStillRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float heading);
+	ActorStandingStillRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float heading);
 	float getHeading();
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
@@ -123,7 +126,7 @@ class ActorAimAtRecordingItem : public ActorRecordingItem {
 protected:
 	Entity m_aimedAtEntity;
 public:
-	ActorAimAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity aimedAtEntity);
+	ActorAimAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Entity aimedAtEntity);
 	Entity getAimedAtEntity();
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
@@ -136,7 +139,7 @@ class ActorShootAtEntityRecordingItem : public ActorRecordingItem {
 protected:
 	Entity m_shotAtEntity;
 public:
-	ActorShootAtEntityRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Entity shotAtEntity);
+	ActorShootAtEntityRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Entity shotAtEntity);
 	Entity getShotAtEntity();
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
@@ -154,7 +157,7 @@ protected:
 	float m_walkSpeed;
 	float m_heading;
 public:
-	ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern, float walkSpeed, float heading);
+	ActorShootAtByImpactRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Hash weapon, Vector3 weaponImpact, Hash firingPattern, float walkSpeed, float heading);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
@@ -169,7 +172,7 @@ protected:
 	bool m_doAim;
 	Vector3 m_weaponImpact;
 public:
-	ActorReloadRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Hash weapon, bool doAim, Vector3 weaponImpact);
+	ActorReloadRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Hash weapon, bool doAim, Vector3 weaponImpact);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
@@ -181,7 +184,7 @@ protected:
 	Scenario m_scenario;
 
 public:
-	ActorScenarioRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Scenario scenario);
+	ActorScenarioRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Scenario scenario);
 	Scenario getScenario();
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
@@ -198,7 +201,7 @@ protected:
 	VEHICLE_TYPE m_vehicleType;
 	VEHICLE_TYPE _getVehicleTypeFromNatives();
 public:
-	ActorVehicleRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
+	ActorVehicleRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
 	Vehicle getVehicle();
 	VEHICLE_TYPE getVehicleType();
 	float getVehicleHeading();
@@ -211,7 +214,7 @@ protected:
 	int m_vehicleSeat;
 	float m_enterVehicleSpeed;
 public:
-	ActorVehicleEnterRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, int vehicleSeat,float enterVehicleSpeed);
+	ActorVehicleEnterRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading, int vehicleSeat,float enterVehicleSpeed);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
@@ -224,7 +227,7 @@ protected:
 	int m_vehicleSeat;
 	float m_enterVehicleSpeed;
 public:
-	ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
+	ActorVehicleExitRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
@@ -235,7 +238,7 @@ class ActorVehicleMovementRecordingItem : public ActorVehicleRecordingItem {
 protected:
 	float m_speedInVehicle;
 public:
-	ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading, float speedInVehicle);
+	ActorVehicleMovementRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading, float speedInVehicle);
 	std::string toString() override;
 	float getSpeedInVehicle();
 	void setSpeedInVehicle(float speedInVehicle);
@@ -247,7 +250,7 @@ public:
 class ActorVehicleRocketBoostRecordingItem : public ActorVehicleMovementRecordingItem {
 protected:
 public:
-	ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
+	ActorVehicleRocketBoostRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
@@ -257,7 +260,7 @@ public:
 class ActorVehicleParachuteRecordingItem : public ActorVehicleMovementRecordingItem {
 protected:
 public:
-	ActorVehicleParachuteRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
+	ActorVehicleParachuteRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vehicle veh, float vehHeading);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
 	bool isRecordingItemCompleted(std::shared_ptr<ActorRecordingItem> nextRecordingItem, DWORD ticksStart, DWORD ticksNow, int nrOfChecksForCompletion, Actor actor, Vector3 location) override;
@@ -270,7 +273,7 @@ protected:
 	AnimationFlag m_animationFlag;
 	float m_heading;
 public:
-	ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, float heading, AnimationSequence animationSequence, AnimationFlag animationFlag);
+	ActorAnimationSequenceRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, float heading, AnimationSequence animationSequence, AnimationFlag animationFlag);
 	AnimationSequence getAnimationSequence();
 	void setAnimationSequence(AnimationSequence animationSequence);
 	std::string toString() override;
@@ -297,7 +300,7 @@ protected:
 	float m_rotation;
 
 public:
-	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped pedActor, std::vector<Actor*> actors, Vector3 location, float actorRotation, SyncedAnimation* syncedAnimation);
+	ActorSyncedAnimationRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped pedActor, std::vector<Actor*> actors, Vector3 location, float actorRotation, SyncedAnimation* syncedAnimation);
 	SyncedAnimation* getSyncedAnimation();
 	void setSyncedAnimation(SyncedAnimation* syncedAnimation);
 	std::vector<Actor*> getActors();
@@ -334,7 +337,7 @@ protected:
 	Vector3 m_enterCoverPosition;
 	Vector3 m_coverPosition;
 public:
-	ActorCoverAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, Ped actor, Vector3 location, Vector3 enterCoverPosition, Vector3 coverPosition);
+	ActorCoverAtRecordingItem(DWORD ticksStart, DWORD ticksDeltaWhenRecorded, int actorIndex, Ped actor, Vector3 location, Vector3 enterCoverPosition, Vector3 coverPosition);
 	void setCoverPosition(Vector3 coverPosition);
 	std::string toString() override;
 	virtual void executeNativesForRecording(Actor actor, std::shared_ptr<ActorRecordingItem> nextRecordingItem, std::shared_ptr<ActorRecordingItem> previousRecordingItem)override;
