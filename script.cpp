@@ -18,6 +18,7 @@
 #include "SyncedAnimation.h"
 #include "tinyxml2.h"
 #include "StageLight.h"
+#include "Network.h"
 
 #include <string>
 #include <ctime>
@@ -7473,6 +7474,8 @@ void ScriptMain()
 
 	//make sure police and everyone do not ignore player
 	reset_ignore_player();
+
+	testRequest();
 
 	main();
 }
