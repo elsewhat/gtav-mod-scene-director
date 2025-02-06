@@ -1,0 +1,13 @@
+{
+  "name": "Windows C++ MSBuild Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "settings": {},
+  "extensions": [
+    "ms-vscode.cmake-tools",
+    "ms-vscode.cpptools"
+  ],
+  "postCreateCommand": "msbuild SceneDirector.vcxproj /p:Configuration=Release /p:Platform=x64",
+  "remoteUser": "ContainerUser"
+}
