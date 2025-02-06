@@ -62,3 +62,20 @@ Note:
 
 ALT+PAUSE/Break
 Reset scene director
+
+## Devcontainer Setup
+
+This project includes a devcontainer configuration to provide a consistent development environment. The devcontainer is configured to use the .NET Framework SDK image and includes necessary tools and extensions for C++ development.
+
+### Purpose
+
+The devcontainer setup aims to simplify the development process by providing a pre-configured environment with all the necessary tools and dependencies. This ensures that all developers working on the project have a consistent setup, reducing the chances of environment-related issues.
+
+### Instructions
+
+1. Install Docker on your machine if you haven't already.
+2. Open the project in Visual Studio Code.
+3. When prompted, reopen the project in the devcontainer.
+4. The devcontainer will be built and started automatically.
+5. Once the devcontainer is running, you can start developing and building the project as usual.
+
